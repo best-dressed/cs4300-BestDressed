@@ -2,7 +2,7 @@
 name: Add User Story
 about: Add a new user story
 title: ''
-labels: enhancement
+labels: Feature
 assignees: ''
 
 ---
