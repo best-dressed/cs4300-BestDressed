@@ -1,0 +1,6 @@
+# Maintance tools
+pylint
+pytest
+
+# Web
+django

@@ -1,0 +1,14 @@
+Logan Andersen:
+    I learned a lot during this iteration. I was fairly new to Django
+    and so software engineering so I got some experience when it came
+    to both of those. I did a lot of new things like: drawing wireframe
+    diagrams, playing planning poker, writing things in Connextra,
+    HTML templates, github kanban, and many other things. One thing that
+    didn't go well was our initial github integration, at the beginning
+    our github projects were pre-made but misformatted, and people began
+    adding their issues into our list, this was solved by creating our
+    own github projects instead of using the ones given to us by the
+    school. I would say that doing planning poker was very usefull for
+    me since it let us find out that some of our Connextra stories were
+    vague, and needed further work.
+
