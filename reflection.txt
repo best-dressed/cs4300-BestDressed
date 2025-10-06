@@ -12,3 +12,16 @@ Logan Andersen:
     me since it let us find out that some of our Connextra stories were
     vague, and needed further work.
 
+John Camargo:
+
+I was able to take in quite a large amount of new knowledge from this first iteration. For example, I have 
+greatly improved as a programmer, as I had to use and implement a lot of code and practices which I had forgotten about,
+including granular testing, web app dev, and secure coding practices. Specifically, using Django with Python (to run not only our app, but 
+also the start of BestDressed), I have been able to understand the Django web framework (and the DRF as well), and how it is
+used to create and manage web applications. Finally, I was able to get some hand-on practice with user stories
+(connextra format/DSL), acceptance criteria (Gherkin DSL), storypoints (including playing planning poker), and wireframes,
+all of which help communicate between dev team and customers.
+
+Robin Levisky:
+
+    This iteration taught me how to create user stories as a group. Through this process, we divided up the high level user stories, then created proposed user stories for each element. We then drew up wireframes for the applicible user stories (those with UI elements). I then moderated a game of planning poker, which is a consensus-based way to determine the amount of story points for each user story. Moderating planning poker was a critical learning experience for myself as I worked with the group on resolving ambiguities within our user stories to make sure we all understood what we were building. 
