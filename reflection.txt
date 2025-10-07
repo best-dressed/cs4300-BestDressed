@@ -16,7 +16,7 @@ Michal Lustig:
    I learned how to create proper user stories as a group, and our team discussions helped me better understand some of the fundamentals of software project management. 
    I especially enjoyed drawing some of the wireframes since I’m a very visual person, and it even helped me see and understand the features better.
    Many things became clearer as we communicated with our customers and refined our goals. Something I specifically learned more about was the Connextra formatting, 
-   which made it easier to write consistent and meaningful user stories. Homework 2 helped me gain hands-on experience with Django and Python, which allowed me to better
+   which made it easier to write consistent and meaningful user stories. Homework 2 helped me have more hands-on experience with Django and Python, which allowed me to better
    understand how the framework works. I now feel more confident going into the next iterations where we’ll start applying those same skills to BestDressed.
 
 John Camargo:
