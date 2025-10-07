@@ -32,3 +32,11 @@ all of which help communicate between dev team and customers.
 Robin Levisky:
 
     This iteration taught me how to create user stories as a group. Through this process, we divided up the high level user stories, then created proposed user stories for each element. We then drew up wireframes for the applicible user stories (those with UI elements). I then moderated a game of planning poker, which is a consensus-based way to determine the amount of story points for each user story. Moderating planning poker was a critical learning experience for myself as I worked with the group on resolving ambiguities within our user stories to make sure we all understood what we were building. 
+
+Mason Andersen:
+    This iteration was a good learning opportunity for the project management side, and I felt like it tied in well with the 2nd homework assignment building skills for django.
+    Our team worked pretty well together, and I feel like we all put in some good work on breaking down user stories, and Robin did great with the landing page view. 
+    I feel very new the project management side of software development, as all my other classes were pretty much a "just do the work and push to the repo" situation with less
+    granular work breakdowns, so it's good to get this experience. Also working with the customer has been an enlightening experience as there's so much you imagine in your head that is completely
+    different from what the customer is imaginging in their head. So overall I think this was a great exercise in project management and communication, which should set us up for success with the main project. 
+    
