@@ -1,1 +1,6 @@
 ## File for setting and describing design choices and standards for the web application
+
+# Color Pallete -- Purples and Agreeable Greyscale
+Background 
+Text
+Buttons
