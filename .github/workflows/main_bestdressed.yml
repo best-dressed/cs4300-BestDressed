@@ -10,6 +10,12 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  ENVIRONMENT: 'PROD'  # Set to 'PROD' for production environment
+  ALLOWED_HOSTS: 'bestdressed.azurewebsites.net'  # Set to your production domain
+  SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
+
 jobs:
   build:
     runs-on: ubuntu-latest

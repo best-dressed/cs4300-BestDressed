@@ -12,6 +12,13 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+# Import Environment Variables
+env_vars = os.environ
+
+# Set to PROD for production environment
+ENVIRONMENT = env_vars.get('ENVIRONMENT', 'DEV')
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,13 +26,30 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
+DEBUG = None
+SECRET_KEY = None
+ALLOWED_HOSTS = None
+STORAGES = None
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+print(f"ENVIRONMENT: {ENVIRONMENT}")
+print(f"SECRET_KEY: {env_vars.get('SECRET_KEY')}")
+print(f"ALLOWED_HOSTS: {env_vars.get('ALLOWED_HOSTS')}")
 
-ALLOWED_HOSTS = ["*"]
+if ENVIRONMENT == 'PROD':
+    DEBUG = False
+    SECRET_KEY = env_vars.get('SECRET_KEY')
+    ALLOWED_HOSTS = [env_vars.get('ALLOWED_HOSTS')]
+    STORAGES = {
+        "staticfiles": {
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+        },
+    }
+else:
+    DEBUG = True
+    SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
+    ALLOWED_HOSTS = ["*"]
+
+
 
 
 # Application definition
@@ -47,6 +71,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'best_dressed.urls'
@@ -114,7 +139,8 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'static'
+STATIC_URL = '/static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / 'best_dressed' / 'static',
