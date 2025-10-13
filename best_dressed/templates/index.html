@@ -1,8 +1,24 @@
-{% extends "main.html" %}
+{% extends "base.html" %}
 {% block title %} Best Dressed {% endblock %}
 {% block content %}
 
-<h1>Coming Soon™</h1>
-<p>Best Dressed is an application to build and share outfits, communicate with other users, and discover the latest fashion trends.</p>
+
+{# include "bootstrap_js.html #}
+
+{# main content #}
+
+<div class="position-absolute top-50 start-50 translate-middle">
+  <div class="card">
+    <div class="d-grid gap-1">
+      <a href="login/" type="button" class="btn btn-primary btn-lg">Login</a>
+      <a href="signup/" type="button" class="btn btn-primary
+					     btn-lg">Sign Up</a>
+      
+      <div class=card-body>Best Dressed is an application to build and
+	share outfits, communicate with other users, and discover the
+	latest fashion trends.</div>
+    </div>
+  </div>
+</div>  
 
 {% endblock %}
