@@ -71,7 +71,7 @@ jobs:
         # Use Azure CLI to persist environment variables into App Service application settings
         # Requires a repository secret named AZURE_RESOURCE_GROUP with the App Service's resource group
         run: |
-          az webapp config appsettings set --name 'bestdressed' --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings ENVIRONMENT=${{ env.ENVIRONMENT }} ALLOWED_HOSTS=${{ env.ALLOWED_HOSTS }} SECRET_KEY=${{ secrets.SECRET_KEY }}
+          az webapp config appsettings set --name 'bestdressed' --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --settings ENVIRONMENT="${{ secrets.ENVIRONMENT }}" ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" SECRET_KEY="${{ secrets.SECRET_KEY }}"
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
