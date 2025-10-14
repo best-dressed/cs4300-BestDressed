@@ -10,12 +10,6 @@ on:
       - main
   workflow_dispatch:
 
-env:
-  ENVIRONMENT: 'PROD'  # Set to 'PROD' for production environment
-  ALLOWED_HOSTS: 'bestdressed.azurewebsites.net'  # Set to your production domain
-  SECRET_KEY: ${{ secrets.SECRET_KEY }}
-
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -72,6 +66,12 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5B5DFC9CDE1F4FC394AA5AF7AF482E6E }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1AB775D03EE24A1996BB864C3CF55E49 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E919FB29A90B4881BA9DA0165B5068CC }}
+
+      - name: Set Azure App Service app settings
+        # Use Azure CLI to persist environment variables into App Service application settings
+        # Requires a repository secret named AZURE_RESOURCE_GROUP with the App Service's resource group
+        run: |
+          az webapp config appsettings set --name 'bestdressed' --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings ENVIRONMENT=${{ env.ENVIRONMENT }} ALLOWED_HOSTS=${{ env.ALLOWED_HOSTS }} SECRET_KEY=${{ secrets.SECRET_KEY }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
