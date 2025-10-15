@@ -29,21 +29,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 DEBUG = None
 SECRET_KEY = None
 ALLOWED_HOSTS = None
-STORAGES = None
-
-print(f"ENVIRONMENT: {ENVIRONMENT}")
-print(f"SECRET_KEY: {env_vars.get('SECRET_KEY')}")
-print(f"ALLOWED_HOSTS: {env_vars.get('ALLOWED_HOSTS')}")
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 if ENVIRONMENT == 'PROD':
     DEBUG = False
     SECRET_KEY = env_vars.get('SECRET_KEY')
     ALLOWED_HOSTS = [env_vars.get('ALLOWED_HOSTS')]
-    STORAGES = {
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
-        },
-    }
+
 else:
     DEBUG = True
     SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
