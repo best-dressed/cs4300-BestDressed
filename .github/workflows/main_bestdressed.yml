@@ -26,20 +26,14 @@ jobs:
 
       # 🛠️ Local Build Section (Optional)
       # The following section in your workflow is designed to catch build issues early on the client side, before deployment. This can be helpful for debugging and validation. However, if this step significantly increases deployment time and early detection is not critical for your workflow, you may remove this section to streamline the deployment process.
-      - name: Create and Start virtual environment and Install dependencies
-        run: |
-          python -m venv antenv
-          source antenv/bin/activate
-          pip install -r requirements.txt
-                
-      # By default, when you enable GitHub CI/CD integration through the Azure portal, the platform automatically sets the SCM_DO_BUILD_DURING_DEPLOYMENT application setting to true. This triggers the use of Oryx, a build engine that handles application compilation and dependency installation (e.g., pip install) directly on the platform during deployment. Hence, we exclude the antenv virtual environment directory from the deployment artifact to reduce the payload size. 
+      # (Optional) Local build step removed to avoid uploading a local virtualenv.
+      # Let Azure (Oryx) perform the build and pip install during deployment.
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
             .
-            !antenv/
 
       # 🚫 Opting Out of Oryx Build
       # If you prefer to disable the Oryx build process during deployment, follow these steps:
@@ -66,6 +60,13 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5B5DFC9CDE1F4FC394AA5AF7AF482E6E }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1AB775D03EE24A1996BB864C3CF55E49 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E919FB29A90B4881BA9DA0165B5068CC }}
+
+      - name: Set Azure App Service app settings
+        # Use Azure CLI to persist environment variables into App Service application settings
+        # Ensure server-side build (Oryx) runs during deployment by setting SCM_DO_BUILD_DURING_DEPLOYMENT=true
+        # Requires a repository secret named AZURE_RESOURCE_GROUP with the App Service's resource group
+        run: |
+          az webapp config appsettings set --name 'bestdressed' --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --settings ENVIRONMENT="${{ secrets.ENVIRONMENT }}" ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" SECRET_KEY="${{ secrets.SECRET_KEY }}" SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
