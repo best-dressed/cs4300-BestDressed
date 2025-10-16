@@ -10,14 +10,15 @@ def index(request):
     """
     return render(request, 'index.html')
 
-def login(request):
-    """
-    View the login page
-    """
-    return render(request, 'login.html')
+# def login(request):
+#     """
+#     View the login page
+#     """
+#     return render(request, 'login.html')
 
-def signup(request):
-    """
-    View the signup page
-    """
-    return render(request, 'signup.html')
+# def signup(request):
+#     """
+#     View the signup page
+#     """
+#     return render(request, 'signup.html')
+
