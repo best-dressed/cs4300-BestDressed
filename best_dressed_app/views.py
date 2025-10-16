@@ -21,3 +21,4 @@ def signup(request):
     View the signup page
     """
     return render(request, 'signup.html')
+
