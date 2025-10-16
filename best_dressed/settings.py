@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = ["*"]
 
@@ -37,10 +37,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'best_dressed_app',
+    'users',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -119,6 +122,22 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'best_dressed' / 'static',
 ]
+
+
+# Auth: redirects after login/logout
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "home"
+
+
+# Security for prod
+CSRF_TRUSTED_ORIGINS = [
+    f"https://{os.getenv('WEBSITE_HOSTNAME','')}".rstrip("."),
+    f"https://{os.getenv('CUSTOM_DOMAIN','')}".rstrip("."),
+]
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
