@@ -8,7 +8,10 @@ def index(request):
     """
     View for the index page, as of now this is a landing page.
     """
-    return render(request, '../templates/index.html')
+    if (request.user.is_authenticated) :
+        return render(request, '../templates/index_signed_in.html')
+    else :
+        return render(request, '../templates/index.html')
 
 def login(request):
     """
