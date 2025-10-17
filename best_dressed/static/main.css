@@ -14,7 +14,11 @@ p {
 }
 .header {
     text-align: left;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    margin-left: 20px;
+    margin-top: 5000px;
+    margin-bottom: 5000px;
+    margin-left: 5000px;
+}
+.navbar-brand{
+    font-family: 'Lato', sans-serif;
+    color: green;
 }
