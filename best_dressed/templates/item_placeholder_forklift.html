@@ -3,10 +3,13 @@
 
     <li class="list-group-item">
         <h5>{{item.title}} T shirt</h5>
-        <img src = "{% static 'forkliftCert.png' %} " alt="Logo" class="img-fluid" style="max-height:200px">
+        <a href = "#">
+            <img src = "{% static 'forkliftCert.png' %} " alt="Logo" class="img-fluid" style="max-height:200px">
+        </a>
+
         <p>{{item.description}}</p>
         <p>Description</p>
-        <a href = "#" class = " btn btn - secondary " >
+        <a href = "#" class = " btn btn - primary bg-primary " >
             Add to Outfit </a>
 
     </li>
