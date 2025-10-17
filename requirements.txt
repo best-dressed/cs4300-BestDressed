@@ -4,3 +4,4 @@ pytest
 
 # Web
 django
+whitenoise
