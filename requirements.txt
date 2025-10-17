@@ -4,6 +4,3 @@ pytest
 
 # Web
 django
-
-# Static files
-whitenoise

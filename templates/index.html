@@ -1,0 +1,33 @@
+{% extends "main.html" %}
+{% block title %} Best Dressed {% endblock %}
+{% block content %}
+
+<div class="position-absolute top-50 start-50 translate-middle">
+  <div class="card">
+    <div class="d-grid gap-1">
+
+      {% if user.is_authenticated %}
+        <form action="{% url 'logout' %}" method="post" class="d-grid gap-1">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-lg">Log Out</button>
+        </form>
+        <div class="card-body text-center">
+          Welcome back, <strong>{{ user.username }}</strong>!
+        </div>
+      {% else %}
+        <a href="{% url 'login' %}" type="button" class="btn btn-primary btn-lg">Log In</a>
+        <a href="{% url 'signup' %}" type="button" class="btn btn-primary btn-lg">Sign Up</a>
+      {% endif %}
+
+
+      <div class="card-body">
+        Best Dressed is an application to build and
+        share outfits, communicate with other users, and discover the
+        latest fashion trends.
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}
