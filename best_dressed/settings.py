@@ -28,10 +28,6 @@ STORAGES = {
     },
 }
 
-print(f"ENVIRONMENT: {ENVIRONMENT}")
-print(f"SECRET_KEY: {env_vars.get('SECRET_KEY')}")
-print(f"ALLOWED_HOSTS: {env_vars.get('ALLOWED_HOSTS')}")
-
 if ENVIRONMENT == 'PROD':
     DEBUG = False
     SECRET_KEY = env_vars.get('SECRET_KEY')
