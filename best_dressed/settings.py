@@ -12,20 +12,31 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+env_vars = os.environ
+ENVIRONMENT = env_vars.get('ENVIRONMENT', 'DEV')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+DEBUG = None
+SECRET_KEY = None
+ALLOWED_HOSTS = None
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
+if ENVIRONMENT == 'PROD':
+    DEBUG = False
+    SECRET_KEY = env_vars.get('SECRET_KEY')
+    ALLOWED_HOSTS = [env_vars.get('ALLOWED_HOSTS')]
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ["*"]
+else:
+    DEBUG = True
+    SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
+    ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
