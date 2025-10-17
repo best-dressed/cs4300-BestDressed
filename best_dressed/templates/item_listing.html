@@ -1,0 +1,65 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %} Movie List {% endblock title %}
+{% block content %}
+<div style="margin:50px; font-size:50px;">
+
+    <div class ="container">
+        <div style="margin:20px;">
+            Available Items
+        </div>
+        <div class="container">
+            <div class="row justify-content-left">
+                <div class="col-md-6">
+                    <div class="search-container">
+                        <input type="text" class="form-control search-input" placeholder="Search for an Item...">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <a href = "#" class = " btn btn - secondary bg-primary"
+            style = "font-size:20px;">
+            Add a new Item to list </a>
+        </div>
+
+</div>
+
+
+<h3> {{movie.id}} </h3>
+<h1> {{Movie.id}}</h1>
+<div class="container text-center">
+    <div class="row align-items-start">
+        <div class="col">
+            {% include "item_placeholder_forklift.html" %}
+        </div>
+        <div class="col">
+            {% include "item_placeholder_forklift.html" %}
+        </div>
+        <div class="col">
+            {% include "item_placeholder_forklift.html" %}
+        </div>
+    </div>
+    <div class="row align-items-center">
+        <div class="col">
+            One of three columns
+        </div>
+        <div class="col">
+            One of three columns
+        </div>
+        <div class="col">
+            One of three columns
+        </div>
+    </div>
+    <div class="row align-items-end">
+        <div class="col">
+            One of three columns
+        </div>
+        <div class="col">
+            One of three columns
+        </div>
+        <div class="col">
+            One of three columns
+        </div>
+    </div>
+</div>
+{% endblock content %}

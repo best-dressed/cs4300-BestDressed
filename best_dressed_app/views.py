@@ -22,3 +22,7 @@ def signup(request):
     """
     return render(request, 'signup.html')
 
+def item_listing(request):
+
+    return render(request, "item_listing.html")
+
