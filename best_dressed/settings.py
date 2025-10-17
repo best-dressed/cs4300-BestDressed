@@ -120,7 +120,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / 'best_dressed' / 'static',
+    BASE_DIR / 'static',
 ]
 
 
@@ -139,6 +139,7 @@ DEFAULT_FROM_EMAIL = "no-reply@bestdressed.com"
 CSRF_TRUSTED_ORIGINS = [
     f"https://{os.getenv('WEBSITE_HOSTNAME','')}".rstrip("."),
     f"https://{os.getenv('CUSTOM_DOMAIN','')}".rstrip("."),
+    'https://app-jcamargoenvironment-19.devedu.io',
 ]
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
