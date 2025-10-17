@@ -31,7 +31,9 @@ STORAGES = {
 if ENVIRONMENT == 'PROD':
     DEBUG = False
     SECRET_KEY = env_vars.get('SECRET_KEY')
-    ALLOWED_HOSTS = [env_vars.get('ALLOWED_HOSTS')]
+    raw_allowed = env_vars.get('ALLOWED_HOSTS', '') or ''
+    ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 else:
     DEBUG = True
@@ -163,10 +165,17 @@ SERVER_EMAIL = "no-reply@bestdressed.com"
 
 # Security for prod
 CSRF_TRUSTED_ORIGINS = [
-    f"https://{os.getenv('WEBSITE_HOSTNAME','')}".rstrip("."),
-    f"https://{os.getenv('CUSTOM_DOMAIN','')}".rstrip("."),
-    'https://app-jcamargoenvironment-19.devedu.io',
 ]
+# Build CSRF_TRUSTED_ORIGINS from available environment values. Avoid
+# adding entries for empty env vars (which would become just 'https://').
+_website = os.getenv('WEBSITE_HOSTNAME', '').rstrip('.')
+_custom = os.getenv('CUSTOM_DOMAIN', '').rstrip('.')
+if _website:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_website}")
+if _custom:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_custom}")
+# include any literal trusted origin the project needs
+CSRF_TRUSTED_ORIGINS.append('https://app-jcamargoenvironment-19.devedu.io')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG
