@@ -2,7 +2,7 @@
 {% load static %}
 {% block title %} Item Listing {% endblock title %}
 {% block content %}
-<div style="margin:50px; font-size:50px;">
+<div style="margin:30px; font-size:50px;">
 
     <div class ="container">
         <div style="margin:20px;">
@@ -18,53 +18,35 @@
                        style = "font-size:20px; margin-top:20px;">
                         Add a new Item to list </a>
                 </div>
-
             </div>
         </div>
 
         </div>
 
 </div>
-
-
-<h3> {{movie.id}} </h3>
-<h1> {{Movie.id}}</h1>
-<div class="container text-center">
-    <div class="row align-items-start"
-         style = "margin-top:20px; margin-bottom:20px;">
-        <div class="col">
-            {% include "item_placeholder_forklift.html" %}
-        </div>
-        <div class="col">
-            {% include "item_placeholder_forklift.html" %}
-        </div>
-        <div class="col">
-            {% include "item_placeholder_forklift.html" %}
-        </div>
-    </div>
-    <div class="row align-items-center"
-         style = "margin-top:20px; margin-bottom:20px;">
-        <div class="col">
-            {% include "item_placeholder_forklift.html" %}
-        </div>
-        <div class="col">
-            {% include "item_placeholder_forklift.html" %}
-        </div>
-        <div class="col">
-            {% include "item_placeholder_forklift.html" %}
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            <!--List items from db-->
+            {% for item in items %}
+                <div class="col mb-5">
+                    <div class="card h-100 ">
+                        <!-- Product image-->
+                        <img class="card-img-top " src ="{{item.image_url}}" alt="Logo"></img>
+                        <!-- Product details-->
+                        <div class="card-body p-4">
+                            <div class="text-center">
+                                <!-- Product name-->
+                                <h5 class="fw-bolder">{{item.title}}</h5>
+                                <p>{{item.description}} </p>
+                                <a href = "#" class = " btn btn - primary bg-primary " >
+                                    Add to Outfit </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
-    <div class="row align-items-end"
-         style = "margin-top:20px; margin-bottom:20px;">
-        <div class="col">
-            {% include "item_placeholder_forklift.html" %}
-        </div>
-        <div class="col">
-            One of three columns
-        </div>
-        <div class="col">
-            One of three columns
-        </div>
-    </div>
-</div>
+</section>
 {% endblock content %}

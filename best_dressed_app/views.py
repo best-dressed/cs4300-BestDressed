@@ -3,7 +3,8 @@ Django views for the Best Dressed application.
 """
 
 from django.shortcuts import render
-
+from django.shortcuts import get_object_or_404
+from .models import Item
 def index(request):
     """
     View for the index page, as of now this is a landing page.
@@ -23,6 +24,6 @@ def signup(request):
     return render(request, 'signup.html')
 
 def item_listing(request):
-
-    return render(request, "item_listing.html")
+    items = Item.objects.all()
+    return render(request, "item_listing.html", {'items': items})
 

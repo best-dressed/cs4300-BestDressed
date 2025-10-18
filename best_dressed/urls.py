@@ -26,5 +26,5 @@ urlpatterns = [
     path("accounts/", include("users.urls")),
 
     path('admin/', admin.site.urls),
-    path('item_listing/', views.item_listing, name="item_listing")
+    path('item_listing/', views.item_listing, name="item_listing"),
 ]
