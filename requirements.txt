@@ -3,4 +3,4 @@ pylint
 pytest
 
 # Web
-djangowhitenoise==6.11.0
+djangowhitenoise==6.6git add requirements.txt.0
