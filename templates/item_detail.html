@@ -1,0 +1,30 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %} Item Listing {% endblock title %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/single_item.css' %}" type="text/css">
+
+<section class="py-5">
+    <div class="container px-4 px-lg-5 my-5">
+        <div class="row gx-4 gx-lg-5 align-items-center">
+            <div class="col-md-6"><img class="img-fluid" src={{item.image_url}} alt="..." /></div>
+            <div class="col-md-6">
+
+                <h1 class="display-5 fw-bolder">{{item.title}}</h1>
+                <p class="lead">{{item.description}}</p>
+                <div class="text-center">
+                    <a href = "#" class = "btn btn-primary" >
+                        Add to Outfit </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="text-center">
+        <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
+            Back to item listing </a>
+    </div>
+</section>
+
+{% endblock content %}
