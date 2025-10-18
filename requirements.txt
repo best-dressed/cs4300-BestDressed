@@ -5,3 +5,6 @@ whitenoise
 
 # Web
 django
+# tests
+coverage
+

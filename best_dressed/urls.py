@@ -26,4 +26,6 @@ urlpatterns = [
     path("accounts/", include("users.urls")),
 
     path('admin/', admin.site.urls),
+    path('item_listing/', views.item_listing, name="item_listing"),
+    path('item/<int:pk>/', views.item_detail, name="item_detail"),
 ]
