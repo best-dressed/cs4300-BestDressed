@@ -14,11 +14,18 @@ p {
 }
 .header {
     text-align: left;
-    margin-top: 5000px;
-    margin-bottom: 5000px;
-    margin-left: 5000px;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    margin-left: 50px;
 }
 .navbar-brand{
     font-family: 'Lato', sans-serif;
     color: green;
+}
+.navbar-nav li a {
+    color: white;
+}
+.btn-primary {
+  background-color: #6D11E3 !important; /* urple */
+  border-color: #6D11E3 !important;
 }
