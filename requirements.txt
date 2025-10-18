@@ -3,4 +3,4 @@ pylint
 pytest
 
 # Web
-django
+djangowhitenoise==6.11.0
