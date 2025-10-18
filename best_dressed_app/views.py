@@ -30,5 +30,13 @@ def item_listing(request):
 # for a particular item view
 def item_detail(request, pk):
     item = get_object_or_404(Item, pk=pk)
-    return render(request, "item_detail.html", {"item": item})
+    # related items list, exclude the item we are primarily viewing
+    items = Item.objects.exclude(pk=pk)
+
+    context = {
+        "item": item,
+        "items": items
+
+    }
+    return render(request, "item_detail.html", context)
 
