@@ -28,12 +28,25 @@ STORAGES = {
     },
 }
 
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
 if ENVIRONMENT == 'PROD':
     DEBUG = False
     SECRET_KEY = env_vars.get('SECRET_KEY')
     raw_allowed = env_vars.get('ALLOWED_HOSTS', '') or ''
     ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    
+    # Put the database in prod within the /home folder to persist across deployments
+    DATABASES['default']['NAME'] = '/home/site/wwwroot/db.sqlite3'
 
 else:
     DEBUG = True
@@ -84,16 +97,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'best_dressed.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 
 # Password validation
