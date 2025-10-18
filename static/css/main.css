@@ -26,7 +26,7 @@ p { margin-left: 20px; margin-right: 20px; }
 .hero-purple {
     /* dark neutral tone instead of purple */
   color: #fff;
-  padding: 5rem 0;             /* vertical space only */
+  padding: 5rem 0;             
   text-align: center;
 }
 
@@ -43,11 +43,10 @@ p { margin-left: 20px; margin-right: 20px; }
   margin-top: 2rem;
 }
 
-/* ---------------------- */
-/* BUTTONS (Bootstrap 5)  */
-/* ---------------------- */
 
-/* Filled purple (Sign up / Create account) */
+/* BUTTONS */
+
+/* Filled purple Create account */
 .btn.btn-primary{
   --bs-btn-bg: var(--bd-purple);
   --bs-btn-border-color: var(--bd-purple);
@@ -70,9 +69,6 @@ p { margin-left: 20px; margin-right: 20px; }
   border-width:2px;
 }
 
-/* ---------------------- */
-/* LAYOUT POLISH          */
-/* ---------------------- */
 
 section { padding-top: 4rem; padding-bottom: 4rem; }
 
@@ -154,13 +150,13 @@ img.rounded-4{
   border-color: var(--bd-purple)!important;
   color:#fff!important;
 }
-
+/*up or down tightness*/
 .navbar {
-  margin-top: -30px; /* tweak up or down depending on how tight you want it */
+  margin-top: -30px; 
 }
-
+/*adjust padding*/
 #features {
-  padding-left: 4rem;  /* adjust between 3rem–5rem until it lines up visually */
+  padding-left: 4rem; 
 }
 
 #features h2,

@@ -15,9 +15,9 @@ def index(request):
     else :
         return render(request, '../templates/index.html')
 
-@login_required(login_url='login')   # <- forces login first
+"""@login_required(login_url='login')   # <- forces login first
 def index_signed_in(request):
-    return render(request, 'index_signed_in.html')
+    return render(request, 'index_signed_in.html')"""
 
 def login(request):
     """
