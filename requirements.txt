@@ -1,6 +1,7 @@
 # Maintance tools
 pylint
 pytest
+coverage
 
 # Web
 django

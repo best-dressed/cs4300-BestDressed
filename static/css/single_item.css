@@ -1,0 +1,37 @@
+h1 {
+    text-align: center;
+}
+p {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+.header {
+    text-align: left;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    margin-left: 50px;
+}
+/* make list items of navbar white */
+.navbar-nav li a {
+    color: white;
+}
+.btn-primary {
+  background-color: #6D11E3; /* purple */
+  border-color: #6D11E3;
+}
+.btn-primary:hover {
+  background-color: #530EB5 !important; /* Slightly darker purple on hover */
+  border-color: #530EB5 !important;
+}
+.card-img-top {
+    width: 100%;
+    height: 13vw;
+    object-fit: cover;
+}

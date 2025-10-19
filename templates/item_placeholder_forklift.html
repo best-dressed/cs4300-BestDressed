@@ -1,0 +1,15 @@
+{% load static %}
+<ul class = "list-group">
+
+    <li class="list-group-item">
+        <h5>{{item.title}} T shirt</h5>
+        <a href = "#">
+            <img src = "{% static 'forkliftCert.png' %} " alt="Logo" class="img-fluid" style="max-height:200px">
+        </a>
+
+        <p>{{item.description}}</p>
+        <p>Description</p>
+        <a href = "{% url 'item' %}" class = " btn btn - primary bg-primary " >
+            Add to Outfit </a>
+    </li>
+</ul>
