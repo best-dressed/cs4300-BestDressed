@@ -1,6 +1,6 @@
 # Maintance tools
 pylint
 pytest
-
+Django==4.2.*
 # Web
 whitenoise==6.6.0
