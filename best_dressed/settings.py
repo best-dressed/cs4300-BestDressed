@@ -156,6 +156,7 @@ CSRF_TRUSTED_ORIGINS = [
     f"https://{os.getenv('CUSTOM_DOMAIN','')}".rstrip("."),
     'https://app-jcamargoenvironment-19.devedu.io',
     'https://app-michal-19.devedu.io',
+    'https://app-landerse-19.devedu.io'
 
 ]
 SESSION_COOKIE_SECURE = not DEBUG
