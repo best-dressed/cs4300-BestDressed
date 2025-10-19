@@ -1,6 +1,4 @@
-/* ---------------------- */
-/* EXISTING BASIC STYLES  */
-/* ---------------------- */
+
 h1 { text-align: center; }
 
 p { margin-left: 20px; margin-right: 20px; }
@@ -13,16 +11,14 @@ p { margin-left: 20px; margin-right: 20px; }
   text-align: left; margin-top: 20px; margin-bottom: 20px; margin-left: 20px;
 }
 
-/* ---------------------- */
-/* THEME                  */
-/* ---------------------- */
+
 :root{
   --bd-purple: #7b3fe4;
   --bd-purple-dark: #5c2bb2;
   --bd-light: #f9f7ff;
 }
 
-/* Hero: clean dark section, centered text (no purple background) */
+
 .hero-purple {
     /* dark neutral tone instead of purple */
   color: #fff;
@@ -93,7 +89,7 @@ img.rounded-4{
   box-shadow:0 6px 20px rgba(0,0,0,.15);
 }
 
-/* Responsive tweaks */
+/* Responsiveness */
 @media (max-width: 768px){
   .hero-purple img{ margin-top:1.5rem; }
 }
@@ -118,13 +114,13 @@ img.rounded-4{
   filter: drop-shadow(0 6px 10px rgba(123,63,228,0.5));
 }
 
-/* temporary color adjustment for the pants image */
+
 .wardrobe-item:nth-child(3) {
   filter: hue-rotate(15deg) saturate(1.2);
 }
 
 
-/* Navbar brand + links in purple accent */
+
 :root{
   --bd-purple:#7b3fe4;
   --bd-purple-dark:#5c2bb2;
@@ -137,7 +133,7 @@ img.rounded-4{
 
 .navbar-brand span { letter-spacing:.2px; }
 
-/* Keep your purple buttons consistent */
+
 .btn.btn-primary{
   --bs-btn-bg: var(--bd-purple);
   --bs-btn-border-color: var(--bd-purple);
