@@ -34,6 +34,3 @@ def signup(request):
     return render(request, 'signup.html')
 
 
-def item_listing(request):
-    items = Item.objects.all()
-    return render(request, 'item_listing.html', {'items': items})
