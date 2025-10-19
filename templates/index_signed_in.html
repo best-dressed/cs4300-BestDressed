@@ -1,0 +1,15 @@
+{% extends "main.html" %}
+{% block title %}Welcome Back{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="mb-4">Welcome back, {{ user.username }} </h1>
+
+  <p class="lead">You’re signed in! What would you like to do next?</p>
+
+  <div class="d-flex justify-content-center gap-3 mt-4">
+    <a href="/item_listing" class="btn btn-primary">View Item Listing</a>
+    <a href="{% url 'logout' %}" class="btn btn-outline-light">Logout</a>
+  </div>
+</div>
+{% endblock %}

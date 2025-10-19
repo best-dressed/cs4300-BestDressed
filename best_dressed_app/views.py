@@ -4,6 +4,8 @@ Django views for the Best Dressed application.
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
+from .models import Item
+from django.shortcuts import render
 
 def index(request):
     """
@@ -31,3 +33,7 @@ def signup(request):
     """
     return render(request, 'signup.html')
 
+
+def item_listing(request):
+    items = Item.objects.all()
+    return render(request, 'item_listing.html', {'items': items})
