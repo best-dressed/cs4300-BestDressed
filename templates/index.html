@@ -1,33 +1,84 @@
 {% extends "main.html" %}
-{% block title %} Best Dressed {% endblock %}
+{% load static %}
+
+{% block title %}Best Dressed — Discover, Build, Share{% endblock %}
+
 {% block content %}
 
-<div class="position-absolute top-50 start-50 translate-middle">
-  <div class="card">
-    <div class="d-grid gap-1">
+<header class="hero-purple d-flex align-items-center justify-content-center text-white text-center">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <h1 class="display-5 fw-bold mb-3">Build, Share, and Discover Outfits.</h1>
+        <p class="lead mb-4">
+          Your smart wardrobe with AI suggestions and a fashion community.
+        </p>
 
-      {% if user.is_authenticated %}
-        <form action="{% url 'logout' %}" method="post" class="d-grid gap-1">
-          {% csrf_token %}
-          <button type="submit" class="btn btn-danger btn-lg">Log Out</button>
-        </form>
-        <div class="card-body text-center">
-          Welcome back, <strong>{{ user.username }}</strong>!
+        <div class="d-flex flex-column flex-md-row justify-content-center align-items-center gap-3 mb-4">
+          <a class="btn btn-primary btn-lg px-5" href="{% url 'signup' %}">Create account</a>
+          <a class="btn btn-outline-light btn-lg px-5" href="{% url 'login' %}">Log In</a>
         </div>
-      {% else %}
-        <a href="{% url 'login' %}" type="button" class="btn btn-primary btn-lg">Log In</a>
-        <a href="{% url 'signup' %}" type="button" class="btn btn-primary btn-lg">Sign Up</a>
-      {% endif %}
+
+        <img class="img-fluid rounded-4 shadow-lg mt-4 mx-auto d-block"
+             
+             
+
+             <div class="wardrobe-preview text-center mt-4">
+              <img src="{% static 'img/Shirt.png' %}" alt="Purple shirt" class="wardrobe-item">
+              <img src="{% static 'img/hand bag.png' %}" alt="Purple pants" class="wardrobe-item">
+              <img src="{% static 'img/pants .png' %}" alt="Purple bag" class="wardrobe-item">
+              <img src="{% static 'img/dress.png' %}" alt="Purple dress" class="wardrobe-item">
+            </div>
 
 
-      <div class="card-body">
-        Best Dressed is an application to build and
-        share outfits, communicate with other users, and discover the
-        latest fashion trends.
       </div>
-
     </div>
   </div>
-</div>
 
+
+
+</header>
+
+
+<section id="features" class="py-5">
+  <div class="text-start mb-4">
+    <h2 class="fw-bold">Everything you need</h2>
+    <p class="text-muted">Simple tools that make styling fast and fun.</p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold">Smart Wardrobe</h5>
+            <p class="card-text">Save outfits & items, organize by event, and plan looks for the week.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold">AI Suggestions</h5>
+            <p class="card-text">Get event-appropriate recommendations and stylish alternatives.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4">
+          <div class="card-body p-4">
+            <h5 class="card-title fw-semibold">Community & Trends</h5>
+            <p class="card-text">Share looks, discuss trends, and discover new collections together.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+  </div>
+</section>
 {% endblock %}

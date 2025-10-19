@@ -1,16 +1,22 @@
 h1 {
     text-align: center;
 }
+
 p {
     text-align: center;
 }
+
+/* ---------------------- */
+/* EXISTING BASIC STYLES  */
+/* ---------------------- */
+h1 { text-align: center; }
+
+p { margin-left: 20px; margin-right: 20px; }
+
 .footer {
-    position: fixed;
-    left: 0;
-    bottom: 10px;
-    width: 100%;
-    text-align: center;
+  position: fixed; left: 0; bottom: 10px; width: 100%; text-align: center;
 }
+
 .header {
     text-align: left;
     margin-top: 50px;
@@ -34,3 +40,156 @@ p {
     height: 13vw;
     object-fit: cover;
 }
+
+/* ---------------------- */
+/* THEME                  */
+/* ---------------------- */
+:root{
+  --bd-purple: #7b3fe4;
+  --bd-purple-dark: #5c2bb2;
+  --bd-light: #f9f7ff;
+}
+
+/* Hero: clean dark section, centered text (no purple background) */
+.hero-purple {
+    /* dark neutral tone instead of purple */
+  color: #fff;
+  padding: 5rem 0;             
+  text-align: center;
+}
+
+.hero-purple h1 {
+  font-weight: 700;
+}
+
+.hero-purple .btn {
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
+}
+
+.hero-purple img {
+  margin-top: 2rem;
+}
+
+
+/* BUTTONS */
+
+/* Filled purple Create account */
+.btn.btn-primary{
+  --bs-btn-bg: var(--bd-purple);
+  --bs-btn-border-color: var(--bd-purple);
+  --bs-btn-hover-bg: var(--bd-purple-dark);
+  --bs-btn-hover-border-color: var(--bd-purple-dark);
+  --bs-btn-active-bg: var(--bd-purple-dark);
+  --bs-btn-active-border-color: var(--bd-purple-dark);
+  color:#fff !important;
+}
+
+/* Purple outline (Log In) */
+.btn.btn-outline-light{
+  --bs-btn-color: var(--bd-purple);
+  --bs-btn-border-color: var(--bd-purple);
+  --bs-btn-hover-bg: var(--bd-purple);
+  --bs-btn-hover-border-color: var(--bd-purple);
+  --bs-btn-hover-color:#fff;
+  --bs-btn-focus-shadow-rgb: 123,63,228; /* purple focus ring */
+  background:transparent !important;
+  border-width:2px;
+}
+
+
+section { padding-top: 4rem; padding-bottom: 4rem; }
+
+.card{
+  border-radius:1rem;
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.card:hover{
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.1);
+}
+
+#features h2{ color: var(--bd-purple); }
+#features p.text-muted{ color:#6c6b70; }
+
+.cta-btn{
+  font-size:1.1rem; padding:.75rem 2rem; border-radius:.75rem;
+}
+
+img.rounded-4{
+  border-radius:1rem !important;
+  box-shadow:0 6px 20px rgba(0,0,0,.15);
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px){
+  .hero-purple img{ margin-top:1.5rem; }
+}
+
+.wardrobe-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.wardrobe-item {
+  width: 90px;
+  height: auto;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+}
+
+.wardrobe-item:hover {
+  transform: translateY(-5px);
+  filter: drop-shadow(0 6px 10px rgba(123,63,228,0.5));
+}
+
+/* temporary color adjustment for the pants image */
+.wardrobe-item:nth-child(3) {
+  filter: hue-rotate(15deg) saturate(1.2);
+}
+
+
+/* Navbar brand + links in purple accent */
+:root{
+  --bd-purple:#7b3fe4;
+  --bd-purple-dark:#5c2bb2;
+}
+
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+  color: var(--bd-purple) !important;
+}
+
+.navbar-brand span { letter-spacing:.2px; }
+
+/* Keep your purple buttons consistent */
+.btn.btn-primary{
+  --bs-btn-bg: var(--bd-purple);
+  --bs-btn-border-color: var(--bd-purple);
+  --bs-btn-hover-bg: var(--bd-purple-dark);
+  --bs-btn-hover-border-color: var(--bd-purple-dark);
+  color:#fff!important;
+}
+.btn.btn-outline-light:hover{
+  background-color: var(--bd-purple)!important;
+  border-color: var(--bd-purple)!important;
+  color:#fff!important;
+}
+/*up or down tightness*/
+.navbar {
+  margin-top: -30px; 
+}
+/*adjust padding*/
+#features {
+  padding-left: 4rem; 
+}
+
+#features h2,
+#features p {
+  margin-left: 0;
+  padding-left: 0;
+}
+
