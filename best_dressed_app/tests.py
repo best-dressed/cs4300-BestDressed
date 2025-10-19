@@ -67,3 +67,47 @@ class ItemViewsTest(TestCase):
         response = self.client.get(url)
         self.assertIn("items", response.context)
         self.assertEqual(len(response.context["items"]), 2)
+
+
+# tests for landing page and after sign in page
+
+class LandingPageTests(TestCase):
+    # This test checks that when you go to the root URL Django correctly connects it to the index function.
+    def test_root_url_resolves_to_index_view(self):
+        match = resolve("/")
+        self.assertIs(match.func, views.index)
+
+    # This test makes sure that visitors who are not logged in see the normal public landing page aka index.html
+    # It also checks that the page loads successfully aka status 200
+    # and includes some expected text and buttons
+    def test_index_anonymous_uses_index_template_and_has_cta(self):
+        resp = self.client.get(reverse("index"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, "../templates/index.html")
+        self.assertContains(resp, "Build, Share, and Discover Outfits.")
+        self.assertContains(resp, "Create account")
+        self.assertContains(resp, "Log In")
+
+    # This test checks what happens when a user is in fact logged in
+    # It forces a login then verifies that the "signed-in version" of the landing page index_signed_in.html is displayed instead
+    def test_index_authenticated_uses_signed_in_template(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            username="michal", email="m@example.com", password="pw12345!"
+        )
+        self.client.force_login(user)
+        resp = self.client.get(reverse("index"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, "../templates/index_signed_in.html")
+
+
+class AuthRoutesExistTests(TestCase):
+    # This test makes sure that the login page route even exists and loads
+    def test_login_route_exists(self):
+        resp = self.client.get(reverse("login"))
+        self.assertEqual(resp.status_code, 200)
+
+    # This test does the same for the create account route. it just confirms that the page exists and responds with the 200 ok
+    def test_signup_route_exists(self):
+        resp = self.client.get(reverse("signup"))
+        self.assertEqual(resp.status_code, 200)
