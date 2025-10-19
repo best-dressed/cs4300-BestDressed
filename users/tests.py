@@ -6,8 +6,10 @@ from django.contrib.auth.models import User
 FOUND = 302
 OK = 200
 
+# The username and password for a test user, not used in production, only used during testing
 testusername = "testusername"
 testpassword = "testpassword123"
+othertestpassword = "testpassword123456"
 
 # This user should not be created. It is used to represent somebody that is not in the database
 fakeusername = "fakeuser"
@@ -25,6 +27,15 @@ def create_signup_request(username,password1,password2=None) :
 
 def create_login_request(username,password) :
     return {'username': username, 'password': password}
+
+def create_password_change_request(oldpassword,newpassword1,newpassword2=None) :
+    # Make newpassword two be newpassword1 by default
+    if newpassword2 == None :
+        newpassword2 = newpassword1
+
+    return {'oldpassword': oldpassword, 
+            'newpassword1': newpassword1,
+            'newpassword2': newpassword2}
 
 def create_user (username=testusername,password=testpassword) :
     return User.objects.create_user(username=testusername,password=testpassword)
@@ -146,6 +157,46 @@ class SignUpTest(TestCase) :
 
         
 
+class ChangePasswordTest(TestCase) : 
+    def setUp(self) :
+        # set the change urls
+        self.changeurl = reverse("password_change")
+        self.doneurl = reverse("password_change_done")
+    
+    def create_user_and_login(self):
+        # create a user 
+        self.user = create_user(testusername,testpassword) 
+        # log in as the user
+        self.client.login(username=testusername,password=testpassword)
+
+    def logout(self) :
+        """Logs the client out, used to test if the password changed"""
+        self.client.get(reverse('logout'))
+
+
+    def test_logged_in(self):
+        """This test is here to catch any problems with setup, it isn't directly related to the feature"""
+        create_user_and_login()
+        assertTrue(is_logged_in(self.client))
+    
+    def test_successful_change(self) : 
+        """Tests to see if password changes on successful password change"""
+        # login 
+        create_user_and_login()
+
+        # Change password
+        response = self.client.post(self.changeurl,
+                                    create_password_change_request(testpassword,othertestpassword))
+        # Make sure the password change worked
+        assertEqual(response.status_code,FOUND)
+
+        # See if we got redirected to password_change_done
+
+        # logout
+        self.logout()
+
+        # 
+            
 
 
 
