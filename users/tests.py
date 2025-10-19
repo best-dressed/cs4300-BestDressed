@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 # http redirect codes
 FOUND = 302
 OK = 200
+MOVED_PERMANENTLY = 301
 
 # The username and password for a test user, not used in production, only used during testing
 testusername = "testusername"
@@ -33,9 +34,9 @@ def create_password_change_request(oldpassword,newpassword1,newpassword2=None) :
     if newpassword2 == None :
         newpassword2 = newpassword1
 
-    return {'oldpassword': oldpassword, 
-            'newpassword1': newpassword1,
-            'newpassword2': newpassword2}
+    return {'old_password': oldpassword, 
+            'new_password1': newpassword1,
+            'new_password2': newpassword2}
 
 def create_user (username=testusername,password=testpassword) :
     return User.objects.create_user(username=testusername,password=testpassword)
@@ -167,7 +168,11 @@ class ChangePasswordTest(TestCase) :
         # create a user 
         self.user = create_user(testusername,testpassword) 
         # log in as the user
-        self.client.login(username=testusername,password=testpassword)
+        self.login()
+
+    def login(self,username=testusername,password=testpassword) :
+        return self.client.post(reverse('login'),create_login_request(username,password))
+
 
     def logout(self) :
         """Logs the client out, used to test if the password changed"""
@@ -176,30 +181,70 @@ class ChangePasswordTest(TestCase) :
 
     def test_logged_in(self):
         """This test is here to catch any problems with setup, it isn't directly related to the feature"""
-        create_user_and_login()
-        assertTrue(is_logged_in(self.client))
+        self.create_user_and_login()
+        self.assertTrue(is_logged_in(self.client))
     
     def test_successful_change(self) : 
         """Tests to see if password changes on successful password change"""
         # login 
-        create_user_and_login()
+        self.create_user_and_login()
 
         # Change password
         response = self.client.post(self.changeurl,
                                     create_password_change_request(testpassword,othertestpassword))
+        
         # Make sure the password change worked
-        assertEqual(response.status_code,FOUND)
+        self.assertEqual(response.status_code,FOUND)
+        
+        # check if users password changed
+        user = User.objects.get(username=testusername)
+        self.assertTrue(user.check_password(othertestpassword))
 
-        # See if we got redirected to password_change_done
-
-        # logout
+        # logout 
         self.logout()
 
-        # 
-            
+        # try logging in with old credentials, should fail to login
+        self.login(password=testpassword)
+        self.assertFalse(is_logged_in(self.client))
 
+        # Login with new credentials
+        self.login(password=othertestpassword)
+        self.assertTrue(is_logged_in(self.client))
 
+    def test_not_logged_in(self) :
+        """Check for redirect if we are not logged in"""
+        response = self.client.post(self.changeurl,
+                                    create_password_change_request(testpassword,othertestpassword))
+        self.assertEqual(response.status_code,FOUND)
+        # this returns a url that looks like 'login?something...' so we need to check if the thing is inside
+        # of it rather than equal, check if it is in the redirect chain
+        self.assertIn(reverse('login'), response['Location'])
+    
+    def test_wrong_password(self):
+        """This tests to make sure signup fails if the password is wrong"""
+        # login
+        self.create_user_and_login()
 
+        # Change password
+        response = self.client.post(self.changeurl,
+                                    create_password_change_request('foo1234',
+                                                                    othertestpassword))
+        
+        # Make sure the password change failed
+        self.assertEqual(response.status_code,OK)
+        # see if it printed the right message
+        self.assertContains(response,"Your old password was entered incorrectly. Please enter it again.")
+        
+        # check if users password changed
+        user = User.objects.get(username=testusername)
+        self.assertFalse(user.check_password(othertestpassword))
+
+        # logout 
+        self.logout()
+
+        # try logging in with old credentials, should succeed
+        self.login(password=testpassword)
+        self.assertTrue(is_logged_in(self.client))
         
 
         
