@@ -18,13 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from best_dressed_app import views
 
+
 urlpatterns = [
     path('', views.index, name="index"),
     # path('login/', views.login, name="login"),
     # path('signup/', views.signup, name="signup"),
-
     path("accounts/", include("users.urls")),
-
     path('admin/', admin.site.urls),
     path('item_listing/', views.item_listing, name="item_listing"),
     path('item/<int:pk>/', views.item_detail, name="item_detail"),
