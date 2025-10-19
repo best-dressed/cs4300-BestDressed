@@ -1,11 +1,8 @@
 # Maintance tools
 pylint
 pytest
-whitenoise
+coverage
 
 # Web
 django
-
-# tests
-coverage
-
+whitenoise

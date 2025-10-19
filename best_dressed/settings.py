@@ -12,20 +12,46 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
+env_vars = os.environ
+ENVIRONMENT = env_vars.get('ENVIRONMENT', 'DEV')
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+DEBUG = None
+SECRET_KEY = None
+ALLOWED_HOSTS = None
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
+# Database
+# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
 
-ALLOWED_HOSTS = ["*"]
+if ENVIRONMENT == 'PROD':
+    DEBUG = False
+    SECRET_KEY = env_vars.get('SECRET_KEY')
+    raw_allowed = env_vars.get('ALLOWED_HOSTS', '') or ''
+    ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()]
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    
+    # Put the database in prod within the /home folder to persist across deployments
+    DATABASES['default']['NAME'] = '/home/site/wwwroot/db.sqlite3'
+
+else:
+    DEBUG = True
+    SECRET_KEY = 'django-insecure-x)x=ioh8m5hl=^xkg0vnq)se+xoi^%yi4=tbm)i7z&g_3shm6x'
+    ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -71,16 +97,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'best_dressed.wsgi.application'
 
-
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
 
 
 # Password validation
@@ -152,13 +168,17 @@ SERVER_EMAIL = "no-reply@bestdressed.com"
 
 # Security for prod
 CSRF_TRUSTED_ORIGINS = [
-    f"https://{os.getenv('WEBSITE_HOSTNAME','')}".rstrip("."),
-    f"https://{os.getenv('CUSTOM_DOMAIN','')}".rstrip("."),
-    'https://app-jcamargoenvironment-19.devedu.io',
-    'https://app-michal-19.devedu.io',
-    'https://app-landerse-19.devedu.io'
-
 ]
+# Build CSRF_TRUSTED_ORIGINS from available environment values. Avoid
+# adding entries for empty env vars (which would become just 'https://').
+_website = os.getenv('WEBSITE_HOSTNAME', '').rstrip('.')
+_custom = os.getenv('CUSTOM_DOMAIN', '').rstrip('.')
+if _website:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_website}")
+if _custom:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{_custom}")
+# include any literal trusted origin the project needs
+CSRF_TRUSTED_ORIGINS.append('https://app-jcamargoenvironment-19.devedu.io')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG
