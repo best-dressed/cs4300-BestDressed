@@ -45,3 +45,6 @@ https://chatgpt.com/share/68f6b00c-47e4-8002-ab69-3866fbe790b3
 
 Michal
 =====
+I used AI more specifically chatGPT to help me design the landing page. It helped me a lot with Bootstrap and do some cooler stuff than what I knew was available. It also helped me generate images for the landing page, and include them on there. 
+I at first wanted to draw things out, but it was cool to see how chat was able to draw it for me and make it look a lot nicer and cohesive. I also used AI when I got stuck and didn't know why I was getting errors and blank pages. This was because I kept being on wrong branches and I realized where some of the work was stored as I kept working. Chat helped me realize why I had a blank page appear. It was logged in the entire time and there was no log out since I was in the wrong branch. Felt like a stupid mistake but this was my learning!
+https://chatgpt.com/g/g-p-68f2920e4c1c81919ff603467b10e2f2/c/68f2e763-5e5c-8330-b955-367799e92729 
