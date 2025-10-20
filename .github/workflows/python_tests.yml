@@ -17,6 +17,10 @@ jobs:
         run: |
             python -m pip install --upgrade pip
             pip install -r requirements.txt
+      - name: Build databases
+        run: |
+            python manage.py makemigrations
+            python manage.py migrate
       - name: Test with django
         run: |
             coverage run manage.py test
