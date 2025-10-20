@@ -68,6 +68,37 @@ class ItemViewsTest(TestCase):
         self.assertIn("items", response.context)
         self.assertEqual(len(response.context["items"]), 2)
 
+    # test the single item listing view
+    # using the first item primary key
+    def test_item_detail_view_status_code(self):
+        """View should return 200 OK"""
+        item = Item.objects.create(
+            title="Pants",
+            description="One for each leg",
+            image_url = "https://ashallendesign.co.uk/images/custom/short-url-logo.png"
+        )
+        pk = item.pk
+        url = reverse("item_detail", kwargs={"pk": pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_item_detail_view_displays_item(self):
+        """View should return 200 OK"""
+        item = Item.objects.create(
+            title="Pants",
+            description="One for each leg",
+            image_url = "https://ashallendesign.co.uk/images/custom/short-url-logo.png"
+        )
+        pk = item.pk
+        url = reverse("item_detail", kwargs={"pk": pk})
+        response = self.client.get(url)
+        self.assertContains(response, "Pants")
+        self.assertContains(response, "for each leg")
+        self.assertContains(response, "https://ashallendesign.co.uk/images/custom/short-url-logo.png")
+        # there should also be the other item we created in recommendations
+        self.assertContains(response, "thrilling")
+        self.assertContains(response, "T shirt")
+
 
 # tests for landing page and after sign in page
 
