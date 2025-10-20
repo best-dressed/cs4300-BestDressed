@@ -27,11 +27,19 @@ https://copilot.microsoft.com/shares/KPd9ZttpnpTqceqrha9Fy
 
 John
 ====
+Bootstrap Template:
+https://getbootstrap.com/docs/5.3/examples/sign-in/
+
+I utilized ChatGPT to generate logout, password reset, and other html (files) for user handling scenarios:
+https://chatgpt.com/share/68f6aa3f-ef90-8011-9293-010f35fa2064
+
 
 
 
 Robin
 =====
+
+
 
 Michal
 =====
