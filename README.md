@@ -38,7 +38,9 @@ https://chatgpt.com/share/68f6aa3f-ef90-8011-9293-010f35fa2064
 
 Robin
 =====
-
+I used ChatGPT to assist with debugging Github Actions:
+https://chatgpt.com/share/68f6aff1-e7a4-8002-add7-547b7f660e4d
+https://chatgpt.com/share/68f6b00c-47e4-8002-ab69-3866fbe790b3
 
 
 Michal
