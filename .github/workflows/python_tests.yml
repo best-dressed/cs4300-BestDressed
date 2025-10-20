@@ -1,4 +1,4 @@
-name: Python package
+name: Python Tests + Linting
 
 on: [push, pull_request]
 
@@ -19,4 +19,8 @@ jobs:
             pip install -r requirements.txt
       - name: Test with pytest
         run: |
-            pytest --cov=.
+            pytest best_dressed_app/tests.py --cov=best_dressed_app
+      - name: Analysing the code with pylint
+        run: |
+            pylint best_dressed/. || true
+            pylint best_dressed_app/. || true
