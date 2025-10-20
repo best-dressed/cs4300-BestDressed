@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from .models import *
-from django.urls import reverse
+from django.urls import reverse, resolve
+from django.contrib.auth import get_user_model
+from best_dressed_app import views
 # Create your tests here.
 
 # test item model creation
