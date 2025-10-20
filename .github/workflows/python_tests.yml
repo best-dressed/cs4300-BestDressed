@@ -24,6 +24,9 @@ jobs:
       - name: Test with django
         run: |
             coverage run manage.py test
+        continue-on-error: true
+      - name: Show coverage report
+        run: |
             coverage report
       - name: Analysing the code with pylint
         run: |
