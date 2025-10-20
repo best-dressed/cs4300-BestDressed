@@ -19,7 +19,7 @@ jobs:
             pip install -r requirements.txt
       - name: Test with django
         run: |
-            coverage manage.py test 
+            coverage run manage.py test
       - name: Analysing the code with pylint
         run: |
             pylint best_dressed/. || true
