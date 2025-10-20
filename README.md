@@ -8,5 +8,11 @@ We've used AI in several places cited below.
 Item listing tests generation and url construction:
 https://chatgpt.com/share/68f6a6e7-e660-8004-828b-eea76ccd11d4 
 
-Instance 2: 
+We used AI to fix some tests, specifically I asked the AI for help on debugging the tests.
+https://copilot.microsoft.com/shares/6LuZoDnqNkkzYf6aVXArj
 
+I used microsoft copilot to ask it questions about static files, and with help writing test cases. I didn't copy paste the test cases and wrote most of them myself but I asked it questions when I ran into problems.
+https://copilot.microsoft.com/shares/syZjsJJfkmrpWfn2wtq4E
+
+I used microsoft copilot to help troubleshoot an error related to wsgi.py
+https://copilot.microsoft.com/shares/KPd9ZttpnpTqceqrha9Fy
