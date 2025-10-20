@@ -40,6 +40,13 @@ jobs:
           path: |
             .
             !antenv/
+      
+      # Apply Database Migrations
+      - name: Apply Database Migrations
+        run: |
+          source antenv/bin/activate
+          python manage.py makemigrations
+          python manage.py migrate
 
       # 🚫 Opting Out of Oryx Build
       # If you prefer to disable the Oryx build process during deployment, follow these steps:

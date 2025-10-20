@@ -3,10 +3,8 @@ pylint
 pytest
 pytest-cov
 whitenoise
+coverage
 
 # Web
 django
-
-# tests
-coverage
-
+whitenoise
