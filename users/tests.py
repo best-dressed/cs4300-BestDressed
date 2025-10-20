@@ -56,7 +56,7 @@ class LogoutTest(TestCase):
         self.assertTrue(is_logged_in(self.client))
 
         # log out
-        response = self.client.get(reverse('logout'))
+        response = self.client.post(reverse('logout'))
 
         # Check if user is logged out after logout
         self.assertFalse(is_logged_in(self.client))
@@ -176,7 +176,7 @@ class ChangePasswordTest(TestCase) :
 
     def logout(self) :
         """Logs the client out, used to test if the password changed"""
-        self.client.get(reverse('logout'))
+        self.client.post(reverse('logout'))
 
 
     def test_logged_in(self):
