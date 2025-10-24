@@ -1,0 +1,33 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %} Item Listing {% endblock title %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/single_item.css' %}" type="text/css">
+<!-- primary item -->
+<section class="py-5">
+
+  <div class="text-center">
+    <form method="POST">
+      {% csrf_token %}
+      <div class="form-group">
+        <label>Title </label>
+        {{ form.title }}
+      </div>
+      <div class="form-group">
+        <label>Description </label>
+        {{ form.description }}
+      </div>
+      <div class="form-group">
+        <label>Image URL</label>
+        {{ form.image_url }}
+      </div>
+      <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+    <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
+      Back to item listing </a>
+  </div>
+
+</section>
+
+{% endblock content %}

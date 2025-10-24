@@ -18,6 +18,11 @@ p {
     margin-bottom: 50px;
     margin-left: 50px;
 }
+
+img {
+  max-width: 800px;
+  max-height: 800px;
+}
 /* make list items of navbar white */
 .navbar-nav li a {
     color: white;

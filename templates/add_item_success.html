@@ -1,0 +1,44 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %} Item Listing {% endblock title %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/single_item.css' %}" type="text/css">
+<!-- primary item -->
+<section class="py-5">
+  <h1>Item Added!</h1>
+  <div class="text-center">
+    <a href = "{% url 'add_item' %}" class = "btn btn-primary">
+      Add another?</a>
+  </div>
+
+  <div class="container px-4 px-lg-5 mt-5">
+    <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+      <div class="col mb-5">
+        <div class="card h-100 ">
+          <!-- Product image-->
+          <a href = "{{ item.get_absolute_url }}">
+            <img class="card-img-top " src ="{{item.image_url}}" alt="Logo"></img>
+          </a>
+          <!-- Product details-->
+          <div class="card-body p-4">
+            <div class="text-center">
+              <!-- Product name-->
+              <h5 class="fw-bolder">{{item.title}}</h5>
+              <p>{{item.description}} </p>
+              <a href = "#" class = "btn btn-primary" >
+                Add to Outfit </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="text-center">
+    <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
+      Back to item listing </a>
+
+  </div>
+</section>
+
+{% endblock content %}

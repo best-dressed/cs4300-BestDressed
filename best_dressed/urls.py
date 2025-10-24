@@ -27,4 +27,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('item_listing/', views.item_listing, name="item_listing"),
     path('item/<int:pk>/', views.item_detail, name="item_detail"),
+    path('add_item/', views.add_item, name="add_item"),
+    path('add_item/success/<int:pk>/', views.add_item_success, name="add_item_success"),
 ]
