@@ -1,6 +1,8 @@
 # Maintance tools
 pylint
 pytest
+pytest-cov
+whitenoise
 coverage
 
 # Web

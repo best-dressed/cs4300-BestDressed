@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from .models import *
-from django.urls import reverse
+from django.urls import reverse, resolve
+from django.contrib.auth import get_user_model
+from best_dressed_app import views
 # Create your tests here.
 
 # test item model creation
@@ -67,3 +69,78 @@ class ItemViewsTest(TestCase):
         response = self.client.get(url)
         self.assertIn("items", response.context)
         self.assertEqual(len(response.context["items"]), 2)
+
+    # test the single item listing view
+    # using the first item primary key
+    def test_item_detail_view_status_code(self):
+        """View should return 200 OK"""
+        item = Item.objects.create(
+            title="Pants",
+            description="One for each leg",
+            image_url = "https://ashallendesign.co.uk/images/custom/short-url-logo.png"
+        )
+        pk = item.pk
+        url = reverse("item_detail", kwargs={"pk": pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+    def test_item_detail_view_displays_item(self):
+        """View should return 200 OK"""
+        item = Item.objects.create(
+            title="Pants",
+            description="One for each leg",
+            image_url = "https://ashallendesign.co.uk/images/custom/short-url-logo.png"
+        )
+        pk = item.pk
+        url = reverse("item_detail", kwargs={"pk": pk})
+        response = self.client.get(url)
+        self.assertContains(response, "Pants")
+        self.assertContains(response, "for each leg")
+        self.assertContains(response, "https://ashallendesign.co.uk/images/custom/short-url-logo.png")
+        # there should also be the other item we created in recommendations
+        self.assertContains(response, "thrilling")
+        self.assertContains(response, "T shirt")
+
+
+# tests for landing page and after sign in page
+
+class LandingPageTests(TestCase):
+    # This test checks that when you go to the root URL Django correctly connects it to the index function.
+    def test_root_url_resolves_to_index_view(self):
+        match = resolve("/")
+        self.assertIs(match.func, views.index)
+
+    # This test makes sure that visitors who are not logged in see the normal public landing page aka index.html
+    # It also checks that the page loads successfully aka status 200
+    # and includes some expected text and buttons
+    def test_index_anonymous_uses_index_template_and_has_cta(self):
+        resp = self.client.get(reverse("index"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, "../templates/index.html")
+        self.assertContains(resp, "Build, Share, and Discover Outfits.")
+        self.assertContains(resp, "Create account")
+        self.assertContains(resp, "Log In")
+
+    # This test checks what happens when a user is in fact logged in
+    # It forces a login then verifies that the "signed-in version" of the landing page index_signed_in.html is displayed instead
+    def test_index_authenticated_uses_signed_in_template(self):
+        User = get_user_model()
+        user = User.objects.create_user(
+            username="michal", email="m@example.com", password="pw12345!"
+        )
+        self.client.force_login(user)
+        resp = self.client.get(reverse("index"))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, "../templates/index_signed_in.html")
+
+
+class AuthRoutesExistTests(TestCase):
+    # This test makes sure that the login page route even exists and loads
+    def test_login_route_exists(self):
+        resp = self.client.get(reverse("login"))
+        self.assertEqual(resp.status_code, 200)
+
+    # This test does the same for the create account route. it just confirms that the page exists and responds with the 200 ok
+    def test_signup_route_exists(self):
+        resp = self.client.get(reverse("signup"))
+        self.assertEqual(resp.status_code, 200)
