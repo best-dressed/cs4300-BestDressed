@@ -6,7 +6,7 @@ from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from .models import Item
 from django.contrib.auth.decorators import login_required
-from .models import Item
+from .models import Item, UserProfile
 from django.shortcuts import render
 
 def index(request):
@@ -52,3 +52,21 @@ def item_detail(request, pk):
     }
     return render(request, "item_detail.html", context)
 
+@login_required
+def dashboard(request):
+    """
+    User dashboard - central hub for accessing all user features
+    """
+    user = request.user
+    
+    # get or create user profile
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    
+    # temporary counts
+    context = {
+        'wardrobe_count': 1,
+        'outfit_count': 2,
+        'recommendation_count': 3,
+    }
+    
+    return render(request, 'dashboard.html', context)
