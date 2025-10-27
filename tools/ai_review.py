@@ -163,7 +163,7 @@ def main():
     OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
     REPO_FULL_NAME = os.environ.get("REPO_FULL_NAME")
     PR_NUMBER = int(os.environ.get("PR_NUMBER"))
-    MODEL = os.environ.get("OPENAI_MODEL")
+    MODEL = os.environ.get("MODEL")
 
     openai_client = create_openai_client(OPENAI_API_KEY)
     diff = get_pull_request_diff(GITHUB_TOKEN, REPO_FULL_NAME, PR_NUMBER)

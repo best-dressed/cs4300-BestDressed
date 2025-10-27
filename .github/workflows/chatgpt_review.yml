@@ -34,4 +34,4 @@ jobs:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           REPO_FULL_NAME: ${{ github.event.repository.full_name }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          MODEL: "gpt-4o"
+          MODEL: "gpt-5-nano"
