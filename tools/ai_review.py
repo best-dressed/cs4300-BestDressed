@@ -101,6 +101,25 @@ def post_pull_request_comment(token: str, repo_full_name: str, pr_number: int, c
     except Exception as e:
         raise RuntimeError(f"Failed to post comment: {e}") from e
 
+def prompt_ai(prompt: str, client: openai.OpenAI, model: str) -> str:
+    """
+    Send a prompt to the OpenAI API and return the response text.
+
+    Args:
+        prompt: The prompt text to send to the AI.
+        client: The OpenAI client to use for the request.
+
+    Returns:
+        The response text from the AI.
+    """
+    response = client.chat.completions.create(
+        model=model,
+        messages=[
+            {"role": "user", "content": prompt}
+        ]
+    )
+    return response.choices[0].message.content.strip()
+
 def generate_ai_review(openai_client, diff: str, model: str = "gpt-4") -> str:
     """
     Generate an AI review of the given pull request diff using the specified model.
@@ -119,18 +138,22 @@ def generate_ai_review(openai_client, diff: str, model: str = "gpt-4") -> str:
     if not diff:
         raise ValueError("Diff text must be provided")
 
-    prompt = f"Please review the following pull request diff and provide feedback:\n\n{diff}\n\nReview:"
+    # Include the system instruction in the prompt since prompt_ai sends a single user message.
+    prompt = (
+        "You are an expert code reviewer. Please provide a thorough review of the following pull request diff. "
+        "Provide your feedback in this format:\n"
+        "- Summary of changes\n"
+        "- Key issues found\n"
+        "- Security considerations\n"
+        "- Performance implications\n"
+        "- Usability concerns\n"
+        "- Compatibility issues\n"
+        "Provide potential fixes or improvements where applicable. Potential fixes and improvements will include code snippets and examples.\n\n"
+        f"Pull Request Diff:\n{diff}"
+    )
+
     try:
-        response = openai_client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "You are a helpful code reviewer."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=1500,
-            temperature=0.2,
-        )
-        return response.choices[0].message.content.strip()
+        return prompt_ai(prompt, openai_client, model)
     except Exception as e:
         raise RuntimeError(f"OpenAI API error generating review: {e}") from e
 
@@ -141,6 +164,7 @@ def main():
     REPO_FULL_NAME = os.environ.get("REPO_FULL_NAME")
     PR_NUMBER = int(os.environ.get("PR_NUMBER"))
     MODEL = os.environ.get("OPENAI_MODEL")
+
     openai_client = create_openai_client(OPENAI_API_KEY)
     diff = get_pull_request_diff(GITHUB_TOKEN, REPO_FULL_NAME, PR_NUMBER)
     review = generate_ai_review(openai_client, diff, MODEL)
