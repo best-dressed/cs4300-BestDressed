@@ -142,7 +142,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 # Auth: redirects after login/logout
-LOGIN_REDIRECT_URL = "index"
+LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "index"
 LOGIN_URL = "login"
 
