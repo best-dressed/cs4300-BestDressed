@@ -27,6 +27,7 @@ jobs:
           pip install -r requirements.txt
       - name: GenAI Code Review
         run: |
+          source venv/bin/activate
           python tools/ai_review.py
         env:
           GITHUB_TOKEN: ${{ github.token }}
