@@ -72,3 +72,22 @@ def dashboard(request):
     }
     
     return render(request, 'dashboard.html', context)
+
+@login_required
+def account_settings(request):
+    """
+    View and edit account settings
+    """
+    user = request.user
+    
+    # get or create user profile, retrieves database record; if it doesnt exist, create it
+    # profile: UserProfile object
+    # created: boolean for if object was just created (True) or if it already exists (False)
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    
+    # python dictionary that passes data from Python (Django view) to the HTML template
+    context = {
+        'profile': profile,
+    }
+    
+    return render(request, 'account_settings.html', context)

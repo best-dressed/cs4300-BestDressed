@@ -28,6 +28,7 @@ urlpatterns = [
 
     # dashboard and user features
     path('dashboard/', views.dashboard, name="dashboard"),
+    path('account/', views.account_settings, name="account_settings"),
 
     # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
