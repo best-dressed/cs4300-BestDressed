@@ -59,10 +59,12 @@ def dashboard(request):
     """
     user = request.user
     
-    # get or create user profile
+    # get or create user profile, retrieves database record; if it doesnt exist, create it
+    # profile: UserProfile object
+    # created: boolean for if object was just created (True) or if it already exists (False)
     profile, created = UserProfile.objects.get_or_create(user=user)
     
-    # temporary counts
+    # python dictionary that passes data from Python (Django view) to the HTML template
     context = {
         'wardrobe_count': 1,
         'outfit_count': 2,
