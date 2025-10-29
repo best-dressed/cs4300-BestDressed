@@ -19,16 +19,11 @@
           <a class="btn btn-outline-light btn-lg px-5" href="{% url 'login' %}">Log In</a>
         </div>
 
-        <img class="img-fluid rounded-4 shadow-lg mt-4 mx-auto d-block"
+        
              
              
 
-             <div class="wardrobe-preview text-center mt-4">
-              <img src="{% static 'img/Shirt.png' %}" alt="Purple shirt" class="wardrobe-item">
-              <img src="{% static 'img/hand bag.png' %}" alt="Purple pants" class="wardrobe-item">
-              <img src="{% static 'img/pants .png' %}" alt="Purple bag" class="wardrobe-item">
-              <img src="{% static 'img/dress.png' %}" alt="Purple dress" class="wardrobe-item">
-            </div>
+             
 
 
       </div>
@@ -39,6 +34,51 @@
 
 </header>
 
+
+
+<!-- Closet Marquee Section -->
+<div class="closet-marquee container-lg">
+  <!-- Row A (left → right) -->
+  <div class="rail rail-a">
+    <ul class="rack">
+      <li><img src="{% static 'img/closet/jacket.png' %}" alt="Jacket"></li>
+      <li><img src="{% static 'img/closet/dress.png' %}"  alt="Dress"></li>
+      <li><img src="{% static 'img/closet/blouse.png' %}" alt="Blouse"></li>
+      <li><img src="{% static 'img/closet/coat.png' %}"   alt="Coat"></li>
+      <li><img src="{% static 'img/closet/jeans.png' %}"  alt="Jeans"></li>
+      <li><img src="{% static 'img/closet/skirt.png' %}"  alt="Skirt"></li>
+    </ul>
+    <ul class="rack" aria-hidden="true">
+      <li><img src="{% static 'img/closet/jacket.png' %}" alt=""></li>
+      <li><img src="{% static 'img/closet/dress.png' %}"  alt=""></li>
+      <li><img src="{% static 'img/closet/blouse.png' %}" alt=""></li>
+      <li><img src="{% static 'img/closet/coat.png' %}"   alt=""></li>
+      <li><img src="{% static 'img/closet/jeans.png' %}"  alt=""></li>
+      <li><img src="{% static 'img/closet/skirt.png' %}"  alt=""></li>
+    </ul>
+  </div>
+
+  <!-- Row B (right → left) -->
+  <div class="rail rail-b">
+    <ul class="rack">
+      <li><img src="{% static 'img/closet/cardigan.png' %}" alt="Cardigan"></li>
+      <li><img src="{% static 'img/closet/tote.png' %}"      alt="Bag"></li>
+      <li><img src="{% static 'img/closet/heels.png' %}"     alt="Heels"></li>
+      <li><img src="{% static 'img/closet/hoodie.png' %}"    alt="Hoodie"></li>
+      <li><img src="{% static 'img/closet/tee.png' %}"       alt="T-shirt"></li>
+      <li><img src="{% static 'img/closet/coat.png' %}"      alt="Coat"></li>
+    </ul>
+    <ul class="rack" aria-hidden="true">
+      <li><img src="{% static 'img/closet/cardigan.png' %}" alt=""></li>
+      <li><img src="{% static 'img/closet/tote.png' %}"      alt=""></li>
+      <li><img src="{% static 'img/closet/heels.png' %}"     alt=""></li>
+      <li><img src="{% static 'img/closet/hoodie.png' %}"    alt=""></li>
+      <li><img src="{% static 'img/closet/tee.png' %}"       alt=""></li>
+      <li><img src="{% static 'img/closet/coat.png' %}"      alt=""></li>
+    </ul>
+  </div>
+</div>
+<!-- end Closet Marquee -->
 
 <section id="features" class="py-5">
   <div class="text-start mb-4">
