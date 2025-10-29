@@ -8,6 +8,7 @@ from .models import Item
 from django.contrib.auth.decorators import login_required
 from .models import Item, UserProfile
 from django.shortcuts import render
+from .forms import UserProfileForm
 
 def index(request):
     """
@@ -88,6 +89,51 @@ def account_settings(request):
     # python dictionary that passes data from Python (Django view) to the HTML template
     context = {
         'profile': profile,
+    }
+    
+    return render(request, 'account_settings.html', context)
+
+@login_required
+def account_settings(request):
+    """
+    View and edit account settings.
+    
+    This view handles both displaying the form (GET request)
+    and processing form submissions (POST request).
+    """
+    user = request.user
+    
+    # get or create user profile, retrieves database record; if it doesnt exist, create it
+    # profile: UserProfile object
+    # created: boolean for if object was just created (True) or if it already exists (False)    
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    
+    # check if this is a form submission (POST) or just viewing the page (GET)
+    if request.method == 'POST':
+        # user submitted the form - process it
+        form = UserProfileForm(request.POST, instance=profile)
+        
+        # validate the form data
+        if form.is_valid():
+            # save the changes to the database
+            form.save()
+            
+            # add a success message (display in template)
+            from django.contrib import messages
+            messages.success(request, 'Your profile has been updated successfully!')
+            
+            # redirect back to account settings (prevents duplicate submissions)
+            from django.shortcuts import redirect
+            return redirect('account_settings')
+    else:
+        # user is just viewing the page - show form with current data
+        form = UserProfileForm(instance=profile)
+    
+    # python dictionary that passes data from Python (Django view) to the HTML template
+    context = {
+        'profile': profile,
+        # pass the form to the template
+        'form': form,
     }
     
     return render(request, 'account_settings.html', context)
