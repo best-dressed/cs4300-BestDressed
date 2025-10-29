@@ -227,32 +227,26 @@ padding-left: 0;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-/* Opposite movement directions */
-.rail-a {
-  animation: scroll-left 28s linear infinite;
-}
+/* same duration for both rails so they pause in sync */
+.rail-a { animation: scroll-left 40s linear infinite; }
+.rail-b { animation: scroll-right 40s linear infinite; }
 
-.rail-b {
-  animation: scroll-right 32s linear infinite;
-}
-
-/* Keyframes for seamless looping */
 @keyframes scroll-left {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+  0%   { transform: translateX(0); }        /* start aligned */
+  40%  { transform: translateX(-50%); }     /* move */
+  45%  { transform: translateX(-50%); }     /* PAUSE (~1.2s) */
+  90%  { transform: translateX(0); }        /* move back */
+  95%  { transform: translateX(0); }        /* PAUSE (~1.2s) */
+  100% { transform: translateX(0); }
 }
 
 @keyframes scroll-right {
-  from {
-    transform: translateX(-50%);
-  }
-  to {
-    transform: translateX(0);
-  }
+  0%   { transform: translateX(-50%); }     /* start aligned (other seam) */
+  40%  { transform: translateX(0); }        /* move */
+  45%  { transform: translateX(0); }        /* PAUSE (~1.2s) */
+  90%  { transform: translateX(-50%); }     /* move back */
+  95%  { transform: translateX(-50%); }     /* PAUSE (~1.2s) */
+  100% { transform: translateX(-50%); }
 }
 
 /* Accessibility: disable animation if user prefers reduced motion */
