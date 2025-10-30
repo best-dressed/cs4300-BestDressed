@@ -2,12 +2,12 @@
 Django views for the Best Dressed application.
 """
 
-from django.shortcuts import render
-from django.shortcuts import get_object_or_404
-from .models import Item
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Item, UserProfile, WardrobeItem
 from django.contrib.auth.decorators import login_required
-from .models import Item, UserProfile
-from django.shortcuts import render
+from django.contrib import messages
+# IntegrityError: exception raised when database constraints are violated
+from django.db import IntegrityError
 from .forms import UserProfileForm
 
 def index(request):
@@ -40,16 +40,40 @@ def item_listing(request):
     items = Item.objects.all()
     return render(request, "item_listing.html", {'items': items})
 
+# # for a particular item view
+# def item_detail(request, pk):
+#     item = get_object_or_404(Item, pk=pk)
+#     # related items list, exclude the item we are primarily viewing
+#     items = Item.objects.exclude(pk=pk)
+
+#     context = {
+#         "item": item,
+#         "items": items
+
+#     }
+#     return render(request, "item_detail.html", context)
+
 # for a particular item view
 def item_detail(request, pk):
+    # get/fetch the item (if it exists)
     item = get_object_or_404(Item, pk=pk)
+    
+    # check if user has already saved this item
+    already_saved = False
+    if request.user.is_authenticated:
+        already_saved = WardrobeItem.objects.filter(
+            # get current (logged in) user
+            user=request.user,
+            catalog_item=item
+        ).exists()
+    
     # related items list, exclude the item we are primarily viewing
     items = Item.objects.exclude(pk=pk)
 
     context = {
         "item": item,
-        "items": items
-
+        "items": items,
+        "already_saved": already_saved,
     }
     return render(request, "item_detail.html", context)
 
@@ -118,3 +142,60 @@ def account_settings(request):
     }
     
     return render(request, 'account_settings.html', context)
+
+@login_required
+def save_to_wardrobe(request, item_pk):
+    """
+    Save a catalog item (from the item listing page) to the user's wardrobe.
+    
+    This view handles POST requests to add items from the catalog
+    to a user's personal wardrobe. It prevents duplicate saves
+    and provides appropriate feedback messages.
+    
+    Args:
+        request: The HTTP request object
+        item_pk: Primary key of the Item to save
+    """
+    
+    # Get the catalog item or return 404 if it doesn't exist
+    # This is safer than Item.objects.get() which would raise an exception
+    catalog_item = get_object_or_404(Item, pk=item_pk)
+    
+    # Only allow POST requests (security best practice)
+    # Prevents accidental saves from just visiting a URL
+    if request.method != 'POST':
+        messages.error(request, 'Invalid request method.')
+        return redirect('item_detail', pk=item_pk)
+    
+    # using try/except:
+    # - guarantees no dupes (or race conditions)
+    # - allows for less code and fewer db queries
+    try:
+        # Try to create a new wardrobe item
+        # If it already exists (violates unique_together), this will raise IntegrityError
+        wardrobe_item = WardrobeItem.objects.create(
+            user=request.user,
+            title=catalog_item.title,
+            description=catalog_item.description,
+            image_url=catalog_item.image_url,
+            category='other',  # Default category, user can change later
+            catalog_item=catalog_item
+        )
+        
+        # show a success message
+        messages.success(
+            request, 
+            f'"{catalog_item.title}" has been added to your wardrobe!'
+        )
+        
+    except IntegrityError:
+        # Item already exists in wardrobe (unique_together constraint violated)
+        # This is not really an error, just inform the user
+        messages.info(
+            request,
+            f'"{catalog_item.title}" is already in your wardrobe.'
+        )
+    
+    # Redirect back to the item detail page
+    # Using redirect prevents form resubmission if user refreshes the page
+    return redirect('item_detail', pk=item_pk)

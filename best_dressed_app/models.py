@@ -30,7 +30,7 @@ class UserProfile(models.Model):
         return f"{self.user.username}'s Profile"
 
 
-# Items saved by a user to their wardrobe
+# items saved by a user to their wardrobe
 class WardrobeItem(models.Model):
     """
     Represents an item in a user's personal wardrobe.
@@ -40,7 +40,7 @@ class WardrobeItem(models.Model):
     reference a catalog item if it was saved from there.
     """
     
-    # Category choices - predefined options for organizing items
+    # category choices - predefined options for organizing items
     CATEGORY_CHOICES = [
         ('top', 'Top'),
         ('bottom', 'Bottom'),
@@ -51,22 +51,22 @@ class WardrobeItem(models.Model):
         ('other', 'Other'),
     ]
     
-    # Foreign Key: Links this wardrobe item to a specific user
+    # Foreign Key: links this wardrobe item to a specific user
     # on_delete=models.CASCADE means: if user is deleted, delete their wardrobe items too
     # related_name='wardrobe_items' lets us access items via user.wardrobe_items.all()
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wardrobe_items')
     
-    # Basic item information
+    # basic item information
     title = models.CharField(max_length=200)
     description = models.TextField(max_length=1000, blank=True)
     
-    # Category with predefined choices (dropdown in forms)
+    # category with predefined choices (dropdown in forms)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
     
-    # Image URL for the item
+    # image URL for the item
     image_url = models.URLField(max_length=2000, blank=True)
     
-    # Optional link to the original catalog item (if saved from catalog)
+    # optional link to the original catalog item (if saved from catalog)
     # on_delete=models.SET_NULL means: if catalog item is deleted, keep wardrobe item but remove the link
     # null=True, blank=True makes this field optional
     catalog_item = models.ForeignKey(
@@ -77,23 +77,23 @@ class WardrobeItem(models.Model):
         related_name='saved_by_users'
     )
     
-    # Additional optional fields for organization
+    # additional optional fields for organization
     color = models.CharField(max_length=100, blank=True)
     brand = models.CharField(max_length=100, blank=True)
     season = models.CharField(max_length=50, blank=True, help_text="e.g., summer, winter, all-season")
     
-    # Automatic timestamps
+    # automatic timestamps
     # auto_now_add=True sets the time when object is first created (never changes)
     # auto_now=True updates the time every time the object is saved
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
-        # Default ordering: newest items first
+        # default ordering: newest items first
         ordering = ['-created_at']
         
-        # Prevent duplicate saves: user can't save the same catalog item twice
-        # This creates a database constraint
+        # prevent duplicate saves: user can't save the same catalog item twice
+        # this creates a database constraint
         unique_together = [['user', 'catalog_item']]
     
     def __str__(self):
