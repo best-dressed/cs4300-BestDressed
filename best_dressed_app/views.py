@@ -8,6 +8,9 @@ from .models import Item
 from django.contrib.auth.decorators import login_required
 from .models import Item, UserProfile
 from django.shortcuts import render
+from .recommendation import generate_recommendations
+from django.http import JsonResponse
+import threading
 
 def index(request):
     """
@@ -72,3 +75,53 @@ def dashboard(request):
     }
     
     return render(request, 'dashboard.html', context)
+
+@login_required
+def recommendations(request):
+    """
+    View to display the recommendations page.
+    The page loads immediately with a loading indicator,
+    then JavaScript fetches the actual recommendations via AJAX.
+    """
+    context = {
+        'loading': True,
+    }
+    return render(request, 'recommendations.html', context)
+
+@login_required
+def generate_recommendations_ajax(request):
+    """
+    AJAX endpoint to generate AI-based clothing recommendations.
+    
+    Process:
+    1. Fetch user profile and available items
+    2. Generate AI recommendations
+    3. Return JSON response with recommendations
+    """
+    user = request.user
+    
+    try:
+        # Get user profile and available items
+        available_items = Item.objects.all()
+        user_profile = UserProfile.objects.get(user=user)
+        
+        # Generate AI recommendations
+        ai_recommendations = generate_recommendations(available_items, user_profile)
+        
+        return JsonResponse({
+            'success': True,
+            'recommendations': ai_recommendations
+        })
+    
+    except UserProfile.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'User profile not found. Please complete your profile first.'
+        }, status=404)
+    
+    except Exception as e:
+        print(f"Error generating recommendations: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Unable to generate recommendations at this time. Please try again later.'
+        }, status=500)
