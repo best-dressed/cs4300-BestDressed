@@ -74,6 +74,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_1AB775D03EE24A1996BB864C3CF55E49 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_E919FB29A90B4881BA9DA0165B5068CC }}
 
+      - name: Configure Environment Variables
+        run: |
+          az webapp config appsettings set --name bestdressed --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --settings ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }} SECRET_KEY=${{ secrets.SECRET_KEY }} ENVIRONMENT=${{ secrets.ENVIRONMENT }} SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}
+
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
