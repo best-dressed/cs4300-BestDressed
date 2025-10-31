@@ -30,6 +30,7 @@ def ebay_marketplace_deletion_notifcation(request):
         # the ebay signature is a json body encoded so once we decode we access its elements
         #x_ebay_signature = request.headers[X_EBAY_SIGNATURE]
         #x_ebay_signature_decoded = json.loads(base64.b64decode(x_ebay_signature).decode('utf-8'))
+        # then the key and allat is passed which we query from api or something
         #kid = x_ebay_signature_decoded['kid']
         #signature = x_ebay_signature_decoded['signature']
 
