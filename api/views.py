@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 # super based on https://stackoverflow.com/questions/68569773/ebay-marketplace-account-deletion-closure-notifications
 EBAY_VERIFICATION_TOKEN = os.environ.get('EBAY_VERIFICATION_TOKEN')
 # need to have this to support accepting requests to delete data from Ebay users who delete accounts.
-def ebay_marketplace_deletion_notifcation(request):
+def ebay_marketplace_deletion_notification(request):
     challengeCode = request.GET.get('challenge_code')
     X_EBAY_SIGNATURE = 'X-Ebay-Signature'
     EBAY_BASE64_AUTHORIZATION_TOKEN = "" # CALCULATE FROM CLIENT:ID CLIENT:SECRET OR SOMETHING
