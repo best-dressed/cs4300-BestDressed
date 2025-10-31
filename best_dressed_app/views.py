@@ -89,11 +89,18 @@ def dashboard(request):
     # created: boolean for if object was just created (True) or if it already exists (False)
     profile, created = UserProfile.objects.get_or_create(user=user)
     
+    # get actual counts (of number of items in Wardrobe) from the database for the logged in user
+    wardrobe_count = WardrobeItem.objects.filter(user=user).count()
+    # implement this later when we build Outfits
+    outfit_count = 0  
+    # implement this later with AI recommendations
+    recommendation_count = 0  
+
     # python dictionary that passes data from Python (Django view) to the HTML template
     context = {
-        'wardrobe_count': 1,
-        'outfit_count': 2,
-        'recommendation_count': 3,
+        'wardrobe_count': wardrobe_count,
+        'outfit_count': outfit_count,
+        'recommendation_count': recommendation_count,
     }
     
     return render(request, 'dashboard.html', context)
@@ -199,3 +206,39 @@ def save_to_wardrobe(request, item_pk):
     # Redirect back to the item detail page
     # Using redirect prevents form resubmission if user refreshes the page
     return redirect('item_detail', pk=item_pk)
+
+@login_required
+def my_wardrobe(request):
+    """
+    Display user's wardrobe items with filtering options
+    """
+    user = request.user
+    
+    # Get filter parameter from URL (e.g., ?category=top)
+    category_filter = request.GET.get('category', None)
+    
+    # Start with all user's wardrobe items
+    wardrobe_items = WardrobeItem.objects.filter(user=user)
+    
+    # Apply category filter if specified
+    if category_filter and category_filter != 'all':
+        wardrobe_items = wardrobe_items.filter(category=category_filter)
+    
+    # Get all available categories for the filter buttons
+    # This creates a list of tuples: [('top', 'Top'), ('bottom', 'Bottom'), ...]
+    categories = WardrobeItem.CATEGORY_CHOICES
+    
+    # Count items in each category (for display)
+    category_counts = {}
+    for category_value, category_label in categories:
+        count = WardrobeItem.objects.filter(user=user, category=category_value).count()
+        category_counts[category_value] = count
+    
+    context = {
+        'wardrobe_items': wardrobe_items,
+        'categories': categories,
+        'category_counts': category_counts,
+        'current_filter': category_filter or 'all',
+    }
+    
+    return render(request, 'my_wardrobe.html', context)
