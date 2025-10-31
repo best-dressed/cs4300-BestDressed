@@ -242,3 +242,28 @@ def my_wardrobe(request):
     }
     
     return render(request, 'my_wardrobe.html', context)
+
+@login_required
+def delete_wardrobe_item(request, item_pk):
+    """
+    Delete an item from the user's wardrobe.
+    
+    Security: Only the owner can delete their items.
+    """
+    # Get the wardrobe item, but only if it belongs to the current user
+    # also prevents users from deleting other users wardrobe items
+    wardrobe_item = get_object_or_404(WardrobeItem, pk=item_pk, user=request.user)
+    
+    # Only allow POST requests (security best practice)
+    if request.method == 'POST':
+        item_title = wardrobe_item.title  # Save title for the message
+        wardrobe_item.delete()
+        
+        messages.success(request, f'"{item_title}" has been removed from your wardrobe.')
+        return redirect('my_wardrobe')
+    
+    # If GET request, show confirmation page (we'll create this template)
+    context = {
+        'item': wardrobe_item,
+    }
+    return render(request, 'confirm_delete_wardrobe_item.html', context)

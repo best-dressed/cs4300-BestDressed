@@ -29,7 +29,11 @@ urlpatterns = [
     # dashboard and user features
     path('dashboard/', views.dashboard, name="dashboard"),
     path('account/', views.account_settings, name="account_settings"),
+    
+    # wardrobe and wardrobe features
     path('wardrobe/', views.my_wardrobe, name="my_wardrobe"),
+    path('wardrobe/delete/<int:item_pk>/', views.delete_wardrobe_item, name="delete_wardrobe_item"),
+
 
     # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
