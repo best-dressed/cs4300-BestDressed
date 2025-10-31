@@ -66,6 +66,9 @@ def item_detail(request, pk):
             user=request.user,
             catalog_item=item
         ).exists()
+
+    # check where user came from
+    came_from = request.GET.get('from', None)
     
     # related items list, exclude the item we are primarily viewing
     items = Item.objects.exclude(pk=pk)
@@ -74,6 +77,7 @@ def item_detail(request, pk):
         "item": item,
         "items": items,
         "already_saved": already_saved,
+        "came_from": came_from,
     }
     return render(request, "item_detail.html", context)
 

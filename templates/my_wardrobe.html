@@ -63,7 +63,7 @@
       <div class="card h-100 border-0 shadow-sm">
         <!-- Item Image -->
         {% if item.catalog_item %}
-          <a href="{% url 'item_detail' pk=item.catalog_item.pk %}">
+          <a href="{% url 'item_detail' pk=item.catalog_item.pk %}?from=wardrobe">
             <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" 
                  style="height: 250px; object-fit: cover;">
           </a>
@@ -112,8 +112,8 @@
         <div class="card-footer bg-transparent border-0 pb-3">
           <div class="d-grid gap-2">
             {% if item.catalog_item %}
-            <a href="{% url 'item_detail' pk=item.catalog_item.pk %}" 
-               class="btn btn-sm btn-outline-primary">
+            <a href="{% url 'item_detail' pk=item.catalog_item.pk %}?from=wardrobe" 
+              class="btn btn-sm btn-outline-primary">
               View in Catalog
             </a>
             {% endif %}
