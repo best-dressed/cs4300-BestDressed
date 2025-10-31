@@ -1,5 +1,5 @@
 from django import forms
-from .models import UserProfile
+from .models import UserProfile, WardrobeItem
 
 
 class UserProfileForm(forms.ModelForm):
@@ -52,4 +52,63 @@ class UserProfileForm(forms.ModelForm):
             'bio': 'Share your personal style story (optional)',
             'style_preferences': 'What styles do you gravitate towards?',
             'favorite_colors': 'Which colors do you wear most often?',
+        }
+
+class WardrobeItemForm(forms.ModelForm):
+    """
+    Form for creating and editing wardrobe items.
+    
+    Users can manually add items or edit existing ones.
+    This form does NOT include the user or catalog_item fields
+    as those are handled automatically.
+    """
+    
+    class Meta:
+        model = WardrobeItem
+        fields = ['title', 'description', 'category', 'image_url', 'color', 'brand', 'season']
+        
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Blue Denim Jacket'
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Describe the item...'
+            }),
+            'category': forms.Select(attrs={
+                'class': 'form-select'
+            }),
+            'image_url': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://example.com/image.jpg'
+            }),
+            'color': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Navy Blue'
+            }),
+            'brand': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Nike, Zara, H&M'
+            }),
+            'season': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., summer, winter, all-season'
+            }),
+        }
+        
+        labels = {
+            'title': 'Item Name',
+            'description': 'Description',
+            'category': 'Category',
+            'image_url': 'Image URL',
+            'color': 'Color',
+            'brand': 'Brand',
+            'season': 'Season',
+        }
+        
+        help_texts = {
+            'image_url': 'Paste a link to an image of this item',
+            'season': 'When do you typically wear this?',
         }

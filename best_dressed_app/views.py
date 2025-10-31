@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
 from django.db import IntegrityError
-from .forms import UserProfileForm
+from .forms import UserProfileForm, WardrobeItemForm
 
 def index(request):
     """
@@ -271,3 +271,35 @@ def delete_wardrobe_item(request, item_pk):
         'item': wardrobe_item,
     }
     return render(request, 'confirm_delete_wardrobe_item.html', context)
+
+@login_required
+def add_wardrobe_item(request):
+    """
+    Add a new item to wardrobe manually (not from catalog).
+    """
+    if request.method == 'POST':
+        form = WardrobeItemForm(request.POST)
+        
+        if form.is_valid():
+            # create the wardrobe item (object) but don't save to DB yet
+            wardrobe_item = form.save(commit=False)
+            
+            # set the user (security - only current user)
+            wardrobe_item.user = request.user
+            
+            # catalog_item stays None (this is a manual upload)
+            
+            # now save to database
+            wardrobe_item.save()
+            
+            messages.success(request, f'"{wardrobe_item.title}" has been added to your wardrobe!')
+            return redirect('my_wardrobe')
+    else:
+        form = WardrobeItemForm()
+    
+    context = {
+        'form': form,
+        # For template to know this is "add" not "edit"
+        'mode': 'add',
+    }
+    return render(request, 'wardrobe_item_form.html', context)
