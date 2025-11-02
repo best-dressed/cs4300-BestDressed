@@ -1,0 +1,21 @@
+<!-- SUB TEMPLATE FOR A SINGLE ITEM IN ITEM LISTING OR ITEM-DETAIL-RECOMMENDED -->
+{% load static %}
+<div class="col mb-5">
+  <div class="card h-100 ">
+
+    <!-- Product image-->
+    <a href = "{{ item.get_absolute_url }}">
+      <img class="card-img-top " src ="{{item.image_url}}" alt="Logo"></img>
+    </a>
+    <!-- Product details-->
+    <div class="card-body p-4">
+      <div class="text-center">
+        <!-- Product name-->
+        <h5 class="fw-bolder">{{item.title}}</h5>
+        <p>{{item.short_description}} </p>
+        <a href = "#" class = "btn btn-primary" >
+          Add to Outfit </a>
+      </div>
+    </div>
+  </div>
+</div>
