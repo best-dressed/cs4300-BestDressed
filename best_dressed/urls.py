@@ -32,4 +32,8 @@ urlpatterns = [
     # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
     path('item/<int:pk>/', views.item_detail, name="item_detail"),
+
+    # ai recommendations
+    path('recommendations/', views.recommendations, name="recommendations"),
+    path('recommendations/generate/', views.generate_recommendations_ajax, name="generate_recommendations_ajax"),
 ]
