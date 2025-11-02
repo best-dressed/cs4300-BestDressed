@@ -303,3 +303,36 @@ def add_wardrobe_item(request):
         'mode': 'add',
     }
     return render(request, 'wardrobe_item_form.html', context)
+
+@login_required
+def edit_wardrobe_item(request, item_pk):
+    """
+    Edit an existing wardrobe item.
+    
+    Important: This edits the WardrobeItem, NOT the catalog Item.
+    Changes here only affect the user's personal wardrobe copy.
+    """
+    # Get the wardrobe item, ensuring it belongs to the current user
+    wardrobe_item = get_object_or_404(WardrobeItem, pk=item_pk, user=request.user)
+    
+    if request.method == 'POST':
+        # Pass the existing instance to the form
+        form = WardrobeItemForm(request.POST, instance=wardrobe_item)
+        
+        if form.is_valid():
+            # Save changes to the wardrobe item
+            # Note: This does NOT affect catalog_item
+            form.save()
+            
+            messages.success(request, f'"{wardrobe_item.title}" has been updated!')
+            return redirect('my_wardrobe')
+    else:
+        # Pre-fill form with existing data
+        form = WardrobeItemForm(instance=wardrobe_item)
+    
+    context = {
+        'form': form,
+        'mode': 'edit',  # Tell template this is edit mode
+        'item': wardrobe_item,
+    }
+    return render(request, 'wardrobe_item_form.html', context)
