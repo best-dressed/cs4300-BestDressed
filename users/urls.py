@@ -14,12 +14,14 @@ from .views import (
     UserPasswordResetDoneView,
     UserPasswordResetConfirmView,
     UserPasswordResetCompleteView,
+    AboutView
 )
 
 urlpatterns = [
     path("signup/", SignUpView.as_view(), name="signup"),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", UserLogoutView.as_view(), name="logout"),
+     path("about/", AboutView.as_view(), name="about"),
 
     # Password change
     path("password_change/", UserPasswordChangeView.as_view(), name="password_change"),
