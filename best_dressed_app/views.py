@@ -2,12 +2,12 @@
 Django views for the Best Dressed application.
 """
 
-from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from .models import Item
 from django.contrib.auth.decorators import login_required
+from .forms import ItemForm
+from django.shortcuts import render, redirect
 from .models import Item, UserProfile
-from django.shortcuts import render
 from .recommendation import generate_recommendations
 from django.http import JsonResponse
 import threading
@@ -55,6 +55,25 @@ def item_detail(request, pk):
     }
     return render(request, "item_detail.html", context)
 
+# view for adding an item manually
+# per chatGPT
+def add_item(request):
+    context = {}
+
+    if request.method == "POST":
+        form = ItemForm(request.POST)
+        if form.is_valid():
+            newItem = form.save()  # this writes the model instance to the database
+            return redirect('add_item_success', pk=newItem.pk)
+    else:
+        form = ItemForm()  # empty form for GET request
+
+    context['form'] = form
+    return render(request, "add_item.html", context)
+
+def add_item_success(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    return render(request, "add_item_success.html", {'item':item})
 @login_required
 def dashboard(request):
     """
