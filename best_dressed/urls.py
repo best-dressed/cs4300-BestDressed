@@ -25,8 +25,17 @@ urlpatterns = [
     # path('signup/', views.signup, name="signup"),
     path("accounts/", include("users.urls")),
     path('admin/', admin.site.urls),
+
+    # dashboard and user features
+    path('dashboard/', views.dashboard, name="dashboard"),
+
+    # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
     path('item/<int:pk>/', views.item_detail, name="item_detail"),
     path('add_item/', views.add_item, name="add_item"),
     path('add_item/success/<int:pk>/', views.add_item_success, name="add_item_success"),
+
+    # ai recommendations
+    path('recommendations/', views.recommendations, name="recommendations"),
+    path('recommendations/generate/', views.generate_recommendations_ajax, name="generate_recommendations_ajax"),
 ]

@@ -1,9 +1,9 @@
 from django.db import models
 from django.urls import reverse
+from django.contrib.auth.models import User
 
-# Create your models here.
 
-# article of clothing item
+# article of clothing item in the catalog
 class Item(models.Model):
 
     ITEM_TAG_CHOICES = {
@@ -42,3 +42,18 @@ class Item(models.Model):
     def get_absolute_url(self):
         return reverse("item_detail", kwargs={'pk': self.pk})
 
+    def __str__(self):
+        return self.title
+
+
+# user profile to extend Django's 'User' model
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    bio = models.TextField(max_length=500, blank=True)
+    style_preferences = models.CharField(max_length=200, blank=True, help_text="e.g., casual, formal, streetwear")
+    favorite_colors = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.user.username}'s Profile"

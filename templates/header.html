@@ -7,7 +7,7 @@
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <img src = "{% static 'main-logo.png' %}" alt="Logo" class="img-fluid" style="max-height: 100px;" onclick="location.href='/'">
+    <img src = "{% static 'img\bestdressedlogo.png' %}" alt="Logo" class="img-fluid" style="max-height: 100px;" onclick="location.href='/'">
 
     <div class="collapse navbar-collapse justify-content-end" id="mainNav">
       <ul class="navbar-nav mb-2 mb-lg-0">
@@ -15,7 +15,10 @@
           <a class="nav-link{% if request.path == '/' %} active{% endif %}" href="{% url 'index' %}">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#about">About</a>
+          <a class="nav-link{% if request.resolver_match.url_name == 'about' %} active{% endif %}"
+             href="{% url 'about' %}">
+            About
+          </a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="{% url 'item_listing' %}">Item Listing</a>
@@ -26,7 +29,9 @@
         <li class="nav-item">
           <a class="nav-link" href="#contact">Contact</a>
         </li>
-
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'recommendations' %}">Recommendations</a>
+        </li>
         
         
       </ul>

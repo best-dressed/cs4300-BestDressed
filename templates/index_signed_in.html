@@ -3,23 +3,11 @@
 
 {% block content %}
 <div class="container py-5 text-center">
-  <h1 class="mb-4">Welcome back, {{ user.username }} </h1>
-
-  <p class="lead">You’re signed in! What would you like to do next?</p>
-
+  <h1 class="mb-4">Welcome back, {{ user.username }}!</h1>
+  
   <div class="d-flex justify-content-center gap-3 mt-4">
-    {% if user.is_authenticated %}
-  <form method="post" action="{% url 'logout' %}" class="d-inline">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-  </form>
-  <form method="get" action="{% url 'password_change' %}" class="d-inline">
-    {% csrf_token %}
-    <button type="submit" class="btn btn-outline-light btn-sm">Change Password</button>
-  </form>
-{% else %}
-  <a class="btn btn-outline-light btn-sm" href="{% url 'login' %}">Login</a>
-{% endif %}
+    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">Go to Dashboard</a>
+    <a href="{% url 'item_listing' %}" class="btn btn-outline-primary btn-lg">Browse Catalog</a>
   </div>
 </div>
 {% endblock %}
