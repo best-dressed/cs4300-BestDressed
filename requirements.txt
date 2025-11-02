@@ -8,3 +8,7 @@ coverage
 # Web
 django
 whitenoise
+requests
+
+# Other
+cryptography
