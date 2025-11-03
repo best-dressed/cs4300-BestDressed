@@ -1,0 +1,37 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %} Item Listing {% endblock title %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/main.css' %}" type="text/css">
+<!-- primary item -->
+<section class="py-5">
+  <div class="container px-3 px-lg-4 mt-5 w-50">
+    <div class="text-center">
+      <h1>Add Items via Ebay Search</h1>
+      <form method="POST" >
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label class="form-label fw-semibold">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+          <div class="text-danger small mt-1">
+            {{ field.errors|striptags }}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <div style="margin-top:20px;">
+          <button type="submit" class="btn btn-primary w-100" >Submit</button>
+        </div>
+      </form>
+      <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
+        Back to item listing </a>
+    </div>
+  </div>
+</section>
+
+{% endblock content %}
