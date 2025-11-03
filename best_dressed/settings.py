@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'best_dressed_app',
     'users',
+    'django_registration',
 ]
 
 MIDDLEWARE = [
@@ -148,14 +149,17 @@ LOGIN_URL = "login"
 
 
 # For testing password reset emails locally
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-DEFAULT_FROM_EMAIL = "noreply@best-dressed.net"
-SENDGRID_API_KEY = env_vars.get('SENDGRID_API_KEY')
-EMAIL_HOST = 'smtp.sendgrid.net'
-EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
-EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+if DEBUG:
+    EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+else:
+    EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+    DEFAULT_FROM_EMAIL = "noreply@best-dressed.net"
+    SENDGRID_API_KEY = env_vars.get('SENDGRID_API_KEY')
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    EMAIL_HOST_USER = 'apikey' # this is exactly the value 'apikey'
+    EMAIL_HOST_PASSWORD = SENDGRID_API_KEY
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
 
 # Security for prod
 CSRF_TRUSTED_ORIGINS = [
@@ -179,3 +183,6 @@ SECURE_SSL_REDIRECT = not DEBUG
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Registration Settings
+ACCOUNT_ACTIVATION_DAYS = 7 

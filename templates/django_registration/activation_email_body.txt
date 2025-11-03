@@ -1,0 +1,10 @@
+{% autoescape off %}
+Hi {{ user.username }},
+
+Thank you for registering with Best Dressed.
+Please click the link below to activate your account:
+
+{{ scheme }}://{{ site.domain }}{% url 'django_registration_activate' %}?key={{ activation_key }}
+
+This link is valid for {{ expiration_days }} days.
+{% endautoescape %}

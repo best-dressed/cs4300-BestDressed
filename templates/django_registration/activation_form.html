@@ -1,0 +1,21 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block title %}Sign up · Best Dressed{% endblock %}
+
+{% block content %}
+  <h1>Activation Form</h1>
+  <form method="post" action="{% url 'django_registration_activate' %}">
+    {% csrf_token %}
+    {% for field in form %}
+      {% if field.name == 'activation_key' %}
+        <input type="hidden" name="{{ field.name }}" value="{{ request.GET.key }}" id="id_{{ field.name }}">
+      {% else %}
+        {{ field.as_p }}
+      {% endif %}
+    {% endfor %}
+    <div class="text-center">
+      <button type="submit" class="btn btn-primary">Activate Your Account</button>
+    </div>
+  </form>
+{% endblock %}
