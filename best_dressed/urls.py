@@ -28,10 +28,25 @@ urlpatterns = [
 
     # dashboard and user features
     path('dashboard/', views.dashboard, name="dashboard"),
+    path('account/', views.account_settings, name="account_settings"),
+    
+    # wardrobe and wardrobe features
+    path('wardrobe/', views.my_wardrobe, name="my_wardrobe"),
+    path('wardrobe/add/', views.add_wardrobe_item, name="add_wardrobe_item"),
+    path('wardrobe/edit/<int:item_pk>/', views.edit_wardrobe_item, name="edit_wardrobe_item"),  # NEW
+    path('wardrobe/delete/<int:item_pk>/', views.delete_wardrobe_item, name="delete_wardrobe_item"),
+
 
     # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
     path('item/<int:pk>/', views.item_detail, name="item_detail"),
+    # pattern (item/<int:item_pk>/save/):
+    # - item/: text
+    # - <int:item_pk>: captures an integer from URL, passes it as `item_pk` parameter
+    # - /save/: text
+    # - views.save_to_wardrobe: view funtion to call
+    # - name="save_to_wardrobe": name for reverse URL lookup
+    path('item/<int:item_pk>/save/', views.save_to_wardrobe, name="save_to_wardrobe"),
     path('add_item/', views.add_item, name="add_item"),
     path('add_item/success/<int:pk>/', views.add_item_success, name="add_item_success"),
 
