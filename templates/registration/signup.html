@@ -36,6 +36,22 @@
           {% endif %}
         </div>
 
+        <!-- Email -->
+        <div class="form-floating mb-2">
+          <input type="email"
+                 name="email"
+                 class="form-control {% if form.email.errors %}is-invalid{% endif %}"
+                 id="floatingEmail"
+                 placeholder="Email"
+                 required>
+          <label for="floatingEmail">Email</label>
+          {% if form.email.errors %}
+          <div class="invalid-feedback">
+            {{ form.email.errors|join:", " }}
+          </div>
+          {% endif %}
+        </div>
+
         <!-- Password -->
         <div class="form-floating mb-2">
           <input type="password"
