@@ -20,6 +20,8 @@ jobs:
       - name: Build databases
         run: |
             python manage.py makemigrations
+            python manage.py makemigrations best_dressed_app
+            python manage.py makemigrations users
             python manage.py migrate
       - name: Test with django
         run: |
