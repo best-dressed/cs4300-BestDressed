@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 # and some chatGPT code for signature verification and request simulation/testing
 EBAY_VERIFICATION_TOKEN = os.environ.get('EBAY_VERIFICATION_TOKEN')
 EBAY_BASE64_AUTHORIZATION_TOKEN = os.environ.get("EBAY_BASE64_AUTHORIZATION_TOKEN") # CALCULATE FROM CLIENT:ID CLIENT:SECRET OR SOMETHING
-
 # need to have this to support accepting requests to delete data from Ebay users who delete accounts.
 @csrf_exempt
 def ebay_marketplace_deletion_notification(request):
@@ -55,6 +54,7 @@ def ebay_marketplace_deletion_notification(request):
 
 
             token_url = "https://api.ebay.com/identity/v1/oauth2/token"
+            #token_url = "https://api.sandbox.ebay.com/identity/v1/oauth2/token"
             token_headers = {
                 "Content-Type": "application/x-www-form-urlencoded",
                 "Authorization": f"Basic {EBAY_BASE64_AUTHORIZATION_TOKEN}"
