@@ -8,7 +8,10 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
 from django.db import IntegrityError
-from .forms import UserProfileForm, WardrobeItemForm
+from .forms import UserProfileForm, WardrobeItemForm, ItemForm
+from .recommendation import generate_recommendations
+from django.http import JsonResponse
+import threading
 
 def index(request):
     """
@@ -81,6 +84,25 @@ def item_detail(request, pk):
     }
     return render(request, "item_detail.html", context)
 
+# view for adding an item manually
+# per chatGPT
+def add_item(request):
+    context = {}
+
+    if request.method == "POST":
+        form = ItemForm(request.POST)
+        if form.is_valid():
+            newItem = form.save()  # this writes the model instance to the database
+            return redirect('add_item_success', pk=newItem.pk)
+    else:
+        form = ItemForm()  # empty form for GET request
+
+    context['form'] = form
+    return render(request, "add_item.html", context)
+
+def add_item_success(request, pk):
+    item = get_object_or_404(Item, pk=pk)
+    return render(request, "add_item_success.html", {'item':item})
 @login_required
 def dashboard(request):
     """
@@ -336,3 +358,51 @@ def edit_wardrobe_item(request, item_pk):
         'item': wardrobe_item,
     }
     return render(request, 'wardrobe_item_form.html', context)
+def recommendations(request):
+    """
+    View to display the recommendations page.
+    The page loads immediately with a loading indicator,
+    then JavaScript fetches the actual recommendations via AJAX.
+    """
+    context = {
+        'loading': True,
+    }
+    return render(request, 'recommendations.html', context)
+
+@login_required
+def generate_recommendations_ajax(request):
+    """
+    AJAX endpoint to generate AI-based clothing recommendations.
+    
+    Process:
+    1. Fetch user profile and available items
+    2. Generate AI recommendations
+    3. Return JSON response with recommendations
+    """
+    user = request.user
+    
+    try:
+        # Get user profile and available items
+        available_items = Item.objects.all()
+        user_profile = UserProfile.objects.get(user=user)
+        
+        # Generate AI recommendations
+        ai_recommendations = generate_recommendations(available_items, user_profile)
+        
+        return JsonResponse({
+            'success': True,
+            'recommendations': ai_recommendations
+        })
+    
+    except UserProfile.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'User profile not found. Please complete your profile first.'
+        }, status=404)
+    
+    except Exception as e:
+        print(f"Error generating recommendations: {e}")
+        return JsonResponse({
+            'success': False,
+            'error': 'Unable to generate recommendations at this time. Please try again later.'
+        }, status=500)

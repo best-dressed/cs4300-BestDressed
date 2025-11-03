@@ -6,7 +6,7 @@ from django.contrib.auth.views import ( LoginView, LogoutView, PasswordChangeVie
 from django.contrib.auth.forms import UserCreationForm
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
-
+from django.views.generic import TemplateView
 
 # sign-up page
 class SignUpView(CreateView):
@@ -53,3 +53,6 @@ class UserPasswordResetConfirmView(PasswordResetConfirmView):
 
 class UserPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = "registration/password_reset_complete.html"
+
+class AboutView(TemplateView):
+    template_name = "registration/about.html"

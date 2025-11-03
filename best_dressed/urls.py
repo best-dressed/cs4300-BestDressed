@@ -47,4 +47,10 @@ urlpatterns = [
     # - views.save_to_wardrobe: view funtion to call
     # - name="save_to_wardrobe": name for reverse URL lookup
     path('item/<int:item_pk>/save/', views.save_to_wardrobe, name="save_to_wardrobe"),
+    path('add_item/', views.add_item, name="add_item"),
+    path('add_item/success/<int:pk>/', views.add_item_success, name="add_item_success"),
+
+    # ai recommendations
+    path('recommendations/', views.recommendations, name="recommendations"),
+    path('recommendations/generate/', views.generate_recommendations_ajax, name="generate_recommendations_ajax"),
 ]
