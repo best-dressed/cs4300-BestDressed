@@ -29,7 +29,9 @@
         <li class="nav-item">
           <a class="nav-link" href="#contact">Contact</a>
         </li>
-
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'recommendations' %}">Recommendations</a>
+        </li>
         <!-- User Account Section (only visible when logged in) -->
         {% if user.is_authenticated %}
         <li class="nav-item">
@@ -81,9 +83,7 @@
           <a class="nav-link btn btn-primary text-white ms-2" href="{% url 'signup' %}">Sign Up</a>
         </li>
         {% endif %}
-        <li class="nav-item">
-          <a class="nav-link" href="{% url 'recommendations' %}">Recommendations</a>
-        </li>
+
         
         
       </ul>
