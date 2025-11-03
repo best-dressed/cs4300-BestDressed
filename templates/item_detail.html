@@ -1,60 +1,150 @@
 {% extends "main.html" %}
 {% load static %}
-{% block title %} Item Listing {% endblock title %}
+{% block title %}{{ item.title }} - Best Dressed{% endblock title %}
 {% block content %}
 
 <link rel="stylesheet" href="{% static 'css/single_item.css' %}" type="text/css">
-<!-- primary item -->
+
+<!-- Success/Error Messages -->
+{% if messages %}
+    <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<!-- Primary Item -->
 <section class="py-5">
     <div class="container px-4 px-lg-5 my-5">
         <div class="row gx-4 gx-lg-5 align-items-center">
-            <div class="col-md-6"><img class="img-fluid" src={{item.image_url}} alt="..." /></div>
+            <!-- Item Image -->
+            <div class="col-md-6">
+                <img class="img-fluid rounded shadow" src="{{ item.image_url }}" alt="{{ item.title }}" />
+            </div>
+            
+            <!-- Item Details -->
+            <div class="col-md-6">
+                <h1 class="display-5 fw-bolder mb-3">{{ item.title }}</h1>
+                <p class="lead mb-4">{{ item.description }}</p>
+                
+                <!-- Action Buttons -->
+                <div class="d-grid gap-3">
+                    {% if user.is_authenticated %}
+                        {% if already_saved %}
+                            <!-- Item already in wardrobe -->
+                            <button class="btn btn-success btn-lg" disabled>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-circle-fill me-2" viewBox="0 0 16 16">
+                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                                </svg>
+                                In Your Wardrobe
+                            </button>
+                        {% else %}
+                            <!-- Save to wardrobe form -->
+                            <form method="post" action="{% url 'save_to_wardrobe' item_pk=item.pk %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-lg w-100">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bag-plus me-2" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                                    </svg>
+                                    Save to Wardrobe
+                                </button>
+                            </form>
+                        {% endif %}
+                        
+                        <!-- Add to Outfit Button -->
+                        <button class="btn btn-outline-primary btn-lg" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle me-2" viewBox="0 0 16 16">
+                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                            </svg>
+                            Add to Outfit (Coming Soon)
+                        </button>
+                    {% else %}
+                        <!-- User not logged in -->
+                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-box-arrow-in-right me-2" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"/>
+                                <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                            </svg>
+                            Log in to Save Items
+                        </a>
+                    {% endif %}
+                    
+                    <!-- Back to Listing Button -->
+                    {% if came_from == 'wardrobe' %}
+                        <!-- User came from wardrobe, show "Back to Wardrobe" -->
+                        <a href="{% url 'my_wardrobe' %}" class="btn btn-outline-secondary btn-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                            </svg>
+                            Back to Wardrobe
+                        </a>
+                    {% else %}
+                        <!-- User came from elsewhere, show "Back to Item Listing" -->
+                        <a href="{% url 'item_listing' %}" class="btn btn-outline-secondary btn-lg">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+                                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                            </svg>
+                            Back to Item Listing
+                            </a>
+                    {% endif %}
+            <div class="col-md-6">
+                <a href = "#" class = "btn btn-primary" >
+                    {{item.tag}} </a>
+                <img class="img-fluid" src={{item.image_url}} alt="..." />
+
+            </div>
             <div class="col-md-6">
 
                 <h1 class="display-5 fw-bolder">{{item.title}}</h1>
                 <p class="lead">{{item.description}}</p>
+
                 <div class="text-center">
                     <a href = "#" class = "btn btn-primary" >
                         Add to Outfit </a>
                 </div>
-
             </div>
         </div>
     </div>
-    <div class="text-center">
-        <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
-            Back to item listing </a>
-    </div>
 </section>
-<!-- related items -->
-<section class="py-5">
-    <h1> Related Items </h1>
-    <h1><a href = "https://amzn.to/4qop97W"> buy gushers on amazon</a></h1>
-    <div class="container px-4 px-lg-5 mt-5">
-        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-            <!--List some items from db-->
+
+<!-- Related Items -->
+<section class="py-5" style="background-color: #2d3238;">
+    <div class="container px-4 px-lg-5">
+        <h2 class="fw-bold mb-4 text-white">Related Items</h2>
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
             {% for item in items|slice:":4" %}
-            <div class="col mb-5">
-                <div class="card h-100 ">
-                    <!-- Product image-->
-                    <a href = "{{ item.get_absolute_url }}">
-                        <img class="card-img-top " src ="{{item.image_url}}" alt="Logo"></img>
+            <div class="col mb-4">
+                <div class="card h-100 bg-dark border border-secondary shadow-sm" style="transition: transform 0.2s;">
+                    <!-- Product image -->
+                    <a href="{{ item.get_absolute_url }}" class="text-decoration-none">
+                        <img class="card-img-top" src="{{ item.image_url }}" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
                     </a>
-                    <!-- Product details-->
-                    <div class="card-body p-4">
-                        <div class="text-center">
-                            <!-- Product name-->
-                            <h5 class="fw-bolder">{{item.title}}</h5>
-                            <p>{{item.description}} </p>
-                            <a href = "#" class = "btn btn-primary" >
-                                Add to Outfit </a>
-                        </div>
+                    <!-- Product details -->
+                    <div class="card-body p-3">
+                        <h5 class="fw-bolder mb-2 text-white">{{ item.title }}</h5>
+                        <p class="small text-muted mb-3">{{ item.description|truncatewords:10 }}</p>
+                        <a href="{{ item.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">
+                            View Details
+                        </a>
                     </div>
                 </div>
             </div>
+            {% include "item_card.html" with item=item %}
             {% endfor %}
         </div>
     </div>
 </section>
+
+<style>
+.card:hover {
+    transform: translateY(-5px);
+}
+</style>
 
 {% endblock content %}

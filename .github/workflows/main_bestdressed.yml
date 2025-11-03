@@ -46,6 +46,8 @@ jobs:
         run: |
           source antenv/bin/activate
           python manage.py makemigrations
+          python manage.py makemigrations best_dressed_app
+          python manage.py makemigrations users
           python manage.py migrate
 
       # 🚫 Opting Out of Oryx Build

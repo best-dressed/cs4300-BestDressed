@@ -19,16 +19,11 @@
           <a class="btn btn-outline-light btn-lg px-5" href="{% url 'login' %}">Log In</a>
         </div>
 
-        <img class="img-fluid rounded-4 shadow-lg mt-4 mx-auto d-block"
+        
              
              
 
-             <div class="wardrobe-preview text-center mt-4">
-              <img src="{% static 'img/Shirt.png' %}" alt="Purple shirt" class="wardrobe-item">
-              <img src="{% static 'img/hand bag.png' %}" alt="Purple pants" class="wardrobe-item">
-              <img src="{% static 'img/pants .png' %}" alt="Purple bag" class="wardrobe-item">
-              <img src="{% static 'img/dress.png' %}" alt="Purple dress" class="wardrobe-item">
-            </div>
+             
 
 
       </div>
@@ -40,10 +35,55 @@
 </header>
 
 
+
+<!-- Closet Marquee Section -->
+<div class="closet-marquee container-lg">
+  <!-- Row A (left → right) -->
+  <div class="rail rail-a">
+    <ul class="rack">
+      <li><img src="{% static 'img/pinkshirt.png' %}" alt="Jacket"></li>
+      <li><img src="{% static 'img/purplelong.png' %}"  alt="Dress"></li>
+      <li><img src="{% static 'img/dressed.png' %}" alt="Blouse"></li>
+      <li><img src="{% static 'img/americanflag.png' %}"   alt="Coat"></li>
+      <li><img src="{% static 'img/purpleflower.png' %}"  alt="Jeans"></li>
+      <li><img src="{% static 'img/darkbluelong.png' %}"  alt="Skirt"></li>
+    </ul>
+    <ul class="rack" aria-hidden="true">
+      <li><img src="{% static 'img/pinkshirt.png' %}" alt=""></li>
+      <li><img src="{% static 'img/purplelong.png' %}"  alt=""></li>
+      <li><img src="{% static 'img/dressed.png' %}" alt=""></li>
+      <li><img src="{% static 'img/americanflag.png' %}"   alt=""></li>
+      <li><img src="{% static 'img/Shirt.png' %}"  alt=""></li>
+      <li><img src="{% static 'img/Shirt.png' %}"  alt=""></li>
+    </ul>
+  </div>
+
+  <!-- Row B (right → left) -->
+  <div class="rail rail-b">
+    <ul class="rack">
+      <li><img src="{% static 'img/morejeans.png' %}" alt="Cardigan"></li>
+      <li><img src="{% static 'img/denim skirt.png' %}"      alt="Bag"></li>
+      <li><img src="{% static 'img/dark.png' %}"     alt="Heels"></li>
+      <li><img src="{% static 'img/denim skirt.png' %}"    alt="Hoodie"></li>
+      <li><img src="{% static 'img/morejeans.png' %}"       alt="T-shirt"></li>
+      <li><img src="{% static 'img/dark.png' %}"      alt="Coat"></li>
+    </ul>
+    <ul class="rack" aria-hidden="true">
+      <li><img src="{% static 'img/morejeans.png' %}" alt=""></li>
+      <li><img src="{% static 'img/denim skirt.png' %}"      alt=""></li>
+      <li><img src="{% static 'img/dark.png' %}"     alt=""></li>
+      <li><img src="{% static 'img/denim skirt.png' %}"    alt=""></li>
+      <li><img src="{% static 'img/morejeans.png' %}"       alt=""></li>
+      <li><img src="{% static 'img/newwhite.png' %}"      alt=""></li>
+    </ul>
+  </div>
+</div>
+<!-- end Closet Marquee -->
+
 <section id="features" class="py-5">
   <div class="text-start mb-4">
     <h2 class="fw-bold">Everything you need</h2>
-    <p class="text-muted">Simple tools that make styling fast and fun.</p>
+    <p class="text-muted text-start">Simple tools that make styling fast and fun.</p>
     </div>
 
     <div class="row g-4">
@@ -76,6 +116,7 @@
     </div>
 
 
+    
 
 
 
