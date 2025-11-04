@@ -23,9 +23,20 @@
                     <div class="search-container">
                         <input type="text" class="form-control search-input" placeholder="Search for an Item...">
                     </div>
-                    <a href = "{% url 'add_item' %}" class = "btn btn-primary"
-                       style = "font-size:20px; margin-top:20px;">
-                        Add a new Item</a>
+
+                    <!-- Dropdown Add Button -->
+                    <div class="dropdown" style="margin-top:20px;">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="addItemDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false" style="font-size:20px;">
+                            Add Item
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="addItemDropdown">
+                            <li><a class="dropdown-item" href="{% url 'add_item' %}">Add item manually</a></li>
+                            <li><a class="dropdown-item" href="{% url 'ebay_get_items' %}">Add items via eBay</a></li>
+                        </ul>
+                    </div>
+                    <!-- End Dropdown -->
+
                 </div>
             </div>
         </div>
@@ -33,6 +44,7 @@
     </div>
 
 </div>
+
 <!-- Meat and potatoes of the item listing -->
 <section class="py-5">
     <div class="container px-4 px-lg-5 mt-5">
@@ -44,6 +56,5 @@
         </div>
     </div>
 </section>
-
 
 {% endblock content %}

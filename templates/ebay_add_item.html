@@ -1,0 +1,85 @@
+{% extends "main.html" %}
+{% load static %}
+{% block title %} Item Listing {% endblock title %}
+{% block content %}
+
+<link rel="stylesheet" href="{% static 'css/main.css' %}" type="text/css">
+
+<!-- alert system if ebay API calls fail -->
+{% if messages %}
+{% for message in messages %}
+<div
+        class="alert
+             {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %}
+             alert-dismissible fade show"
+        role="alert"
+>
+  {{ message }}
+  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- primary item -->
+<section class="py-5">
+  <div class="container px-3 px-lg-4 mt-5 w-50">
+    <div class="text-center">
+      <h1>Add Items via Ebay Search</h1>
+      <form method="POST" >
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="form-group">
+          <label class="form-label fw-semibold">
+            {{ field.label }}
+          </label>
+          {{ field }}
+          {% if field.errors %}
+          <div class="text-danger small mt-1">
+            {{ field.errors|striptags }}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <div style="margin-top:20px;">
+          <button type="submit" class="btn btn-primary w-100" >Submit</button>
+        </div>
+      </form>
+
+
+      <div style="padding-bottom: 10%">
+      <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
+        Back to item listing </a>
+      </div>
+    </div>
+  </div>
+  <!-- Recently Added Items just takes the logic from Related items -->
+  {% if recent_items %}
+    <section class="py-5" style="background-color: #2d3238">
+      <div class="container px-4 px-lg-5">
+        <h2 class="fw-bold mb-4 text-white">Added Items</h2>
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+          {% for related_item in recent_items|slice:":4" %}
+          <div class="col mb-4">
+            <div class="card h-100 bg-dark border border-secondary shadow-sm" style="transition: transform 0.2s;">
+              <!-- Product image -->
+              <a href="{{ related_item.get_absolute_url }}" class="text-decoration-none">
+                <img class="card-img-top" src="{{ related_item.image_url }}" alt="{{ related_item.title }}" style="height: 200px; object-fit: cover;">
+              </a>
+              <!-- Product details -->
+              <div class="card-body p-3">
+                <h5 class="fw-bolder mb-2 text-white">{{ related_item.title }}</h5>
+                <p class="small text-muted mb-3">{{ related_item.description|truncatewords:10 }}</p>
+                <a href="{{ related_item.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">
+                  View Details
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  {% endif %}
+</section>
+
+{% endblock content %}

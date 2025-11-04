@@ -1,16 +1,21 @@
 {% load static %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark border-bottom border-secondary sticky-top">
-  <div class="container header">
+  <div class="container-fluid header">
+    
+    <!-- Logo - Left side -->
+    <a class="navbar-brand" href="{% url 'index' %}">
+      <img src="{% static 'img/bestdressedlogo.png' %}" alt="Logo" class="img-fluid">
+    </a>
 
+    <!-- Toggle button for mobile -->
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
             aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
 
-    <img src = "{% static 'img\bestdressedlogo.png' %}" alt="Logo" class="img-fluid" style="max-height: 100px;" onclick="location.href='/'">
-
-    <div class="collapse navbar-collapse justify-content-end" id="mainNav">
-      <ul class="navbar-nav mb-2 mb-lg-0">
+    <!-- Navigation items - Right side -->
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link{% if request.path == '/' %} active{% endif %}" href="{% url 'index' %}">Home</a>
         </li>
@@ -32,7 +37,7 @@
         <li class="nav-item">
           <a class="nav-link" href="{% url 'recommendations' %}">Recommendations</a>
         </li>
-        <!-- User Account Section (only visible when logged in) -->
+        
         {% if user.is_authenticated %}
         <li class="nav-item">
           <a class="nav-link{% if request.path == '/dashboard/' %} active{% endif %}" href="{% url 'dashboard' %}">Dashboard</a>
@@ -45,7 +50,6 @@
               <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
               <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
             </svg>
-            <!-- {{ user.username }} -->
           </a>
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark" aria-labelledby="userDropdown">
             <li>
@@ -75,7 +79,6 @@
           </ul>
         </li>
         {% else %}
-        <!-- Show Login/Signup when not logged in -->
         <li class="nav-item">
           <a class="nav-link" href="{% url 'login' %}">Login</a>
         </li>
@@ -83,9 +86,6 @@
           <a class="nav-link btn btn-primary text-white ms-2" href="{% url 'signup' %}">Sign Up</a>
         </li>
         {% endif %}
-
-        
-        
       </ul>
     </div>
 
