@@ -11,6 +11,6 @@ class EbaySearchForm(forms.Form):
         label="Number of Results",
         min_value=1,
         max_value=100,
-        initial=10,
+        initial=3,
         widget=forms.NumberInput(attrs={'class': 'form-control'})
     )

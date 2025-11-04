@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.contrib import messages
 import hashlib
 import json
 from django.http import (
@@ -103,9 +104,11 @@ def ebay_marketplace_deletion_notification(request):
 @csrf_exempt
 def ebay_get_items(request):
 
+    context = {}
+
     # when POSTing send our query info
     if request.method == "POST":
-        oauth_access_token = get_oath_token()
+        logger.warning(f"Running Ebay Get items search")
         form = EbaySearchForm(request.POST)
         if form.is_valid():
 
@@ -114,54 +117,71 @@ def ebay_get_items(request):
             item_count = form.cleaned_data['item_count']
 
             ebay_items_url = f"https://api.ebay.com/buy/browse/v1/item_summary/search?q={search_term}&limit={item_count}"
+            try:
+                oauth_access_token = get_oath_token()
+                # send call to get some item data
+                itemRequest = requests.get(url=ebay_items_url,
+                                           headers = {
+                                               'Authorization': f'Bearer {oauth_access_token}'
+                                           },
+                                           data = {})
+                itemResponse = itemRequest.json()
 
-            # send call to get some item data
-            itemRequest = requests.get(url=ebay_items_url,
-                                       headers = {
-                                           'Authorization': f'Bearer {oauth_access_token}'
-                                       },
-                                       data = {})
-            logger.warning(f"PKRESPONSE: {itemRequest.json()}")
-            itemResponse = itemRequest.json()
-            itemData = json.loads(json.dumps(itemResponse))
-            print(itemData)
+                items = itemResponse.get("itemSummaries", [])
 
-            items = itemResponse.get("itemSummaries", [])
+                # this is all per chatGPT to parse the json and get more item details
+                parsed_items = []
+                for item in items:
+                    item_id = item.get("itemId")
+                    # --- Second API call to get full item details (includes description) ---
+                    detail_url = f"https://api.ebay.com/buy/browse/v1/item/{item_id}"
+                    detail_response = requests.get(
+                        url=detail_url,
+                        headers={'Authorization': f'Bearer {oauth_access_token}'}
+                    )
 
-            # this is all per chatGPT to parse the json
-            parsed_items = []
-            for item in items:
-                parsed_items.append({
-                    "item_id": item.get("itemId"),
-                    "title": item.get("title"),
-                    "price": f"{item['price']['value']} {item['price']['currency']}" if "price" in item else None,
-                    "seller_username": item.get("seller", {}).get("username"),
-                    "item_url": item.get("itemWebUrl"),
-                    "image_url": item.get("image", {}).get("imageUrl")
-                })
-            print(parsed_items)
+                    detail_data = detail_response.json()
+                    description = detail_data.get("shortDescription")
+                    if (description == None):
+                        description = "Ebay Seller did not Provide Description for this item"
 
-            # --- Print parsed output ---
-            for idx, p in enumerate(parsed_items, 1):
-                print(f"\nItem {idx}")
-                for k, v in p.items():
-                    print(f"{k}: {v}")
 
-            for idx, p in enumerate(parsed_items, 1):
-                # Create a new Item instance using data from parsed JSON
-                item = Item(
-                    title=p.get("item_id"),
-                    description=p.get("title"),
-                    image_url=p.get("image_url"),
-                    tag = "Accessory"
-                )
-                item.save()
+                    parsed_items.append({
+                        "item_id": item_id,
+                        "title": item.get("title"),
+                        "price": f"{item['price']['value']} {item['price']['currency']}" if "price" in item else None,
+                        "seller_username": item.get("seller", {}).get("username"),
+                        "item_url": item.get("itemWebUrl"),
+                        "image_url": item.get("image", {}).get("imageUrl"),
+                        "description": description
+                    })
 
-                print(f"Saved Item {idx}: {item.title}")
+                recent_items = []
+                for idx, p in enumerate(parsed_items, 1):
+                    # Create a new Item instance using data from parsed JSON
+                    item = Item(
+                        title=p.get("title"),
+                        description=p.get("description"),
+                        image_url=p.get("image_url"),
+                        tag = "Accessory"
+                    )
+                    item.save()
+                    recent_items.append(item)
+                    context['recent_items'] = recent_items
+
+            # per chatGPT
+            except Exception as e:
+                logger.error(f"Error while calling eBay API: {e}")
+                messages.error(request, "Unable to retrieve eBay items. Please try again later.")   # 🟩 new user-facing message
+                form = EbaySearchForm()  # 🟩 reset form to empty
+                context['form'] = form
+                return render(request, "ebay_add_item.html", context)
+
     else:
         form = EbaySearchForm()  # empty form for GET request, no API stuff
-    context = {}
+
     context['form'] = form
+
     return render(request, "ebay_add_item.html", context)
 
 # get an ebay token from API
@@ -186,9 +206,14 @@ def get_oath_token():
             data= token_data
         )
         oauth_access_token = tokenRequest.json()['access_token']
-        logger.warning(f"OAUTH ACCESS TOKEN SUCCESS ------------------:")
+        logger.warning(f"--- OAUTH ACCESS TOKEN SUCCESS ---:")
         return oauth_access_token
+
     # if it fails make it known
-    except:
-        logger.warning("--- OATH TOKEN GRANT FAILURE ---")
-        return 0
+    except requests.RequestException as e:
+        logger.error(f"OAuth token request failed: {e}")
+        return None
+
+    except KeyError:
+        logger.error("OAuth token not found in response")
+        return None
