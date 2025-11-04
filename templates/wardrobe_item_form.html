@@ -1,0 +1,173 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block title %}
+  {% if mode == 'edit' %}Edit Item{% else %}Add Item{% endif %} · Best Dressed
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-6 fw-bold">
+          {% if mode == 'edit' %}
+            Edit Wardrobe Item
+          {% else %}
+            Add New Item
+          {% endif %}
+        </h1>
+        <a href="{% url 'my_wardrobe' %}" class="btn btn-outline-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+            <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8z"/>
+          </svg>
+          Cancel
+        </a>
+      </div>
+
+      <!-- Form Card -->
+      <div class="card border-0 shadow-sm">
+        <div class="card-body p-4">
+          <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <!-- Form Errors (if any) -->
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger" role="alert">
+              {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+            
+            <!-- Title Field -->
+            <div class="mb-3">
+              <label for="{{ form.title.id_for_label }}" class="form-label fw-semibold">
+                {{ form.title.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.title }}
+              {% if form.title.help_text %}
+              <div class="form-text">{{ form.title.help_text }}</div>
+              {% endif %}
+              {% if form.title.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.title.errors|join:", " }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Description Field -->
+            <div class="mb-3">
+              <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
+                {{ form.description.label }}
+              </label>
+              {{ form.description }}
+              {% if form.description.help_text %}
+              <div class="form-text">{{ form.description.help_text }}</div>
+              {% endif %}
+              {% if form.description.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.description.errors|join:", " }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Category Field -->
+            <div class="mb-3">
+              <label for="{{ form.category.id_for_label }}" class="form-label fw-semibold">
+                {{ form.category.label }}
+                <span class="text-danger">*</span>
+              </label>
+              {{ form.category }}
+              {% if form.category.help_text %}
+              <div class="form-text">{{ form.category.help_text }}</div>
+              {% endif %}
+              {% if form.category.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.category.errors|join:", " }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Image URL Field -->
+            <div class="mb-3">
+              <label for="{{ form.image_url.id_for_label }}" class="form-label fw-semibold">
+                {{ form.image_url.label }}
+              </label>
+              {{ form.image_url }}
+              {% if form.image_url.help_text %}
+              <div class="form-text">{{ form.image_url.help_text }}</div>
+              {% endif %}
+              {% if form.image_url.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.image_url.errors|join:", " }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Optional Fields Section -->
+            <hr class="my-4">
+            <h5 class="mb-3 text-muted">Optional Details</h5>
+            
+            <!-- Color Field -->
+            <div class="mb-3">
+              <label for="{{ form.color.id_for_label }}" class="form-label fw-semibold">
+                {{ form.color.label }}
+              </label>
+              {{ form.color }}
+              {% if form.color.help_text %}
+              <div class="form-text">{{ form.color.help_text }}</div>
+              {% endif %}
+            </div>
+            
+            <!-- Brand Field -->
+            <div class="mb-3">
+              <label for="{{ form.brand.id_for_label }}" class="form-label fw-semibold">
+                {{ form.brand.label }}
+              </label>
+              {{ form.brand }}
+              {% if form.brand.help_text %}
+              <div class="form-text">{{ form.brand.help_text }}</div>
+              {% endif %}
+            </div>
+            
+            <!-- Season Field -->
+            <div class="mb-3">
+              <label for="{{ form.season.id_for_label }}" class="form-label fw-semibold">
+                {{ form.season.label }}
+              </label>
+              {{ form.season }}
+              {% if form.season.help_text %}
+              <div class="form-text">{{ form.season.help_text }}</div>
+              {% endif %}
+            </div>
+            
+            <!-- Submit Buttons -->
+            <hr class="my-4">
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+              <a href="{% url 'my_wardrobe' %}" class="btn btn-outline-secondary">
+                Cancel
+              </a>
+              <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
+                  <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+                </svg>
+                {% if mode == 'edit' %}
+                    Save Changes
+                {% else %}
+                    Add to Wardrobe
+                {% endif %}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Help Text -->
+      <div class="alert alert-info mt-4" role="alert">
+        <strong>Tip:</strong> You can find image URLs by right-clicking on any image online and selecting "Copy Image Address" or "Copy Image URL".
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

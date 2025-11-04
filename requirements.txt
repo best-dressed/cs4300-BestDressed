@@ -10,5 +10,7 @@ django
 whitenoise
 requests
 
-# Other
+# Tools
+pygithub
+openai
 cryptography

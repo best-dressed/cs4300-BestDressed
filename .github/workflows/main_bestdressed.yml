@@ -46,6 +46,8 @@ jobs:
         run: |
           source antenv/bin/activate
           python manage.py makemigrations
+          python manage.py makemigrations best_dressed_app
+          python manage.py makemigrations users
           python manage.py migrate
 
       # 🚫 Opting Out of Oryx Build
@@ -76,7 +78,7 @@ jobs:
 
       - name: Configure Environment Variables
         run: |
-          az webapp config appsettings set --name bestdressed --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --settings ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" SECRET_KEY="${{ secrets.SECRET_KEY }}" ENVIRONMENT="${{ secrets.ENVIRONMENT }}" SENDGRID_API_KEY="${{ secrets.SENDGRID_API_KEY }}" EBAY_VERIFICATION_TOKEN="${{ secrets.EBAY_VERIFICATION_TOKEN }}"
+          az webapp config appsettings set --name bestdressed --resource-group "${{ secrets.AZURE_RESOURCE_GROUP }}" --settings ALLOWED_HOSTS="${{ secrets.ALLOWED_HOSTS }}" SECRET_KEY="${{ secrets.SECRET_KEY }}" ENVIRONMENT="${{ secrets.ENVIRONMENT }}" SENDGRID_API_KEY="${{ secrets.SENDGRID_API_KEY }}" EBAY_VERIFICATION_TOKEN="${{ secrets.EBAY_VERIFICATION_TOKEN }}" OPENAI_API_KEY="${{ secrets.OPENAI_API_KEY }}"
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp

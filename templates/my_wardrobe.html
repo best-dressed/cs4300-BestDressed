@@ -1,0 +1,159 @@
+{% extends "main.html" %}
+{% load static %}
+{% load wardrobe_extras %}
+
+{% block title %}My Wardrobe · Best Dressed{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="display-6 fw-bold">My Wardrobe</h1>
+      <p class="text-muted">Organize and manage your clothing items</p>
+    </div>
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+      </svg>
+      Back to Dashboard
+    </a>
+  </div>
+
+  <!-- Category Filter Buttons -->
+  <div class="mb-4">
+    <div class="btn-group flex-wrap" role="group" aria-label="Category filter">
+      <!-- All Items Button -->
+      <a href="{% url 'my_wardrobe' %}" 
+         class="btn {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+        All Items ({{ wardrobe_items.count }})
+      </a>
+      
+      <!-- Category Buttons -->
+      {% for category_value, category_label in categories %}
+        <a href="{% url 'my_wardrobe' %}?category={{ category_value }}" 
+           class="btn {% if current_filter == category_value %}btn-primary{% else %}btn-outline-primary{% endif %}">
+          {{ category_label }} ({{ category_counts|get_item:category_value|default:0 }})
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Action Buttons -->
+  <div class="mb-4">
+    <a href="{% url 'add_wardrobe_item' %}" class="btn btn-success me-2">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg me-1" viewBox="0 0 16 16">
+        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+      </svg>
+      Add New Item
+    </a>
+    <a href="{% url 'item_listing' %}" class="btn btn-outline-primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-1" viewBox="0 0 16 16">
+        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+      </svg>
+      Browse Catalog
+    </a>
+  </div>
+
+  <!-- Wardrobe Items Grid -->
+  {% if wardrobe_items %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+    {% for item in wardrobe_items %}
+    <div class="col">
+      <div class="card h-100 border-0 shadow-sm">
+        <!-- Item Image -->
+        {% if item.catalog_item %}
+          <a href="{% url 'item_detail' pk=item.catalog_item.pk %}?from=wardrobe">
+            <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" 
+                 style="height: 250px; object-fit: cover;">
+          </a>
+        {% else %}
+          <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" 
+               style="height: 250px; object-fit: cover;">
+        {% endif %}
+        
+        <!-- Item Details -->
+        <div class="card-body">
+          <!-- Category Badge -->
+          <span class="badge bg-secondary mb-2">{{ item.get_category_display }}</span>
+          
+          <!-- Title -->
+          <h5 class="card-title">{{ item.title }}</h5>
+          
+          <!-- Description -->
+          <p class="card-text text-muted small">{{ item.description|truncatewords:15 }}</p>
+          
+          <!-- Additional Info -->
+          {% if item.color %}
+          <p class="small mb-1">
+            <strong>Color:</strong> {{ item.color }}
+          </p>
+          {% endif %}
+          
+          {% if item.brand %}
+          <p class="small mb-1">
+            <strong>Brand:</strong> {{ item.brand }}
+          </p>
+          {% endif %}
+          
+          {% if item.season %}
+          <p class="small mb-1">
+            <strong>Season:</strong> {{ item.season }}
+          </p>
+          {% endif %}
+          
+          <!-- Timestamp -->
+          <p class="small text-muted mt-2">
+            Added {{ item.created_at|date:"M d, Y" }}
+          </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="card-footer bg-transparent border-0 pb-3">
+          <div class="d-grid gap-2">
+            {% if item.catalog_item %}
+            <a href="{% url 'item_detail' pk=item.catalog_item.pk %}?from=wardrobe" 
+              class="btn btn-sm btn-outline-primary">
+              View in Catalog
+            </a>
+            {% endif %}
+            <a href="{% url 'edit_wardrobe_item' item_pk=item.pk %}" 
+              class="btn btn-sm btn-outline-secondary">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
+                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+              </svg>
+              Edit
+            </a>
+            <a href="{% url 'delete_wardrobe_item' item_pk=item.pk %}" 
+              class="btn btn-sm btn-outline-danger">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+              <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+              <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+              </svg>
+              Remove
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- Empty State -->
+  <div class="text-center py-5">
+    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-inbox text-muted mb-3" viewBox="0 0 16 16">
+      <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
+    </svg>
+    <h4 class="text-muted">
+      {% if current_filter != 'all' %}
+        No {{ current_filter }}s in your wardrobe yet
+      {% else %}
+        Your wardrobe is empty
+      {% endif %}
+    </h4>
+    <p class="text-muted">Start adding items from the catalog or upload your own!</p>
+    <a href="{% url 'item_listing' %}" class="btn btn-primary mt-3">Browse Catalog</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

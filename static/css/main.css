@@ -1,9 +1,9 @@
-h1 {
-    text-align: center;
+h1 { 
+  text-align: center;
 }
 
 p {
-    text-align: center;
+  text-align: center;
 }
 
 /* ---------------------- */
@@ -14,110 +14,113 @@ h1 { text-align: center; }
 p { margin-left: 20px; margin-right: 20px; }
 
 .header {
-  margin-top: 50px;
-  margin-left: 50px;
+margin-top: 50px;
+margin-left: 50px;
+margin-right: 50px;
 }
+
 /* make list items of navbar white */
 .navbar-nav li a {
-    color: white;
-}
-.btn-primary {
-  background-color: #6D11E3; /* purple */
-  border-color: #6D11E3;
-}
-.btn-primary:hover {
-  background-color: #530EB5 !important; /* Slightly darker purple on hover */
-  border-color: #530EB5 !important;
-}
-.card-img-top {
-    width: 100%;
-    height: 13vw;
-    object-fit: cover;
+  color: white;
 }
 
 /* ---------------------- */
-/* THEME                  */
+/* THEME COLORS 🌸        */
 /* ---------------------- */
-:root{
-  --bd-purple: #7b3fe4;
-  --bd-purple-dark: #5c2bb2;
-  --bd-light: #f9f7ff;
+:root {
+--bd-purple: #CDB4FF;       /* pastel lavender */
+--bd-purple-dark: #B89CFF;  /* slightly deeper hover tone */
+--bd-light: #F6F2FF;        /* soft light for backgrounds or accents */
 }
 
 /* Hero: clean dark section, centered text (no purple background) */
 .hero-purple {
-    /* dark neutral tone instead of purple */
-  color: #fff;
-  padding: 5rem 0;             
-  text-align: center;
+color: #fff;
+padding: 3rem 0 2.5rem;       
+text-align: center;
 }
 
 .hero-purple h1 {
-  font-weight: 700;
+font-weight: 700;
 }
 
 .hero-purple .btn {
-  font-size: 1.1rem;
-  padding: 0.75rem 2rem;
+font-size: 1.1rem;
+padding: 0.75rem 2rem;
 }
 
 .hero-purple img {
-  margin-top: 2rem;
+margin-top: 2rem;
 }
-
 
 /* BUTTONS */
 
-/* Filled purple Create account */
-.btn.btn-primary{
-  --bs-btn-bg: var(--bd-purple);
-  --bs-btn-border-color: var(--bd-purple);
-  --bs-btn-hover-bg: var(--bd-purple-dark);
-  --bs-btn-hover-border-color: var(--bd-purple-dark);
-  --bs-btn-active-bg: var(--bd-purple-dark);
-  --bs-btn-active-border-color: var(--bd-purple-dark);
-  color:#fff !important;
+/* Filled lavender Create account */
+.btn.btn-primary {
+--bs-btn-bg: var(--bd-purple);
+--bs-btn-border-color: var(--bd-purple);
+--bs-btn-hover-bg: var(--bd-purple-dark);
+--bs-btn-hover-border-color: var(--bd-purple-dark);
+--bs-btn-active-bg: var(--bd-purple-dark);
+--bs-btn-active-border-color: var(--bd-purple-dark);
+color: #1C1C1C !important; /* darker text for contrast */
+transition: 0.2s ease-in-out;
 }
 
-/* Purple outline (Log In) */
-.btn.btn-outline-light{
-  --bs-btn-color: var(--bd-purple);
-  --bs-btn-border-color: var(--bd-purple);
-  --bs-btn-hover-bg: var(--bd-purple);
-  --bs-btn-hover-border-color: var(--bd-purple);
-  --bs-btn-hover-color:#fff;
-  --bs-btn-focus-shadow-rgb: 123,63,228; /* purple focus ring */
-  background:transparent !important;
-  border-width:2px;
+.btn.btn-primary:hover {
+transform: scale(1.03);
 }
 
-
-section { padding-top: 4rem; padding-bottom: 4rem; }
-
-.card{
-  border-radius:1rem;
-  transition: transform .2s ease, box-shadow .2s ease;
-}
-.card:hover{
-  transform: translateY(-3px);
-  box-shadow: 0 6px 20px rgba(0,0,0,.1);
-}
-
-#features h2{ color: var(--bd-purple); }
-#features p.text-muted{ color:#6c6b70; }
-
-.cta-btn{
-  font-size:1.1rem; padding:.75rem 2rem; border-radius:.75rem;
+/* Lavender outline (Log In) */
+.btn.btn-outline-light {
+--bs-btn-color: var(--bd-purple);
+--bs-btn-border-color: var(--bd-purple);
+--bs-btn-hover-bg: var(--bd-purple);
+--bs-btn-hover-border-color: var(--bd-purple);
+--bs-btn-hover-color: #1C1C1C;
+--bs-btn-focus-shadow-rgb: 205,180,255; /* lavender focus ring */
+background: transparent !important;
+border-width: 2px;
 }
 
-img.rounded-4{
-  border-radius:1rem !important;
-  box-shadow:0 6px 20px rgba(0,0,0,.15);
+/* Cards + sections */
+section { 
+padding-top: 4rem; 
+padding-bottom: 4rem; 
+}
+
+.card {
+border-radius: 1rem;
+transition: transform .2s ease, box-shadow .2s ease;
+}
+
+.card:hover {
+transform: translateY(-3px);
+box-shadow: 0 6px 20px rgba(0,0,0,.1);
+}
+
+#features h2 { 
+color: var(--bd-purple); 
+}
+
+#features p.text-muted { 
+color: #6c6b70; 
+}
+
+.cta-btn {
+font-size: 1.1rem; 
+padding: .75rem 2rem; 
+border-radius: .75rem;
+}
+
+img.rounded-4 {
+border-radius: 1rem !important;
+box-shadow: 0 6px 20px rgba(0,0,0,.15);
 }
 
 /* Responsive tweaks */
-@media (max-width: 768px){
-  .hero-purple img{ margin-top:1.5rem; }
+@media (max-width: 768px) {
+.hero-purple img { margin-top: 1.5rem; }
 }
 /* Make the highlight on forms Purple */
 .form-control:focus {
@@ -125,69 +128,170 @@ img.rounded-4{
   box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075), 0 0 8px rgba(109, 17, 227, 0.6);
 }
 .wardrobe-preview {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 2rem;
-  flex-wrap: wrap;
+display: flex;
+justify-content: center;
+align-items: center;
+gap: 2rem;
+flex-wrap: wrap;
 }
 
 .wardrobe-item {
-  width: 90px;
-  height: auto;
-  transition: transform 0.3s ease, filter 0.3s ease;
-  filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
+width: 90px;
+height: auto;
+transition: transform 0.3s ease, filter 0.3s ease;
+filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3));
 }
 
 .wardrobe-item:hover {
-  transform: translateY(-5px);
-  filter: drop-shadow(0 6px 10px rgba(123,63,228,0.5));
+transform: translateY(-5px);
+/* pastel lavender glow */
+filter: drop-shadow(0 6px 10px rgba(205,180,255,0.5));
 }
 
 /* temporary color adjustment for the pants image */
 .wardrobe-item:nth-child(3) {
-  filter: hue-rotate(15deg) saturate(1.2);
+filter: hue-rotate(15deg) saturate(1.2);
 }
 
-
-/* Navbar brand + links in purple accent */
-:root{
-  --bd-purple:#7b3fe4;
-  --bd-purple-dark:#5c2bb2;
-}
-
+/* Navbar brand + links in lavender accent */
 .navbar .nav-link.active,
 .navbar .nav-link:hover {
-  color: var(--bd-purple) !important;
+color: var(--bd-purple) !important;
 }
 
-.navbar-brand span { letter-spacing:.2px; }
+.navbar-brand span { letter-spacing: .2px; }
 
-/* Keep your purple buttons consistent */
-.btn.btn-primary{
-  --bs-btn-bg: var(--bd-purple);
-  --bs-btn-border-color: var(--bd-purple);
-  --bs-btn-hover-bg: var(--bd-purple-dark);
-  --bs-btn-hover-border-color: var(--bd-purple-dark);
-  color:#fff!important;
+/* Keep lavender buttons consistent */
+.btn.btn-outline-light:hover {
+background-color: var(--bd-purple) !important;
+border-color: var(--bd-purple) !important;
+color: #1C1C1C !important;
 }
-.btn.btn-outline-light:hover{
-  background-color: var(--bd-purple)!important;
-  border-color: var(--bd-purple)!important;
-  color:#fff!important;
-}
-/*up or down tightness*/
+
+/* Navbar spacing and padding adjustments */
 .navbar {
-  margin-top: -30px; 
+  padding: 0.5rem 0;
 }
-/*adjust padding*/
+
+.navbar .container-fluid.header {
+  margin-top: 0;
+  margin-left: 2rem;
+  margin-right: 2rem;
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+}
+
+.navbar-nav {
+  margin-left: auto !important;
+  align-items: center;
+}
+
+.navbar-nav .nav-item {
+  display: flex;
+  align-items: center;
+}
+
+.navbar img {
+  cursor: pointer;
+  max-height: 80px !important;
+  height: auto;
+}
+
+@media (max-width: 991px) {
+  .navbar .container.header {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+  
+  .navbar img {
+    max-height: 60px !important;
+  }
+  
+  .navbar-collapse {
+    margin-top: 1rem;
+  }
+}
+
 #features {
-  padding-left: 4rem; 
+padding-left: 4rem; 
 }
 
-#features h2,
-#features p {
-  margin-left: 0;
-  padding-left: 0;
+/* ------------------------------------ */
+/*  CLOSET MARQUEE (full width version) */
+/* ------------------------------------ */
+
+.closet-marquee {
+  overflow: hidden;
+  border-radius: 1rem;
+  padding: 1.1rem 0;
+  margin: 2rem auto 0;
+  background: rgba(205, 180, 255, 0.06);
+  outline: 1px solid rgba(205, 180, 255, 0.18);
+  user-select: none;
+  pointer-events: none;
 }
 
+/* Each rail contains two identical racks */
+.rail {
+  display: flex;
+  gap: 0;
+  will-change: transform;
+}
+
+/* Each rack should take up the full container width */
+.rack {
+  flex: 0 0 100%;
+  min-width: 100%;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  gap: 2rem;
+  list-style: none;
+  margin: 0;
+  padding: 0 1rem;
+}
+
+/* Clothes or SVG outlines */
+.icon-outline svg,
+.rack img {
+  height: 86px;
+  width: auto;
+  stroke: #fff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+  opacity: 0.9;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* same duration for both rails so they pause in sync */
+.rail-a { animation: scroll-left 40s linear infinite; }
+.rail-b { animation: scroll-right 40s linear infinite; }
+
+@keyframes scroll-left {
+  0%   { transform: translateX(0); }        /* start aligned */
+  40%  { transform: translateX(-50%); }     /* move */
+  45%  { transform: translateX(-50%); }     /* PAUSE (~1.2s) */
+  90%  { transform: translateX(0); }        /* move back */
+  95%  { transform: translateX(0); }        /* PAUSE (~1.2s) */
+  100% { transform: translateX(0); }
+}
+
+@keyframes scroll-right {
+  0%   { transform: translateX(-50%); }     /* start aligned (other seam) */
+  40%  { transform: translateX(0); }        /* move */
+  45%  { transform: translateX(0); }        /* PAUSE (~1.2s) */
+  90%  { transform: translateX(-50%); }     /* move back */
+  95%  { transform: translateX(-50%); }     /* PAUSE (~1.2s) */
+  100% { transform: translateX(-50%); }
+}
+
+/* Accessibility: disable animation if user prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .rail {
+    animation: none !important;
+    transform: none !important;
+  }
+}

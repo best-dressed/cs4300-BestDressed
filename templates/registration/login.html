@@ -12,6 +12,16 @@
       <form method="post" action="{% url 'login' %}">
         {% csrf_token %}
 
+        <!-- Light Purple Icon + Welcome Text -->
+        <div class="text-center mb-3">
+          <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="none"
+               stroke="#c6a7ff" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+          <h2 class="fw-semibold mt-2" style="color:#cdb4ff;">Welcome back!</h2>
+        </div>
+
         <h1 class="h4 mb-3 fw-normal text-center">Please sign in</h1>
 
         {% if form.non_field_errors %}
