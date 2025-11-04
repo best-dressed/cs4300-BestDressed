@@ -103,6 +103,7 @@ def add_item(request):
 def add_item_success(request, pk):
     item = get_object_or_404(Item, pk=pk)
     return render(request, "add_item_success.html", {'item':item})
+
 @login_required
 def dashboard(request):
     """
@@ -236,25 +237,38 @@ def save_to_wardrobe(request, item_pk):
 @login_required
 def my_wardrobe(request):
     """
-    Display user's wardrobe items with filtering options
+    Display user's wardrobe items with filtering and search options
     """
     user = request.user
     
-    # Get filter parameter from URL (e.g., ?category=top)
+    # Get filter and search parameters from URL
     category_filter = request.GET.get('category', None)
+    search_query = request.GET.get('search', '').strip()
     
     # Start with all user's wardrobe items
     wardrobe_items = WardrobeItem.objects.filter(user=user)
+    
+    # Apply search filter if provided
+    if search_query:
+        # Q objects allow us to combine multiple OR conditions
+        # icontains = case-insensitive contains search -- title__icontains="blue" matches "Blue", "blue", "BLUE", "Sky Blue", etc.
+        from django.db.models import Q
+        wardrobe_items = wardrobe_items.filter(
+            Q(title__icontains=search_query) |        # search in title
+            Q(description__icontains=search_query) |  # search in description
+            Q(brand__icontains=search_query) |        # search in brand
+            Q(color__icontains=search_query)          # search in color
+        )
     
     # Apply category filter if specified
     if category_filter and category_filter != 'all':
         wardrobe_items = wardrobe_items.filter(category=category_filter)
     
     # Get all available categories for the filter buttons
-    # This creates a list of tuples: [('top', 'Top'), ('bottom', 'Bottom'), ...]
     categories = WardrobeItem.CATEGORY_CHOICES
     
     # Count items in each category (for display)
+    # Note: This counts ALL items, not just search results
     category_counts = {}
     for category_value, category_label in categories:
         count = WardrobeItem.objects.filter(user=user, category=category_value).count()
@@ -265,6 +279,7 @@ def my_wardrobe(request):
         'categories': categories,
         'category_counts': category_counts,
         'current_filter': category_filter or 'all',
+        'search_query': search_query,  # pass to template to keep search box filled
     }
     
     return render(request, 'my_wardrobe.html', context)

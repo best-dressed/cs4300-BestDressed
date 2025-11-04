@@ -20,6 +20,52 @@
     </a>
   </div>
 
+<!-- Search Bar -->
+<div class="mb-4">
+  <form method="get" action="{% url 'my_wardrobe' %}" class="row g-3">
+    <div class="col-md-8">
+      <div class="input-group">
+        <span class="input-group-text">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+          </svg>
+        </span>
+        <input 
+          type="text" 
+          name="search" 
+          class="form-control" 
+          placeholder="Search by title, brand, color, or description..." 
+          value="{{ search_query }}"
+          aria-label="Search wardrobe items">
+        
+        <!-- Hidden field to preserve category filter when searching -->
+        {% if current_filter != 'all' %}
+        <input type="hidden" name="category" value="{{ current_filter }}">
+        {% endif %}
+        
+        <button class="btn btn-primary" type="submit">Search</button>
+        
+        <!-- Clear button (only show if there's an active search) -->
+        {% if search_query %}
+        <a href="{% url 'my_wardrobe' %}{% if current_filter != 'all' %}?category={{ current_filter }}{% endif %}" class="btn btn-outline-secondary">
+          Clear
+        </a>
+        {% endif %}
+      </div>
+    </div>
+  </form>
+  
+  <!-- Search results info -->
+  {% if search_query %}
+  <div class="mt-2">
+    <small class="text-muted">
+      Showing {{ wardrobe_items.count }} result{{ wardrobe_items.count|pluralize }} for "<strong>{{ search_query }}</strong>"
+      {% if current_filter != 'all' %} in {{ current_filter }}s{% endif %}
+    </small>
+  </div>
+  {% endif %}
+</div>
+
   <!-- Category Filter Buttons -->
   <div class="mb-4">
     <div class="btn-group flex-wrap" role="group" aria-label="Category filter">
