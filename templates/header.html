@@ -9,8 +9,8 @@
 
     <img src = "{% static 'img\bestdressedlogo.png' %}" alt="Logo" class="img-fluid" style="max-height: 100px;" onclick="location.href='/'">
 
-    <div class="collapse navbar-collapse justify-content-end" id="mainNav">
-      <ul class="navbar-nav mb-2 mb-lg-0">
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
         <li class="nav-item">
           <a class="nav-link{% if request.path == '/' %} active{% endif %}" href="{% url 'index' %}">Home</a>
         </li>
