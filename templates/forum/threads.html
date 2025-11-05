@@ -28,7 +28,7 @@
               {% endif %}
               <small class="text-muted">
                 Started by
-                <a href="{% url 'user_profile' user_id=thread.user.id %}">{{ thread.user.username }}</a>
+                <strong class="text-body">{{ thread.user.username }}</strong>
                 &middot; {{ thread.created_at|date:"M d, Y g:ia" }}
                 {% if thread.last_post_at %}&middot; last activity {{ thread.last_post_at|timesince }} ago{% endif %}
               </small>
