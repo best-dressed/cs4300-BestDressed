@@ -15,13 +15,13 @@ import threading
 
 def index(request):
     """
-    View for the index page, as of now this is a landing page.
+    Landing page.
+    If logged in → redirect straight to dashboard.
+    If not logged in → show marketing homepage.
     """
-    if (request.user.is_authenticated) :
-        return render(request, '../templates/index_signed_in.html')
-       
-    else :
-        return render(request, '../templates/index.html')
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return render(request, '../templates/index.html')
 
 """@login_required(login_url='login')   # <- forces login first
 def index_signed_in(request):
