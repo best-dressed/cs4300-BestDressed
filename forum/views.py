@@ -33,7 +33,7 @@ def delete_post(request, post_id):
 
 def threads(request):
     all_threads = Thread.objects.all().order_by('-created_at')  # newest first
-    return render(request, '../forum/threads.html', {'threads': all_threads})
+    return render(request, 'forum/threads.html', {'threads': all_threads})
 
 
 def thread_detail(request, thread_id):
@@ -67,34 +67,26 @@ def thread_detail(request, thread_id):
     }
     return render(request, 'thread_detail.html', context)
 
+
 @login_required
 def thread_create(request):
-    """Create a new thread and first post optionally."""
+    """Create a new thread without creating an initial post."""
     if request.method == 'POST':
-        tform = ThreadForm(request.POST)
-        pform = PostForm(request.POST)  # optional first post
-        if tform.is_valid() and pform.is_valid():
-            thread = tform.save(commit=False)
+        form = ThreadForm(request.POST)
+        if form.is_valid():
+            thread = form.save(commit=False)
             thread.user = request.user
             thread.save()
-
-            # create initial post
-            post = pform.save(commit=False)
-            post.thread = thread
-            post.user = request.user
-            post.save()
-
             messages.success(request, "Thread created.")
             return redirect('thread_detail', thread_id=thread.id)
     else:
-        tform = ThreadForm()
-        pform = PostForm()
+        form = ThreadForm()
 
-    return render(request, 'thread_form.html', {
-        'form': tform,
-        'post_form': pform,
+    return render(request, 'forum/thread_form.html', {
+        'form': form,
         'creating': True,
     })
+
 
 @login_required
 def thread_edit(request, thread_id):
@@ -114,7 +106,7 @@ def thread_edit(request, thread_id):
     else:
         form = ThreadForm(instance=thread)
 
-    return render(request, 'thread_form.html', {
+    return render(request, 'forum/thread_form.html', {
         'form': form,
         'creating': False,
         'thread': thread,
@@ -137,3 +129,28 @@ def user_profile(request, user_id):
         'recent_threads': recent_threads,
         'recent_posts': recent_posts,
     })
+
+@login_required
+def thread_delete(request, thread_id):
+    """
+    Delete a thread. Only the thread owner or a staff user may delete.
+    This view expects POST requests (protects against accidental GET deletes).
+    """
+    thread = get_object_or_404(Thread, id=thread_id)
+
+    # permission check: owner or staff/superuser
+    if not (request.user == thread.user or request.user.is_staff or request.user.is_superuser):
+        messages.error(request, "You don't have permission to delete this thread.")
+        return redirect('thread_detail', thread_id=thread.id)
+
+    if request.method == 'POST':
+        thread.delete()
+        messages.success(request, "Thread deleted.")
+        return redirect('threads')
+
+    # If a GET sneaks through, redirect to detail (we only accept POST deletes)
+    return redirect('thread_detail', thread_id=thread.id)
+
+def thread_detail(request, thread_id):
+    thread = get_object_or_404(Thread, id=thread_id)
+    return render(request, 'forum/thread_detail.html', {'thread': thread})
