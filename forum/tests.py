@@ -98,3 +98,96 @@ class ForumTests(TestCase):
         resp = self.client.post(edit_url, data={'content': 'Edited content'}, follow=True)
         self.wrap_post.refresh_from_db()
         self.assertEqual(self.wrap_post.content, 'Edited content')
+
+class ThreadCreateTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client.login(username='testuser', password='testpass')
+
+    def test_thread_create_success(self):
+        response = self.client.post(reverse('thread_create'), {
+            'title': 'Test Thread',
+            'content': 'This is a test thread.',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Thread.objects.count(), 1)
+        thread = Thread.objects.first()
+        self.assertEqual(thread.title, 'Test Thread')
+        self.assertEqual(thread.content, 'This is a test thread.')
+        self.assertEqual(thread.user, self.user)
+
+    def test_thread_create_missing_title(self):
+        response = self.client.post(reverse('thread_create'), {
+            'title': '',
+            'description': 'Missing title test.',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This field is required.')
+        self.assertEqual(Thread.objects.count(), 0)
+
+    def test_thread_create_with_long_title(self):
+        long_title = 'A' * 300
+        response = self.client.post(reverse('thread_create'), {
+            'title': long_title,
+            'description': 'Valid description',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Ensure this value has at most')
+
+
+    def test_thread_create_requires_login(self):
+        self.client.logout()
+        response = self.client.get(reverse('thread_create'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
+
+class ThreadEditTests(TestCase):
+    def setUp(self):
+        self.owner = User.objects.create_user(username='owner', password='pass')
+        self.other_user = User.objects.create_user(username='intruder', password='pass')
+        self.thread = Thread.objects.create(
+            title='Original Title',
+            content='Original description.',
+            user=self.owner
+        )
+
+    def test_thread_edit_success(self):
+        self.client.login(username='owner', password='pass')
+        response = self.client.post(reverse('thread_edit', args=[self.thread.pk]), {
+            'title': 'Updated Title',
+            'content': 'Updated description.',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.thread.refresh_from_db()
+        self.assertEqual(self.thread.title, 'Updated Title')
+        self.assertEqual(self.thread.content, 'Updated description.')
+
+    def test_thread_edit_invalid_data(self):
+        self.client.login(username='owner', password='pass')
+        response = self.client.post(reverse('thread_edit', args=[self.thread.pk]), {
+            'title': '',
+            'description': 'Still here',
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This field is required.')
+        self.thread.refresh_from_db()
+        self.assertEqual(self.thread.title, 'Original Title')
+
+    def test_thread_edit_preserves_creator(self):
+        self.client.login(username='owner', password='pass')
+        self.client.post(reverse('thread_edit', args=[self.thread.pk]), {
+            'title': 'Changed title',
+            'content': 'Changed description',
+        })
+        self.thread.refresh_from_db()
+        self.assertEqual(self.thread.user, self.owner)
+
+    def test_thread_edit_unauthorized_user(self):
+        self.client.login(username='intruder', password='pass')
+        response = self.client.get(reverse('thread_edit', args=[self.thread.pk]))
+        self.assertEqual(response.status_code, 302)
+
+    def test_thread_edit_requires_login(self):
+        response = self.client.get(reverse('thread_edit', args=[self.thread.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/accounts/login/', response.url)
