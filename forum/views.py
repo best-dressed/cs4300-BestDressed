@@ -43,37 +43,6 @@ def threads(request):
     return render(request, 'forum/threads.html', {'threads': all_threads})
 
 
-def thread_detail(request, thread_id):
-    """
-    Show a single thread and its posts. Handle posting a reply via POST.
-    """
-    thread = get_object_or_404(Thread, id=thread_id)
-    posts = Post.objects.filter(thread=thread).select_related('user').order_by('created_at')
-
-    # Reply form (must be POST and authenticated)
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            messages.error(request, "You must be signed in to reply.")
-            return redirect('thread_detail', thread_id=thread.id)
-
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.thread = thread
-            post.user = request.user
-            post.save()
-            messages.success(request, "Reply posted.")
-            return redirect('thread_detail', thread_id=thread.id)
-    else:
-        form = PostForm()
-
-    context = {
-        'thread': thread,
-        'posts': posts,
-        'form': form,
-    }
-    return render(request, 'thread_detail.html', context)
-
 
 @login_required
 def thread_create(request):
