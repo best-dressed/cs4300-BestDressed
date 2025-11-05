@@ -3,25 +3,25 @@ Django views for the Best Dressed application.
 """
 
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Item, UserProfile, WardrobeItem
+from .models import Item, UserProfile, WardrobeItem, Outfit
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
 from django.db import IntegrityError
-from .forms import UserProfileForm, WardrobeItemForm, ItemForm
+from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
 from .recommendation import generate_recommendations
 from django.http import JsonResponse
 import threading
 
 def index(request):
     """
-    View for the index page, as of now this is a landing page.
+    Landing page.
+    If logged in → redirect straight to dashboard.
+    If not logged in → show marketing homepage.
     """
-    if (request.user.is_authenticated) :
-        return render(request, '../templates/index_signed_in.html')
-       
-    else :
-        return render(request, '../templates/index.html')
+    if request.user.is_authenticated:
+        return redirect('dashboard')
+    return render(request, '../templates/index.html')
 
 """@login_required(login_url='login')   # <- forces login first
 def index_signed_in(request):
@@ -103,6 +103,7 @@ def add_item(request):
 def add_item_success(request, pk):
     item = get_object_or_404(Item, pk=pk)
     return render(request, "add_item_success.html", {'item':item})
+
 @login_required
 def dashboard(request):
     """
@@ -236,22 +237,38 @@ def save_to_wardrobe(request, item_pk):
 @login_required
 def my_wardrobe(request):
     """
-    Display user's wardrobe items with filtering options
+    Display user's wardrobe items with filtering, search, and sorting options
     """
     user = request.user
     
-    # Get filter parameter from URL (e.g., ?category=top)
+    # Get filter, search, and sort parameters from URL
     category_filter = request.GET.get('category', None)
+    search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort', '-created_at')  # default: newest first
     
     # Start with all user's wardrobe items
     wardrobe_items = WardrobeItem.objects.filter(user=user)
+    
+    # Apply search filter if provided
+    if search_query:
+        from django.db.models import Q
+        wardrobe_items = wardrobe_items.filter(
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(brand__icontains=search_query) |
+            Q(color__icontains=search_query)
+        )
     
     # Apply category filter if specified
     if category_filter and category_filter != 'all':
         wardrobe_items = wardrobe_items.filter(category=category_filter)
     
+    # Apply sorting
+    # order_by() sorts the database results
+    # The '-' prefix means descending order (reverse)
+    wardrobe_items = wardrobe_items.order_by(sort_by)
+    
     # Get all available categories for the filter buttons
-    # This creates a list of tuples: [('top', 'Top'), ('bottom', 'Bottom'), ...]
     categories = WardrobeItem.CATEGORY_CHOICES
     
     # Count items in each category (for display)
@@ -260,11 +277,24 @@ def my_wardrobe(request):
         count = WardrobeItem.objects.filter(user=user, category=category_value).count()
         category_counts[category_value] = count
     
+    # Define available sorting options (value, display_name)
+    sort_options = [
+        ('-created_at', 'Newest First'),
+        ('created_at', 'Oldest First'),
+        ('title', 'A-Z'),
+        ('-title', 'Z-A'),
+        ('brand', 'Brand (A-Z)'),
+        ('-brand', 'Brand (Z-A)'),
+    ]
+    
     context = {
         'wardrobe_items': wardrobe_items,
         'categories': categories,
         'category_counts': category_counts,
         'current_filter': category_filter or 'all',
+        'search_query': search_query,
+        'current_sort': sort_by,
+        'sort_options': sort_options,
     }
     
     return render(request, 'my_wardrobe.html', context)
@@ -358,6 +388,8 @@ def edit_wardrobe_item(request, item_pk):
         'item': wardrobe_item,
     }
     return render(request, 'wardrobe_item_form.html', context)
+
+@login_required
 def recommendations(request):
     """
     View to display the recommendations page.
@@ -406,3 +438,63 @@ def generate_recommendations_ajax(request):
             'success': False,
             'error': 'Unable to generate recommendations at this time. Please try again later.'
         }, status=500)
+
+@login_required
+def create_outfit(request):
+    """
+    Create a new outfit by selecting wardrobe items.
+    
+    GET: Display form with user's wardrobe items as checkboxes
+    POST: Save the outfit with selected items
+    """
+    user = request.user
+    
+    if request.method == 'POST':
+        # User submitted the form
+        form = OutfitForm(user, request.POST)
+        
+        if form.is_valid():
+            # Create outfit but don't save to database yet
+            outfit = form.save(commit=False)
+            
+            # Set the user (security - only current user can create for themselves)
+            outfit.user = user
+            
+            # Now save to database (this saves the outfit, but not the many-to-many items yet)
+            outfit.save()
+            
+            # Save the many-to-many relationships (the items)
+            # form.save_m2m() handles the many-to-many field (items)
+            form.save_m2m()
+            
+            messages.success(request, f'Outfit "{outfit.name}" created successfully!')
+            return redirect('my_outfits')
+    else:
+        # User is viewing the form (GET request)
+        form = OutfitForm(user)
+    
+    # Get user's wardrobe items to display with images
+    wardrobe_items = WardrobeItem.objects.filter(user=user)
+    
+    context = {
+        'form': form,
+        'wardrobe_items': wardrobe_items,
+        'mode': 'create',  # Tell template this is create mode (not edit)
+    }
+    
+    return render(request, 'create_outfit.html', context)
+
+@login_required
+def my_outfits(request):
+    """
+    Display all outfits created by the user.
+    (Full implementation coming in Phase 6C)
+    """
+    user = request.user
+    outfits = Outfit.objects.filter(user=user)
+    
+    context = {
+        'outfits': outfits,
+    }
+    
+    return render(request, 'my_outfits.html', context)

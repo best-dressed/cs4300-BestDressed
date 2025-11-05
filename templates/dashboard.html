@@ -17,7 +17,7 @@
     <div class="col-md-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center p-4">
-          <div class="display-4 text-primary mb-2">{{ wardrobe_count }}</div>
+          <div class="display-4 mb-2" style="color: #CDB4FF;">{{ wardrobe_count }}</div>
           <h5 class="card-title">Wardrobe Items</h5>
           <p class="card-text text-muted small">Items in your collection</p>
         </div>
@@ -27,7 +27,7 @@
     <div class="col-md-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center p-4">
-          <div class="display-4 text-success mb-2">{{ outfit_count }}</div>
+          <div class="display-4 mb-2" style="color: #B89CFF;">{{ outfit_count }}</div>
           <h5 class="card-title">Saved Outfits</h5>
           <p class="card-text text-muted small">Complete outfits you've created</p>
         </div>
@@ -37,7 +37,7 @@
     <div class="col-md-4">
       <div class="card border-0 shadow-sm h-100">
         <div class="card-body text-center p-4">
-          <div class="display-4 text-warning mb-2">{{ recommendation_count }}</div>
+          <div class="display-4 mb-2" style="color: #A378FF;">{{ recommendation_count }}</div>
           <h5 class="card-title">New Recommendations</h5>
           <p class="card-text text-muted small">AI-suggested outfits</p>
         </div>
@@ -45,46 +45,46 @@
     </div>
   </div>
 
-<!-- Quick Links -->
-<div class="row g-3 mb-4">
-  <div class="col-md-6 col-lg-3">
-    <a href="{% url 'account_settings' %}" class="text-decoration-none">
-      <div class="card h-100 border-0 shadow-sm hover-lift">
-        <div class="card-body p-3 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-person-circle text-primary mb-2" viewBox="0 0 16 16">
-            <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-            <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-          </svg>
-          <h6 class="card-title fw-semibold mb-0">Account Settings</h6>
+  <!-- Quick Links -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-3">
+      <a href="{% url 'account_settings' %}" class="text-decoration-none">
+        <div class="card h-100 border-0 shadow-sm hover-lift">
+          <div class="card-body p-3 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-person-circle mb-2" style="color: #B89CFF;" viewBox="0 0 16 16">
+              <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+              <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+            </svg>
+            <h6 class="card-title fw-semibold mb-0">Account Settings</h6>
+          </div>
         </div>
-      </div>
-    </a>
-  </div>
-  
-  <div class="col-md-6 col-lg-3">
-    <a href="{% url 'my_wardrobe' %}" class="text-decoration-none">
-      <div class="card h-100 border-0 shadow-sm hover-lift">
-        <div class="card-body p-3 text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-bag text-primary mb-2" viewBox="0 0 16 16">
-            <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
-          </svg>
-          <h6 class="card-title fw-semibold mb-0">My Wardrobe</h6>
-        </div>
-      </div>
-    </a>
-  </div>
-  
-  
-  <div class="col-md-6 col-lg-3">
-    <div class="card h-100 border-0 shadow-sm">
-      <div class="card-body p-3 text-center text-muted">
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-grid-3x3 mb-2" viewBox="0 0 16 16">
-          <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5zM1.5 1a.5.5 0 0 0-.5.5V5h4V1zM5 6H1v4h4zm1 4h4V6H6zm-1 1H1v3.5a.5.5 0 0 0 .5.5H5zm1 0v4h4v-4zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11zm0-1h4V6h-4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11zm-1 0V1H6v4z"/>
-        </svg>
-        <h6 class="card-title fw-semibold mb-0">My Outfits</h6>
-        <small class="text-muted">(Coming Soon)</small>
-      </div>
+      </a>
     </div>
+    
+    <div class="col-md-6 col-lg-3">
+      <a href="{% url 'my_wardrobe' %}" class="text-decoration-none">
+        <div class="card h-100 border-0 shadow-sm hover-lift">
+          <div class="card-body p-3 text-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-bag mb-2" style="color: #CDB4FF;" viewBox="0 0 16 16">
+              <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+            </svg>
+            <h6 class="card-title fw-semibold mb-0">My Wardrobe</h6>
+          </div>
+        </div>
+      </a>
+    </div>
+  
+  <div class="col-md-6 col-lg-3">
+    <a href="{% url 'my_outfits' %}" class="text-decoration-none">
+      <div class="card h-100 border-0 shadow-sm hover-lift">
+        <div class="card-body p-3 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" class="bi bi-grid-3x3 text-primary mb-2" style="color: #CDB4FF;" viewBox="0 0 16 16">
+            <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5zM1.5 1a.5.5 0 0 0-.5.5V5h4V1zM5 6H1v4h4zm1 4h4V6H6zm-1 1H1v3.5a.5.5 0 0 0 .5.5H5zm1 0v4h4v-4zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11zm0-1h4V6h-4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11zm-1 0V1H6v4z"/>
+          </svg>
+          <h6 class="card-title fw-semibold mb-0">My Outfits</h6>
+        </div>
+      </div>
+    </a>
   </div>
   
   <div class="col-md-6 col-lg-3">
@@ -98,7 +98,6 @@
       </div>
     </div>
   </div>
-</div>
 
   <!-- Quick Actions -->
   <div class="row mt-5">
@@ -108,8 +107,8 @@
           <h5 class="card-title fw-semibold mb-3">Quick Actions</h5>
           <div class="d-flex flex-wrap gap-2">
             <a href="{% url 'item_listing' %}" class="btn btn-light">Browse Catalog</a>
-            <button class="btn btn-outline-light" disabled>Add Item to Wardrobe (Coming Soon)</button>
-            <button class="btn btn-outline-light" disabled>Create New Outfit (Coming Soon)</button>
+            <a href="{% url 'add_wardrobe_item' %}" class="btn btn-light">Add Item to Wardrobe</a>
+            <a href="{% url 'create_outfit' %}" class="btn btn-light">Create New Outfit</a>
           </div>
         </div>
       </div>
