@@ -1,33 +1,6 @@
 {% extends "main.html" %}
 {% load static %}
 {% block content %}
-
-<style>
-  /* Force long unbroken text to wrap and preserve newlines */
-  .thread-content,
-  .post-content {
-    white-space: pre-wrap;          /* preserve newlines, but allow wrapping */
-    overflow-wrap: anywhere;       /* break long words when needed */
-    word-break: break-word;        /* fallback for some browsers */
-    hyphens: auto;
-    text-align: left !important;
-  }
-  
-  /* Important: when content lives inside a flex container, flex items need min-width:0
-     or long words can force the flex child wider than its container. */
-  .list-group-item,
-  .card-body > .row,
-  .d-flex {
-    min-width: 0;
-  }
-  
-  /* More targeted: ensure the wrapper of the paragraph can shrink inside flex */
-  .list-group-item > .mt-2,
-  .card .thread-content,
-  .card .post-content {
-    min-width: 0;
-  }
-  </style>
   
 <div class="container my-4">
   <div class="row">
