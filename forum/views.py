@@ -48,7 +48,7 @@ def thread_edit(request, thread_id):
     """Edit a thread. Only the thread author may edit (adjust permission as needed)."""
     thread = get_object_or_404(Thread, id=thread_id)
 
-    if request.user != thread.user and not request.user.has_perm('forum.change_thread'):
+    if not(request.user == thread.user or request.user.is_staff):
         messages.error(request, "You don't have permission to edit this thread.")
         return redirect('thread_detail', thread_id=thread.id)
 
@@ -107,6 +107,7 @@ def thread_detail(request, thread_id):
 @login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
+    # only author or staff can delete
     if not (request.user == post.user or request.user.is_staff):
         return redirect('thread_detail', thread_id=post.thread.id)
 
