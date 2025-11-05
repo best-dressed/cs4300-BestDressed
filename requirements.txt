@@ -9,7 +9,9 @@ coverage
 django
 django-registration
 whitenoise
+requests
 
 # Tools
 pygithub
 openai
+cryptography

@@ -18,25 +18,47 @@
   </header>
 </div>
 
-<!-- Search + Add Item (closer to hero) -->
-<div class="container my-3">
-  <div class="row justify-content-center">
-    <div class="col-md-6 text-center">
-      <input type="text" class="form-control search-input mb-2" placeholder="Search for an Item...">
-      <a href="{% url 'add_item' %}" class="btn btn-primary mt-1">
-        Add a new Item
-      </a>
+<div style="margin:30px; font-size:50px;">
+
+    <div class ="container">
+
+        <div class="container">
+            <div class="row justify-content-left">
+                <div class="col-md-6">
+                    <div class="search-container">
+                        <input type="text" class="form-control search-input" placeholder="Search for an Item...">
+                    </div>
+
+                    <!-- Dropdown Add Button -->
+                    <div class="dropdown" style="margin-top:20px;">
+                        <button class="btn btn-primary dropdown-toggle" type="button" id="addItemDropdown"
+                                data-bs-toggle="dropdown" aria-expanded="false" style="font-size:20px;">
+                            Add Item
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="addItemDropdown">
+                            <li><a class="dropdown-item" href="{% url 'add_item' %}">Add item manually</a></li>
+                            <li><a class="dropdown-item" href="{% url 'ebay_get_items' %}">Add items via eBay</a></li>
+                        </ul>
+                    </div>
+                    <!-- End Dropdown -->
+
+                </div>
+            </div>
+        </div>
+
     </div>
   </div>
 </div>
 
-<!-- Item Listing Section -->
-<section class="py-4"> <!-- tighter spacing here too -->
-  <div class="container px-4 px-lg-5 mt-3">
-    <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-      {% for item in items %}
-        {% include "item_card.html" with item=item %}
-      {% endfor %}
+<!-- Meat and potatoes of the item listing -->
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            <!--List items from db-->
+            {% for item in items %}
+            {% include "item_card.html" with item=item %}
+            {% endfor %}
+        </div>
     </div>
   </div>
 </section>
