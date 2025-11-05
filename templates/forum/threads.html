@@ -46,7 +46,8 @@
               <div class="d-flex justify-content-end">
                 <a href="{% url 'thread_detail' thread_id=thread.id %}" class="btn btn-sm btn-outline-primary me-2">Open</a>
 
-                {% if user.is_authenticated and user.id == thread.user_id %}
+                {% if user.is_authenticated %}
+                {% if user.id == thread.user_id or user.is_staff %}
                   <!-- delete form for owners -->
                   <form method="post" action="{% url 'thread_delete' thread_id=thread.id %}" class="d-inline">
                     {% csrf_token %}
@@ -57,6 +58,7 @@
                   </form>
 
                   <a href="{% url 'thread_edit' thread_id=thread.id %}" class="btn btn-sm btn-outline-secondary ms-2">Edit</a>
+                {% endif %}
                 {% endif %}
               </div>
             </div>

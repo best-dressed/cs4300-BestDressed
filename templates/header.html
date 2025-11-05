@@ -24,6 +24,9 @@
           <a class="nav-link{% if request.path == '/item_listing/' %} active{% endif %}" href="{% url 'item_listing' %}">Item Listing</a>
         </li>
         <li class="nav-item">
+          <a class="nav-link{% if request.path == '/forum/' %} active{% endif %}" href="{% url 'threads' %}">Forum</a>
+        </li>
+        <li class="nav-item">
           <a class="nav-link" href="#services">Services</a>
         </li>
         <li class="nav-item">
