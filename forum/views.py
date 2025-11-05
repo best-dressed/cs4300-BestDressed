@@ -24,12 +24,19 @@ def create_post(request, thread_id):
     return render(request, 'create_post.html', {'form': form, 'thread': thread})
 
 @login_required
-def delete_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    thread_id = post.thread.id
-    if request.user == post.user:
+def post_delete(request, post_id):
+    post = get_object_or_404(Post.objects.select_related('thread', 'user'), id=post_id)
+    # only author or staff can delete
+    if not (request.user == post.user or request.user.is_staff):
+        return redirect('thread_detail', thread_id=post.thread.id)
+
+    if request.method == 'POST':
+        thread_id = post.thread.id
         post.delete()
-    return redirect('thread_detail', thread_id=thread_id)
+        return redirect('thread_detail', thread_id=thread_id)
+
+    # GET -> show confirmation page
+    return redirect('thread_detail', thread_id=post.thread.id)
 
 def threads(request):
     all_threads = Thread.objects.all().order_by('-created_at')  # newest first
@@ -77,16 +84,10 @@ def thread_create(request):
             thread = form.save(commit=False)
             thread.user = request.user
             thread.save()
-            messages.success(request, "Thread created.")
             return redirect('thread_detail', thread_id=thread.id)
     else:
         form = ThreadForm()
-
-    return render(request, 'forum/thread_form.html', {
-        'form': form,
-        'creating': True,
-    })
-
+    return render(request, 'forum/thread_form.html', {'form': form})
 
 @login_required
 def thread_edit(request, thread_id):
@@ -153,4 +154,16 @@ def thread_delete(request, thread_id):
 
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
-    return render(request, 'forum/thread_detail.html', {'thread': thread})
+    posts = thread.posts.select_related('user').order_by('created_at')
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            return redirect(f"{reverse('login')}?next={request.path}")
+        form = PostForm(request.POST)
+        if form.is_valid():
+            p = form.save(commit=False)
+            p.thread, p.user = thread, request.user
+            p.save()
+            return redirect('thread_detail', thread_id=thread.id)
+    else:
+        form = PostForm()
+    return render(request, 'forum/thread_detail.html', {'thread': thread, 'posts': posts, 'form': form})
