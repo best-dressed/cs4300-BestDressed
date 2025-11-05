@@ -1,4 +1,4 @@
-# all credit to ChatGPT on here
+# chatGPT with small tweaks
 
 from django.test import TestCase, Client
 from django.urls import reverse
@@ -19,19 +19,52 @@ class EbayViewsTestCase(TestCase):
         self.client = Client()
 
     def test_challenge_code_response(self):
-        # Simulate GET request with challenge_code
+        """
+        ✅ Tests GET /auth/ebay_market_delete/?challenge_code=...
+        Ensures proper challengeResponse SHA256 hash is returned.
+        """
         response = self.client.get(
             reverse('ebay_market_delete') + '?challenge_code=test123'
         )
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertIn('challengeResponse', data)
-        # Ensure the response is a 64-character hex string (SHA256)
         self.assertEqual(len(data['challengeResponse']), 64)
 
     @patch('api.views.get_oath_token', return_value='fake_token')
     @patch('requests.get')
+    def test_post_invalid_signature_returns_412(self, mock_get, mock_token):
+        """
+        ✅ Tests POST /auth/ebay_market_delete/ with an invalid signature.
+        Mocks public key fetch and forces InvalidSignature branch.
+        """
+        fake_public_key = """-----BEGIN PUBLIC KEY-----
+MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEz2dK6S0RZKoF7zT9f3v7UzE1kmD+YvXY
+J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
+-----END PUBLIC KEY-----"""
+        mock_get.return_value = MagicMock(status_code=200, json=lambda: {'key': fake_public_key})
+
+        # Prepare fake POST data and headers
+        body = json.dumps({'dummy': 'data'}).encode('utf-8')
+        signature_dict = {'kid': 'fake_kid', 'signature': base64.b64encode(b'bad_signature').decode('utf-8')}
+        headers = {'HTTP_X_EBAY_SIGNATURE': base64.b64encode(json.dumps(signature_dict).encode('utf-8')).decode('utf-8')}
+
+        response = self.client.post(
+            reverse('ebay_market_delete'),
+            data=body,
+            content_type='application/json',
+            **headers
+        )
+
+        self.assertEqual(response.status_code, 412)
+        self.assertJSONEqual(response.content, {'error': 'Invalid public key or Signature'})
+
+    @patch('api.views.get_oath_token', return_value='fake_token')
+    @patch('requests.get')
     def test_ebay_get_items_post_creates_items(self, mock_get, mock_token):
+        """
+        ✅ Tests POST /ebay_add_items/ to ensure items are created and parsed.
+        """
         # Mock eBay search response
         mock_search_response = {
             "itemSummaries": [
@@ -46,11 +79,9 @@ class EbayViewsTestCase(TestCase):
             ]
         }
 
-        mock_detail_response = {
-            "shortDescription": "Test description"
-        }
+        mock_detail_response = {"shortDescription": "Test description"}
 
-        # Mock sequential requests: search then item detail
+        # Sequential requests: search then item detail
         mock_get.side_effect = [
             MagicMock(status_code=200, json=lambda: mock_search_response),
             MagicMock(status_code=200, json=lambda: mock_detail_response)
@@ -61,16 +92,18 @@ class EbayViewsTestCase(TestCase):
             data={'search_term': 'Test', 'item_count': 1}
         )
 
-        # Should render template with form and recent_items
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'ebay_add_item.html')
         self.assertTrue(Item.objects.filter(title='Test Item').exists())
+
         item = Item.objects.get(title='Test Item')
         self.assertEqual(item.description, 'Test description')
         self.assertEqual(item.tag, 'Accessory')
 
     def test_ebay_get_items_get_request(self):
-        # GET request should return empty form and template
+        """
+        ✅ Tests GET /ebay_add_items/ ensures empty form and template render.
+        """
         response = self.client.get(reverse('ebay_get_items'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'ebay_add_item.html')

@@ -14,7 +14,7 @@ from django.views.decorators.csrf import csrf_exempt
 import logging
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.exceptions import InvalidSignature
+from cryptography.exceptions import InvalidSignature, InvalidKey
 from best_dressed_app.models import Item
 from .forms import *
 logger = logging.getLogger(__name__)
@@ -81,7 +81,14 @@ def ebay_marketplace_deletion_notification(request):
         pk = public_key
         msg_body_bytes = request.body
         public_key_pem = pk.encode("utf-8")
-        pk = serialization.load_pem_public_key(public_key_pem)
+
+        # figure this out later
+        try:
+            pk = serialization.load_pem_public_key(public_key_pem)
+        except (ValueError, InvalidKey):
+            logging.error("Invalid public key received.")
+            return JsonResponse({'error': 'Invalid public key or Signature'}, status=412)
+
         try:
             pk.verify(base64.b64decode(signature), msg_body_bytes, ec.ECDSA(hashes.SHA1()))
             logger.info("Ebay Signature verified successfully")
