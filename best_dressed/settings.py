@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'best_dressed_app',
     'users',
+    'forum',
     'api',
     'django_registration',
 ]
@@ -146,7 +147,7 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 # Auth: redirects after login/logout
 LOGIN_REDIRECT_URL = "dashboard"
 LOGOUT_REDIRECT_URL = "index"
-LOGIN_URL = "login"
+LOGIN_URL = "/accounts/login/"
 
 
 # For testing password reset emails locally
@@ -175,6 +176,8 @@ if _custom:
     CSRF_TRUSTED_ORIGINS.append(f"https://{_custom}")
 # include any literal trusted origin the project needs
 CSRF_TRUSTED_ORIGINS.append('https://app-jcamargoenvironment-19.devedu.io')
+CSRF_TRUSTED_ORIGINS.append('https://app-landerse-19.devedu.io')
+CSRF_TRUSTED_ORIGINS.append('https://app-michal-19.devedu.io')
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SECURE_SSL_REDIRECT = not DEBUG

@@ -22,7 +22,7 @@ urlpatterns = [
     path("creation/", include('django.contrib.auth.urls')),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", UserLogoutView.as_view(), name="logout"),
-     path("about/", AboutView.as_view(), name="about"),
+    path("about/", AboutView.as_view(), name="about"),
 
     # Password change
     path("password_change/", UserPasswordChangeView.as_view(), name="password_change"),

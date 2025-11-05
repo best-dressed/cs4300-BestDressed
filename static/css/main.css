@@ -90,13 +90,29 @@ padding-bottom: 4rem;
 }
 
 .card {
-border-radius: 1rem;
-transition: transform .2s ease, box-shadow .2s ease;
+  border-radius: 1rem;
+  transition: transform .2s ease, box-shadow .2s ease;
 }
 
 .card:hover {
-transform: translateY(-3px);
-box-shadow: 0 6px 20px rgba(0,0,0,.1);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0,0,0,.1);
+}
+
+/* ---------------------- */
+/* FEATURES (glass cards) */
+/* ---------------------- */
+#features .card {
+  background: rgba(255, 255, 255, 0.03);  /* soft frosted glass */
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  border: 1px solid rgba(205, 180, 255, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#features .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
 }
 
 #features h2 { 
@@ -294,4 +310,108 @@ padding-left: 4rem;
     animation: none !important;
     transform: none !important;
   }
+}
+
+/* Fix blue outline button to be light purple */
+.btn-outline-primary {
+  --bs-btn-color: var(--bd-purple) !important;
+  --bs-btn-border-color: var(--bd-purple) !important;
+  --bs-btn-hover-bg: var(--bd-purple) !important;
+  --bs-btn-hover-border-color: var(--bd-purple) !important;
+  --bs-btn-hover-color: #1C1C1C !important;
+  background: transparent !important;
+  border-width: 2px !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--bd-purple) !important;
+  border-color: var(--bd-purple) !important;
+  color: #1C1C1C !important;
+}
+
+/* Also fix any blue text links */
+a.btn-outline-primary {
+  color: var(--bd-purple) !important;
+}
+
+
+/* 💜 Deep hanger-purple button */
+.btn-purple-dark {
+  background-color: #5A05AE !important;   /* same as hanger */
+  border-color: #5A05AE !important;
+  color: #fff !important;                 /* keep text readable */
+  transition: 0.25s ease-in-out;
+  box-shadow: 0 0 0 rgba(0,0,0,0);        /* smooth hover animation start */
+}
+
+.btn-purple-dark:hover {
+  background-color: #46048A !important;   /* slightly darker hover */
+  border-color: #46048A !important;
+  transform: scale(1.03);
+  box-shadow: 0 0 12px rgba(90, 5, 174, 0.4); /* soft purple glow */
+}
+
+/* ---------------------- */
+/* AUTH PAGE STYLING   */
+/* ---------------------- */
+
+.auth-hero {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, rgba(205,180,255,0.15) 0%, transparent 70%);
+}
+
+.auth-box {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(205,180,255,0.15);
+  border-radius: 16px;
+  padding: 3rem 2.5rem;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 0 24px rgba(0,0,0,0.2);
+  backdrop-filter: blur(10px);
+}
+
+.auth-box h1 {
+  color: #fff;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.auth-box .form-control {
+  background-color: rgba(255,255,255,0.05);
+  border: 1px solid rgba(205,180,255,0.25);
+  color: #fff;
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.auth-box .form-control:focus {
+  border-color: var(--bd-purple);
+  box-shadow: 0 0 6px rgba(205,180,255,0.4);
+}
+
+.auth-box a {
+  color: var(--bd-purple);
+  text-decoration: none;
+}
+
+.auth-box a:hover {
+  text-decoration: underline;
+}
+
+/* little sparkle like on About */
+.sparkle-icon {
+  color: var(--bd-purple);
+  font-size: 1.4rem;
+  animation: twinkle 2s infinite ease-in-out;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.6; transform: scale(0.95); }
+  50% { opacity: 1; transform: scale(1.05); }
 }

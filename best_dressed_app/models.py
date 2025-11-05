@@ -127,3 +127,78 @@ class WardrobeItem(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.title}"
+
+
+class Outfit(models.Model):
+    """
+    Represents a collection of wardrobe items.
+    
+    Users can create outfits by combining multiple items from their wardrobe.
+    Each outfit belongs to one user and can contain multiple wardrobe items.
+    """
+    
+    # Foreign Key: links this outfit to a specific user
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='outfits')
+    
+    # Basic outfit information
+    name = models.CharField(max_length=200, help_text="e.g., 'Summer Date Night', 'Office Monday'")
+    description = models.TextField(max_length=1000, blank=True, help_text="Describe the outfit and when to wear it")
+    
+    # ManyToMany relationship: one outfit can have many items, one item can be in many outfits
+    # This creates a separate "junction table" in the database to track the relationships
+    items = models.ManyToManyField(
+        WardrobeItem,
+        related_name='outfits',
+        blank=True,
+        help_text="Items included in this outfit"
+    )
+    
+    # Optional fields for organization
+    occasion = models.CharField(
+        max_length=50, 
+        blank=True,
+        choices=[
+            ('casual', 'Casual'),
+            ('business', 'Business/Professional'),
+            ('formal', 'Formal'),
+            ('athletic', 'Athletic/Workout'),
+            ('night_out', 'Night Out'),
+            ('date', 'Date'),
+            ('other', 'Other'),
+        ],
+        help_text="What type of occasion is this outfit for?"
+    )
+    
+    season = models.CharField(
+        max_length=50, 
+        blank=True,
+        choices=[
+            ('spring', 'Spring'),
+            ('summer', 'Summer'),
+            ('fall', 'Fall'),
+            ('winter', 'Winter'),
+            ('all', 'All Seasons'),
+        ],
+        help_text="What season is this outfit best for?"
+    )
+    
+    # Track if this is a favorite outfit
+    is_favorite = models.BooleanField(default=False, help_text="Mark as a favorite outfit")
+    
+    # Automatic timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        # Default ordering: favorites first, then newest
+        ordering = ['-is_favorite', '-created_at']
+        
+        # Ensure outfit names are unique per user (can't have two outfits with same name)
+        unique_together = [['user', 'name']]
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.name}"
+    
+    def item_count(self):
+        """Helper method to get the number of items in this outfit"""
+        return self.items.count()
