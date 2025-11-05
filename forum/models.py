@@ -21,7 +21,7 @@ class Thread(models.Model):
 class Post(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='posts')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
-    content = models.TextField()
+    content = models.TextField(default="No text entered")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
