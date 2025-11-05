@@ -3,12 +3,12 @@ Django views for the Best Dressed application.
 """
 
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Item, UserProfile, WardrobeItem
+from .models import Item, UserProfile, WardrobeItem, Outfit
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
 from django.db import IntegrityError
-from .forms import UserProfileForm, WardrobeItemForm, ItemForm
+from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
 from .recommendation import generate_recommendations
 from django.http import JsonResponse
 import threading
@@ -436,3 +436,63 @@ def generate_recommendations_ajax(request):
             'success': False,
             'error': 'Unable to generate recommendations at this time. Please try again later.'
         }, status=500)
+
+@login_required
+def create_outfit(request):
+    """
+    Create a new outfit by selecting wardrobe items.
+    
+    GET: Display form with user's wardrobe items as checkboxes
+    POST: Save the outfit with selected items
+    """
+    user = request.user
+    
+    if request.method == 'POST':
+        # User submitted the form
+        form = OutfitForm(user, request.POST)
+        
+        if form.is_valid():
+            # Create outfit but don't save to database yet
+            outfit = form.save(commit=False)
+            
+            # Set the user (security - only current user can create for themselves)
+            outfit.user = user
+            
+            # Now save to database (this saves the outfit, but not the many-to-many items yet)
+            outfit.save()
+            
+            # Save the many-to-many relationships (the items)
+            # form.save_m2m() handles the many-to-many field (items)
+            form.save_m2m()
+            
+            messages.success(request, f'Outfit "{outfit.name}" created successfully!')
+            return redirect('my_outfits')
+    else:
+        # User is viewing the form (GET request)
+        form = OutfitForm(user)
+    
+    # Get user's wardrobe items to display with images
+    wardrobe_items = WardrobeItem.objects.filter(user=user)
+    
+    context = {
+        'form': form,
+        'wardrobe_items': wardrobe_items,
+        'mode': 'create',  # Tell template this is create mode (not edit)
+    }
+    
+    return render(request, 'create_outfit.html', context)
+
+@login_required
+def my_outfits(request):
+    """
+    Display all outfits created by the user.
+    (Full implementation coming in Phase 6C)
+    """
+    user = request.user
+    outfits = Outfit.objects.filter(user=user)
+    
+    context = {
+        'outfits': outfits,
+    }
+    
+    return render(request, 'my_outfits.html', context)

@@ -1,5 +1,5 @@
 from django import forms
-from .models import UserProfile, WardrobeItem, Item
+from .models import UserProfile, WardrobeItem, Item, Outfit
 
 
 class UserProfileForm(forms.ModelForm):
@@ -53,6 +53,7 @@ class UserProfileForm(forms.ModelForm):
             'style_preferences': 'What styles do you gravitate towards?',
             'favorite_colors': 'Which colors do you wear most often?',
         }
+
 
 class WardrobeItemForm(forms.ModelForm):
     """
@@ -113,6 +114,7 @@ class WardrobeItemForm(forms.ModelForm):
             'season': 'When do you typically wear this?',
         }
 
+
 # mostly chatGPT here with some edits
 class ItemForm(forms.ModelForm):
     class Meta:
@@ -125,3 +127,69 @@ class ItemForm(forms.ModelForm):
             'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Enter image URL'}),
             'tag': forms.Select(attrs={'class': 'form-control'}),
         }
+
+
+class OutfitForm(forms.ModelForm):
+    """
+    Form for creating and editing outfits.
+    
+    Users can name their outfit, describe it, and select wardrobe items.
+    The items field uses checkboxes for multiple selection.
+    """
+    
+    class Meta:
+        model = Outfit
+        fields = ['name', 'description', 'occasion', 'season', 'is_favorite', 'items']
+        
+        widgets = {
+            'name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'e.g., Summer Date Night, Office Monday',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Describe this outfit and when to wear it...',
+            }),
+            'occasion': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'season': forms.Select(attrs={
+                'class': 'form-select',
+            }),
+            'is_favorite': forms.CheckboxInput(attrs={
+                'class': 'form-check-input',
+            }),
+            # CheckboxSelectMultiple creates a checkbox for each wardrobe item
+            'items': forms.CheckboxSelectMultiple(attrs={
+                'class': 'form-check-input',
+            }),
+        }
+        
+        labels = {
+            'name': 'Outfit Name',
+            'description': 'Description',
+            'occasion': 'Occasion',
+            'season': 'Season',
+            'is_favorite': 'Mark as Favorite',
+            'items': 'Select Items for This Outfit',
+        }
+        
+        help_texts = {
+            'name': 'Give your outfit a memorable name',
+            'description': 'Optional - describe the look or when you\'d wear it',
+            'items': 'Check all items you want to include in this outfit',
+        }
+    
+    def __init__(self, user, *args, **kwargs):
+        """
+        Custom initialization to filter items by user.
+        
+        This ensures users only see their own wardrobe items, not other users' items.
+        The __init__ method is called when the form is created.
+        """
+        super().__init__(*args, **kwargs)
+        
+        # Filter the items queryset to only show this user's wardrobe items
+        # The 'items' field will only display wardrobe items belonging to this user
+        self.fields['items'].queryset = WardrobeItem.objects.filter(user=user)
