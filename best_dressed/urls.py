@@ -22,8 +22,8 @@ from best_dressed_app import views
 
 urlpatterns = [
     path('', views.index, name="index"),
-    # path('login/', views.login, name="login"),
-    # path('signup/', views.signup, name="signup"),
+     path('login/', views.login, name="login"),
+     path('signup/', views.signup, name="signup"),
     path("accounts/", include("users.urls")),
     # ebay api path
     path('', include("api.urls")),
