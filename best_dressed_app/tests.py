@@ -121,17 +121,17 @@ class LandingPageTests(TestCase):
         self.assertContains(resp, "Create account")
         self.assertContains(resp, "Log In")
 
-    # This test checks what happens when a user is in fact logged in
-    # It forces a login then verifies that the "signed-in version" of the landing page index_signed_in.html is displayed instead
-    def test_index_authenticated_uses_signed_in_template(self):
-        User = get_user_model()
-        user = User.objects.create_user(
-            username="michal", email="m@example.com", password="pw12345!"
-        )
-        self.client.force_login(user)
-        resp = self.client.get(reverse("index"))
-        self.assertEqual(resp.status_code, 200)
-        self.assertTemplateUsed(resp, "../templates/index_signed_in.html")
+   
+   def test_index_authenticated_redirects_to_dashboard(self):
+    """If logged in, visiting / should redirect to the dashboard"""
+    User = get_user_model()
+    user = User.objects.create_user(
+        username="michal", email="m@example.com", password="pw12345!"
+    )
+    self.client.force_login(user)
+    resp = self.client.get(reverse("index"))
+    # Now logged-in users get redirected to the dashboard
+    self.assertRedirects(resp, reverse("dashboard"))
 
 
 class AuthRoutesExistTests(TestCase):
