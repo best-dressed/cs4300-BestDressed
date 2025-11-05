@@ -237,49 +237,64 @@ def save_to_wardrobe(request, item_pk):
 @login_required
 def my_wardrobe(request):
     """
-    Display user's wardrobe items with filtering and search options
+    Display user's wardrobe items with filtering, search, and sorting options
     """
     user = request.user
     
-    # Get filter and search parameters from URL
+    # Get filter, search, and sort parameters from URL
     category_filter = request.GET.get('category', None)
     search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort', '-created_at')  # default: newest first
     
     # Start with all user's wardrobe items
     wardrobe_items = WardrobeItem.objects.filter(user=user)
     
     # Apply search filter if provided
     if search_query:
-        # Q objects allow us to combine multiple OR conditions
-        # icontains = case-insensitive contains search -- title__icontains="blue" matches "Blue", "blue", "BLUE", "Sky Blue", etc.
         from django.db.models import Q
         wardrobe_items = wardrobe_items.filter(
-            Q(title__icontains=search_query) |        # search in title
-            Q(description__icontains=search_query) |  # search in description
-            Q(brand__icontains=search_query) |        # search in brand
-            Q(color__icontains=search_query)          # search in color
+            Q(title__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(brand__icontains=search_query) |
+            Q(color__icontains=search_query)
         )
     
     # Apply category filter if specified
     if category_filter and category_filter != 'all':
         wardrobe_items = wardrobe_items.filter(category=category_filter)
     
+    # Apply sorting
+    # order_by() sorts the database results
+    # The '-' prefix means descending order (reverse)
+    wardrobe_items = wardrobe_items.order_by(sort_by)
+    
     # Get all available categories for the filter buttons
     categories = WardrobeItem.CATEGORY_CHOICES
     
     # Count items in each category (for display)
-    # Note: This counts ALL items, not just search results
     category_counts = {}
     for category_value, category_label in categories:
         count = WardrobeItem.objects.filter(user=user, category=category_value).count()
         category_counts[category_value] = count
+    
+    # Define available sorting options (value, display_name)
+    sort_options = [
+        ('-created_at', 'Newest First'),
+        ('created_at', 'Oldest First'),
+        ('title', 'A-Z'),
+        ('-title', 'Z-A'),
+        ('brand', 'Brand (A-Z)'),
+        ('-brand', 'Brand (Z-A)'),
+    ]
     
     context = {
         'wardrobe_items': wardrobe_items,
         'categories': categories,
         'category_counts': category_counts,
         'current_filter': category_filter or 'all',
-        'search_query': search_query,  # pass to template to keep search box filled
+        'search_query': search_query,
+        'current_sort': sort_by,
+        'sort_options': sort_options,
     }
     
     return render(request, 'my_wardrobe.html', context)
