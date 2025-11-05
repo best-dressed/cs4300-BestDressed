@@ -388,6 +388,8 @@ def edit_wardrobe_item(request, item_pk):
         'item': wardrobe_item,
     }
     return render(request, 'wardrobe_item_form.html', context)
+
+@login_required
 def recommendations(request):
     """
     View to display the recommendations page.
