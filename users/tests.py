@@ -1,251 +1,503 @@
-from django.test import TestCase
-from django.urls import reverse
+﻿"""
+Unit tests for the Django authentication backend in the users app.
+"""
+
+from django.test import TestCase, Client
 from django.contrib.auth.models import User
+from django.contrib.auth import authenticate, get_user_model
+from django.urls import reverse
+from django.core import mail
+from users.forms import SignUpForm
 
-# http redirect codes
-FOUND = 302
-OK = 200
-MOVED_PERMANENTLY = 301
 
-# The username and password for a test user, not used in production, only used during testing
-testusername = "testusername"
-testpassword = "testpassword123"
-othertestpassword = "testpassword123456"
-
-# This user should not be created. It is used to represent somebody that is not in the database
-fakeusername = "fakeuser"
-fakepassword = "fakepassword123"
-
-def create_signup_request(username,password1,password2=None) :
-    """Creates a signup request"""
-    # Make the signin request correct by default
-    if password2 == None :
-        password2 = password1 
+class AuthenticationBackendTests(TestCase):
+    """Tests for Django's authentication backend."""
     
-    return  {'username': username, 
-             'password1': password1, 
-             'password2': password2}
-
-def create_login_request(username,password) :
-    return {'username': username, 'password': password}
-
-def create_password_change_request(oldpassword,newpassword1,newpassword2=None) :
-    # Make newpassword two be newpassword1 by default
-    if newpassword2 == None :
-        newpassword2 = newpassword1
-
-    return {'old_password': oldpassword, 
-            'new_password1': newpassword1,
-            'new_password2': newpassword2}
-
-def create_user (username=testusername,password=testpassword) :
-    return User.objects.create_user(username=testusername,password=testpassword)
-
-def is_logged_in(client) :
-    response = client.get('/')
-    return response.wsgi_request.user.is_authenticated
-
-# Create your tests here.
-class LogoutTest(TestCase):
-    def test_logout(self) :
-        # Login client (done manually to make the tests not dependent on one another)
-        create_user()
-        self.client.login(username=testusername,password=testpassword)
-
-        # check if the user is logged in
-        self.assertTrue(is_logged_in(self.client))
-
-        # log out
-        response = self.client.post(reverse('logout'))
-
-        # Check if user is logged out after logout
-        self.assertFalse(is_logged_in(self.client))
-
-class LoginTest(TestCase) :
-    def setUp(self) :
-        self.url = reverse("login")
-    def test_login(self) :
-        """tests a successful login request"""
-        create_user()
-        # test login with post to login
-        response = self.client.post(self.url,create_login_request(testusername,testpassword))
-        
-        # check for redirect code after login
-        self.assertEqual(response.status_code, FOUND)
-        
-        # check if I am logged in
-        self.assertTrue(is_logged_in(self.client))
-
-    def test_login_to_non_existant_user(self) :
-        """tests a bad login request"""
-        # post bad login request
-        response = self.client.post(self.url,create_login_request(fakeusername,fakepassword))
-        
-        # Check for OK status code, which is what is usually returned on inccorect login
-        self.assertEqual(response.status_code, OK)
-
-        # check that I am not logged in
-        self.assertFalse(is_logged_in(self.client))
-
-class SignUpTest(TestCase) : 
-    def sign_up(self,username=testusername,password1=testpassword,password2=testpassword) :
-        signup_url = reverse("signup") 
-        return self.client.post(signup_url,create_signup_request(username,password1,password2))
-
-    def bad_signup_request_contains(self,password1,correct_contains,*,
-                                    correct_response_code=OK,password2=None,
-                                    username=testusername):
-        """Inserts a bad password request constructed from password1 and password two, 
-        checks response code and makes sure response contains the right test"""
-        # make password 2 a correct response
-        if (password2 == None) :
-            password2 = password1
-        # try to sign up 
-        response = self.sign_up(username,password1,password2)
-        # test response
-        self.assertEqual(response.status_code,correct_response_code)
-        # test the contains
-        self.assertContains(response,correct_contains)
-
-
-
-    def test_sign_up(self) :
-        """Try a correct sign up, and then login to see if you are logged in"""
-        # sign up
-        response = self.sign_up()
-        # Check if signup worked 
-        self.assertEqual(response.status_code,FOUND)
-
-        # login to account
-        login_url = reverse("login")
-        self.client.login(username=testusername,password=testpassword)
-        self.assertTrue(is_logged_in(self.client))
-
-
-    def test_sign_up_twice(self) :
-        """Tests to see if signing up twice fails""" 
-        # Sign up the first time
-        response = self.sign_up()
-        # Check if signup worked 
-        self.assertEqual(response.status_code,FOUND)
-        
-        # try to create another client with same name
-        response = self.sign_up()
-        self.assertEqual(response.status_code,OK)
-        # Should display that username already exists
-        self.assertContains(response,"A user with that username already exists.")
-
-    def test_sign_up_wrong_password(self) :
-        """Try to sign up when two passwords differ from one another"""
-        self.bad_signup_request_contains("orange123",
-                                         "The two password fields didn’t match.",
-                                         password2="banana123")
-
-    def test_sign_up_short_password(self) :
-        self.bad_signup_request_contains("abc123",
-            "This password is too short. It must contain at least 8 characters.")
+    def setUp(self):
+        """Set up test fixtures."""
+        self.client = Client()
+        self.test_user = User.objects.create_user(
+            username='testuser',
+            email='testuser@example.com',
+            password='testpass123'
+        )
     
-    def test_sign_up_common_password(self) :
-        """User should fail if signup password is too common"""
-        self.bad_signup_request_contains("password",
-                                         "This password is too common.")
+    def test_authenticate_with_valid_credentials(self):
+        """Test that authentication succeeds with valid credentials."""
+        user = authenticate(username='testuser', password='testpass123')
+        self.assertIsNotNone(user)
+        self.assertEqual(user.username, 'testuser')
+        self.assertTrue(user.is_authenticated)
     
-    def test_sign_up_username_same_as_password(self):
-        """Signup should fail if password is too similar to username"""
-        self.bad_signup_request_contains(testpassword,
-                                         "The password is too similar to the username.",
-                                         username=testpassword)
-
-        
-
-class ChangePasswordTest(TestCase) : 
-    def setUp(self) :
-        # set the change urls
-        self.changeurl = reverse("password_change")
-        self.doneurl = reverse("password_change_done")
+    def test_authenticate_with_invalid_username(self):
+        """Test that authentication fails with invalid username."""
+        user = authenticate(username='wronguser', password='testpass123')
+        self.assertIsNone(user)
     
-    def create_user_and_login(self):
-        # create a user 
-        self.user = create_user(testusername,testpassword) 
-        # log in as the user
-        self.login()
-
-    def login(self,username=testusername,password=testpassword) :
-        return self.client.post(reverse('login'),create_login_request(username,password))
-
-
-    def logout(self) :
-        """Logs the client out, used to test if the password changed"""
-        self.client.post(reverse('logout'))
-
-
-    def test_logged_in(self):
-        """This test is here to catch any problems with setup, it isn't directly related to the feature"""
-        self.create_user_and_login()
-        self.assertTrue(is_logged_in(self.client))
+    def test_authenticate_with_invalid_password(self):
+        """Test that authentication fails with invalid password."""
+        user = authenticate(username='testuser', password='wrongpass')
+        self.assertIsNone(user)
     
-    def test_successful_change(self) : 
-        """Tests to see if password changes on successful password change"""
-        # login 
-        self.create_user_and_login()
-
-        # Change password
-        response = self.client.post(self.changeurl,
-                                    create_password_change_request(testpassword,othertestpassword))
-        
-        # Make sure the password change worked
-        self.assertEqual(response.status_code,FOUND)
-        
-        # check if users password changed
-        user = User.objects.get(username=testusername)
-        self.assertTrue(user.check_password(othertestpassword))
-
-        # logout 
-        self.logout()
-
-        # try logging in with old credentials, should fail to login
-        self.login(password=testpassword)
-        self.assertFalse(is_logged_in(self.client))
-
-        # Login with new credentials
-        self.login(password=othertestpassword)
-        self.assertTrue(is_logged_in(self.client))
-
-    def test_not_logged_in(self) :
-        """Check for redirect if we are not logged in"""
-        response = self.client.post(self.changeurl,
-                                    create_password_change_request(testpassword,othertestpassword))
-        self.assertEqual(response.status_code,FOUND)
-        # this returns a url that looks like 'login?something...' so we need to check if the thing is inside
-        # of it rather than equal, check if it is in the redirect chain
-        self.assertIn(reverse('login'), response['Location'])
+    def test_authenticate_with_empty_credentials(self):
+        """Test that authentication fails with empty credentials."""
+        user = authenticate(username='', password='')
+        self.assertIsNone(user)
     
-    def test_wrong_password(self):
-        """This tests to make sure signup fails if the password is wrong"""
-        # login
-        self.create_user_and_login()
-
-        # Change password
-        response = self.client.post(self.changeurl,
-                                    create_password_change_request('foo1234',
-                                                                    othertestpassword))
+    def test_authenticate_with_none_credentials(self):
+        """Test that authentication fails with None credentials."""
+        user = authenticate(username=None, password=None)
+        self.assertIsNone(user)
+    
+    def test_user_password_is_hashed(self):
+        """Test that user passwords are hashed, not stored in plaintext."""
+        self.assertNotEqual(self.test_user.password, 'testpass123')
+        self.assertTrue(self.test_user.password.startswith('pbkdf2_sha256$'))
+    
+    def test_check_password_method(self):
+        """Test the check_password method."""
+        self.assertTrue(self.test_user.check_password('testpass123'))
+        self.assertFalse(self.test_user.check_password('wrongpass'))
+    
+    def test_set_password_method(self):
+        """Test the set_password method."""
+        self.test_user.set_password('newpass456')
+        self.test_user.save()
         
-        # Make sure the password change failed
-        self.assertEqual(response.status_code,OK)
-        # see if it printed the right message
-        self.assertContains(response,"Your old password was entered incorrectly. Please enter it again.")
+        # Old password should not work
+        user = authenticate(username='testuser', password='testpass123')
+        self.assertIsNone(user)
         
-        # check if users password changed
-        user = User.objects.get(username=testusername)
-        self.assertFalse(user.check_password(othertestpassword))
+        # New password should work
+        user = authenticate(username='testuser', password='newpass456')
+        self.assertIsNotNone(user)
 
-        # logout 
-        self.logout()
 
-        # try logging in with old credentials, should succeed
-        self.login(password=testpassword)
-        self.assertTrue(is_logged_in(self.client))
+class UserLoginTests(TestCase):
+    """Tests for user login functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.client = Client()
+        self.login_url = reverse('login')
+        self.test_user = User.objects.create_user(
+            username='testuser',
+            email='testuser@example.com',
+            password='testpass123'
+        )
+    
+    def test_login_page_loads(self):
+        """Test that the login page loads successfully."""
+        response = self.client.get(self.login_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+    
+    def test_login_with_valid_credentials(self):
+        """Test login with valid credentials."""
+        response = self.client.post(self.login_url, {
+            'username': 'testuser',
+            'password': 'testpass123'
+        })
         
-
+        # Should redirect to dashboard after successful login
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('dashboard'))
         
+        # User should be authenticated
+        user = get_user_model().objects.get(username='testuser')
+        self.assertTrue('_auth_user_id' in self.client.session)
+    
+    def test_login_with_invalid_credentials(self):
+        """Test login with invalid credentials."""
+        response = self.client.post(self.login_url, {
+            'username': 'testuser',
+            'password': 'wrongpass'
+        })
+        
+        # Should stay on login page
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/login.html')
+        
+        # Should show error message
+        self.assertContains(response, 'Please enter a correct username and password')
+    
+    def test_login_with_inactive_user(self):
+        """Test login with inactive user account."""
+        self.test_user.is_active = False
+        self.test_user.save()
+        
+        response = self.client.post(self.login_url, {
+            'username': 'testuser',
+            'password': 'testpass123'
+        })
+        
+        # Should not authenticate inactive user
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse('_auth_user_id' in self.client.session)
 
+
+class UserLogoutTests(TestCase):
+    """Tests for user logout functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.client = Client()
+        self.logout_url = reverse('logout')
+        self.test_user = User.objects.create_user(
+            username='testuser',
+            email='testuser@example.com',
+            password='testpass123'
+        )
+    
+    def test_logout_authenticated_user(self):
+        """Test logout for authenticated user."""
+        # First login
+        self.client.login(username='testuser', password='testpass123')
+        self.assertTrue('_auth_user_id' in self.client.session)
+        
+        # Then logout
+        response = self.client.post(self.logout_url)
+        
+        # Should redirect to index
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('index'))
+        
+        # User should no longer be authenticated
+        self.assertFalse('_auth_user_id' in self.client.session)
+    
+    def test_logout_unauthenticated_user(self):
+        """Test logout for unauthenticated user."""
+        response = self.client.post(self.logout_url)
+        
+        # Should still redirect
+        self.assertEqual(response.status_code, 302)
+
+
+class PasswordChangeTests(TestCase):
+    """Tests for password change functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.client = Client()
+        self.password_change_url = reverse('password_change')
+        self.password_change_done_url = reverse('password_change_done')
+        self.test_user = User.objects.create_user(
+            username='testuser',
+            email='testuser@example.com',
+            password='oldpass123'
+        )
+        self.client.login(username='testuser', password='oldpass123')
+    
+    def test_password_change_page_requires_login(self):
+        """Test that password change page requires authentication."""
+        self.client.logout()
+        response = self.client.get(self.password_change_url)
+        
+        # Should redirect to login page
+        self.assertEqual(response.status_code, 302)
+        self.assertIn(reverse('login'), response.url)
+    
+    def test_password_change_page_loads_for_authenticated_user(self):
+        """Test that password change page loads for authenticated user."""
+        response = self.client.get(self.password_change_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/password_change_form.html')
+    
+    def test_password_change_with_valid_data(self):
+        """Test password change with valid data."""
+        response = self.client.post(self.password_change_url, {
+            'old_password': 'oldpass123',
+            'new_password1': 'newpass456',
+            'new_password2': 'newpass456'
+        })
+        
+        # Should redirect to password change done page
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.password_change_done_url)
+        
+        # Verify password was actually changed
+        self.client.logout()
+        login_success = self.client.login(username='testuser', password='newpass456')
+        self.assertTrue(login_success)
+    
+    def test_password_change_with_wrong_old_password(self):
+        """Test password change with incorrect old password."""
+        response = self.client.post(self.password_change_url, {
+            'old_password': 'wrongpass',
+            'new_password1': 'newpass456',
+            'new_password2': 'newpass456'
+        })
+        
+        # Should stay on password change page with error
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertFalse(form.is_valid())
+        self.assertIn('old_password', form.errors)
+    
+    def test_password_change_with_mismatched_passwords(self):
+        """Test password change with mismatched new passwords."""
+        response = self.client.post(self.password_change_url, {
+            'old_password': 'oldpass123',
+            'new_password1': 'newpass456',
+            'new_password2': 'differentpass789'
+        })
+        
+        # Should stay on password change page with error
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertFalse(form.is_valid())
+        self.assertIn('new_password2', form.errors)
+
+
+class PasswordResetTests(TestCase):
+    """Tests for password reset functionality."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.client = Client()
+        self.password_reset_url = reverse('password_reset')
+        self.password_reset_done_url = reverse('password_reset_done')
+        self.test_user = User.objects.create_user(
+            username='testuser',
+            email='testuser@example.com',
+            password='testpass123'
+        )
+    
+    def test_password_reset_page_loads(self):
+        """Test that password reset page loads."""
+        response = self.client.get(self.password_reset_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'registration/password_reset_form.html')
+    
+    def test_password_reset_sends_email(self):
+        """Test that password reset sends an email."""
+        response = self.client.post(self.password_reset_url, {
+            'email': 'testuser@example.com'
+        })
+        
+        # Should redirect to password reset done page
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.password_reset_done_url)
+        
+        # Should send one email
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('testuser@example.com', mail.outbox[0].to)
+    
+    def test_password_reset_with_invalid_email(self):
+        """Test password reset with non-existent email."""
+        response = self.client.post(self.password_reset_url, {
+            'email': 'nonexistent@example.com'
+        })
+        
+        # Still redirects to done page (security best practice)
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, self.password_reset_done_url)
+        
+        # No email should be sent
+        self.assertEqual(len(mail.outbox), 0)
+    
+    def test_password_reset_with_invalid_email_format(self):
+        """Test password reset with invalid email format."""
+        response = self.client.post(self.password_reset_url, {
+            'email': 'not-an-email'
+        })
+        
+        # Should stay on password reset page with error
+        self.assertEqual(response.status_code, 200)
+        form = response.context['form']
+        self.assertFalse(form.is_valid())
+        self.assertIn('email', form.errors)
+
+
+class SignUpFormTests(TestCase):
+    """Tests for the custom SignUpForm."""
+    
+    def test_signup_form_valid_data(self):
+        """Test SignUpForm with valid data."""
+        form_data = {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'password1': 'securepass123',
+            'password2': 'securepass123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertTrue(form.is_valid())
+    
+    def test_signup_form_saves_email(self):
+        """Test that SignUpForm saves the email field."""
+        form_data = {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'password1': 'securepass123',
+            'password2': 'securepass123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertTrue(form.is_valid())
+        user = form.save()
+        
+        self.assertEqual(user.email, 'newuser@example.com')
+        self.assertEqual(user.username, 'newuser')
+        self.assertTrue(user.check_password('securepass123'))
+    
+    def test_signup_form_missing_email(self):
+        """Test SignUpForm with missing email."""
+        form_data = {
+            'username': 'newuser',
+            'email': '',
+            'password1': 'securepass123',
+            'password2': 'securepass123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('email', form.errors)
+    
+    def test_signup_form_invalid_email(self):
+        """Test SignUpForm with invalid email format."""
+        form_data = {
+            'username': 'newuser',
+            'email': 'not-an-email',
+            'password1': 'securepass123',
+            'password2': 'securepass123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('email', form.errors)
+    
+    def test_signup_form_password_mismatch(self):
+        """Test SignUpForm with mismatched passwords."""
+        form_data = {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'password1': 'securepass123',
+            'password2': 'differentpass456'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('password2', form.errors)
+    
+    def test_signup_form_duplicate_username(self):
+        """Test SignUpForm with duplicate username."""
+        # Create existing user
+        User.objects.create_user(
+            username='existinguser',
+            email='existing@example.com',
+            password='pass123'
+        )
+        
+        form_data = {
+            'username': 'existinguser',
+            'email': 'newuser@example.com',
+            'password1': 'securepass123',
+            'password2': 'securepass123'
+        }
+        form = SignUpForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('username', form.errors)
+
+
+class UserModelTests(TestCase):
+    """Tests for User model authentication behavior."""
+    
+    def test_create_user(self):
+        """Test creating a user."""
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+        self.assertEqual(user.username, 'testuser')
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+    
+    def test_create_superuser(self):
+        """Test creating a superuser."""
+        user = User.objects.create_superuser(
+            username='admin',
+            email='admin@example.com',
+            password='adminpass123'
+        )
+        
+        self.assertEqual(user.username, 'admin')
+        self.assertTrue(user.is_active)
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+    
+    def test_user_string_representation(self):
+        """Test User model string representation."""
+        user = User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.assertEqual(str(user), 'testuser')
+    
+    def test_get_user_by_username(self):
+        """Test retrieving user by username."""
+        User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+        user = User.objects.get(username='testuser')
+        self.assertIsNotNone(user)
+        self.assertEqual(user.username, 'testuser')
+    
+    def test_get_user_by_email(self):
+        """Test retrieving user by email."""
+        User.objects.create_user(
+            username='testuser',
+            email='test@example.com',
+            password='testpass123'
+        )
+        
+        user = User.objects.get(email='test@example.com')
+        self.assertIsNotNone(user)
+        self.assertEqual(user.email, 'test@example.com')
+
+
+class SessionManagementTests(TestCase):
+    """Tests for session management with authentication backend."""
+    
+    def setUp(self):
+        """Set up test fixtures."""
+        self.client = Client()
+        self.test_user = User.objects.create_user(
+            username='testuser',
+            email='testuser@example.com',
+            password='testpass123'
+        )
+    
+    def test_session_created_on_login(self):
+        """Test that a session is created when user logs in."""
+        self.client.login(username='testuser', password='testpass123')
+        
+        # Session should exist
+        self.assertTrue('_auth_user_id' in self.client.session)
+        self.assertEqual(
+            int(self.client.session['_auth_user_id']),
+            self.test_user.pk
+        )
+    
+    def test_session_cleared_on_logout(self):
+        """Test that session is cleared when user logs out."""
+        self.client.login(username='testuser', password='testpass123')
+        self.assertTrue('_auth_user_id' in self.client.session)
+        
+        self.client.logout()
+        self.assertFalse('_auth_user_id' in self.client.session)
+    
+    def test_session_persists_across_requests(self):
+        """Test that authentication persists across requests."""
+        self.client.login(username='testuser', password='testpass123')
+        
+        # Make a request that requires authentication
+        response = self.client.get(reverse('password_change'))
+        self.assertEqual(response.status_code, 200)
+        
+        # Make another request
+        response = self.client.get(reverse('password_change_done'))
+        self.assertEqual(response.status_code, 200)
