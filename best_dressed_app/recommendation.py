@@ -58,5 +58,4 @@ def generate_recommendations(available_items, user_profile) -> str:
         recommendations = prompt_ai(prompt, client, model)
         return recommendations
     except Exception as e:
-        print("Error generating recommendations:", e)
         return "Error generating recommendations."
