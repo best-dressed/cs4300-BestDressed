@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'best_dressed_app',
     'users',
+    'api',
     'django_registration',
 ]
 
