@@ -23,9 +23,6 @@
                   {{ thread.title }}
                 </a>
               </h5>
-              {% if thread.description %}
-                <p class="mb-1 text-muted">{{ thread.description|truncatechars:160 }}</p>
-              {% endif %}
               <small class="text-muted">
                 Started by
                 <strong class="text-body">{{ thread.user.username }}</strong>
