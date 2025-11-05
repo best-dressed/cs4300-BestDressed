@@ -1,0 +1,89 @@
+{% extends "main.html" %}
+{% load static %}
+{% block content %}
+<div class="container my-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h4 mb-3">{% if creating %}Create Thread{% else %}Edit Thread{% endif %}</h1>
+
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for err in form.non_field_errors %}{{ err }}<br>{% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="mb-3">
+              <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+              {{ form.title }}
+              {% if form.title.errors %}
+                <div class="invalid-feedback d-block">
+                  {{ form.title.errors|striptags }}
+                </div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              <label for="{{ form.content.id_for_label }}" class="form-label">Content</label>
+              {{ form.content }}
+              {% if form.content.errors %}
+                <div class="invalid-feedback d-block">
+                  {{ form.content.errors|striptags }}
+                </div>
+              {% else %}
+                {% if form.content.help_text %}
+                  <div class="form-text">{{ form.content.help_text }}</div>
+                {% endif %}
+              {% endif %}
+              <div class="form-text text-muted mt-1">
+                <span id="content-count">0</span>/<span id="content-max">2000</span> characters
+              </div>
+            </div>
+
+            <div class="d-flex gap-2">
+              <button type="submit" class="btn btn-primary">
+                {% if creating %}Create Thread{% else %}Save Changes{% endif %}
+              </button>
+
+              <a href="{% url 'threads' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const textarea = document.getElementById('{{ form.content.id_for_label }}') || document.querySelector('textarea[name="{{ form.content.html_name }}"]');
+    const countEl = document.getElementById('content-count');
+    const maxEl = document.getElementById('content-max');
+    const MAX = 2000;
+
+    if (maxEl) maxEl.textContent = MAX;
+
+    function updateCount() {
+      if (!textarea) return;
+      const len = textarea.value.trim().length;
+      countEl.textContent = len;
+      if (len > MAX) {
+        textarea.classList.add('is-invalid');
+      } else {
+        textarea.classList.remove('is-invalid');
+      }
+    }
+
+    if (textarea) {
+      // initial
+      updateCount();
+      // listen
+      textarea.addEventListener('input', updateCount);
+    }
+  })();
+</script>
+{% endblock %}

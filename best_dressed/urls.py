@@ -56,4 +56,7 @@ urlpatterns = [
     # ai recommendations
     path('recommendations/', views.recommendations, name="recommendations"),
     path('recommendations/generate/', views.generate_recommendations_ajax, name="generate_recommendations_ajax"),
+
+    # forums
+    path("forum/", include("forum.urls")),
 ]
