@@ -3,7 +3,7 @@ URL configuration for users app.
 
 """
 
-from django.urls import path
+from django.urls import include, path
 from .views import (
     SignUpView,
     UserLoginView,
@@ -18,7 +18,8 @@ from .views import (
 )
 
 urlpatterns = [
-    path("signup/", SignUpView.as_view(), name="signup"),
+    path("creation/", include('django_registration.backends.activation.urls')),
+    path("creation/", include('django.contrib.auth.urls')),
     path("login/", UserLoginView.as_view(), name="login"),
     path("logout/", UserLogoutView.as_view(), name="logout"),
     path("about/", AboutView.as_view(), name="about"),

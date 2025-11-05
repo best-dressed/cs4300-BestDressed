@@ -143,5 +143,5 @@ class AuthRoutesExistTests(TestCase):
 
     # This test does the same for the create account route. it just confirms that the page exists and responds with the 200 ok
     def test_signup_route_exists(self):
-        resp = self.client.get(reverse("signup"))
+        resp = self.client.get(reverse("django_registration_register"))
         self.assertEqual(resp.status_code, 200)

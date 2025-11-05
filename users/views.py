@@ -3,14 +3,15 @@ Django views for the Best Dressed 'users' application.
 """
 
 from django.contrib.auth.views import ( LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView)
-from django.contrib.auth.forms import UserCreationForm
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
+from .forms import SignUpForm
+
 
 # sign-up page
 class SignUpView(CreateView):
-    form_class = UserCreationForm
+    form_class = SignUpForm
     template_name = "registration/signup.html"
     success_url = reverse_lazy("login")
 
