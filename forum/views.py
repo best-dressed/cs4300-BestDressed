@@ -9,21 +9,6 @@ from .forms import ThreadForm, PostForm
 
 # Create your views here.
 @login_required
-def create_post(request, thread_id):
-    thread = get_object_or_404(Thread, id=thread_id)
-    if request.method == 'POST':
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.thread = thread
-            post.user = request.user
-            post.save()
-            return redirect('thread_detail', thread_id=thread.id)
-    else:
-        form = PostForm()
-    return render(request, 'create_post.html', {'form': form, 'thread': thread})
-
-@login_required
 def post_delete(request, post_id):
     post = get_object_or_404(Post.objects.select_related('thread', 'user'), id=post_id)
     # only author or staff can delete
@@ -43,37 +28,6 @@ def threads(request):
     return render(request, 'forum/threads.html', {'threads': all_threads})
 
 
-def thread_detail(request, thread_id):
-    """
-    Show a single thread and its posts. Handle posting a reply via POST.
-    """
-    thread = get_object_or_404(Thread, id=thread_id)
-    posts = Post.objects.filter(thread=thread).select_related('user').order_by('created_at')
-
-    # Reply form (must be POST and authenticated)
-    if request.method == 'POST':
-        if not request.user.is_authenticated:
-            messages.error(request, "You must be signed in to reply.")
-            return redirect('thread_detail', thread_id=thread.id)
-
-        form = PostForm(request.POST)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.thread = thread
-            post.user = request.user
-            post.save()
-            messages.success(request, "Reply posted.")
-            return redirect('thread_detail', thread_id=thread.id)
-    else:
-        form = PostForm()
-
-    context = {
-        'thread': thread,
-        'posts': posts,
-        'form': form,
-    }
-    return render(request, 'thread_detail.html', context)
-
 
 @login_required
 def thread_create(request):
@@ -87,7 +41,7 @@ def thread_create(request):
             return redirect('thread_detail', thread_id=thread.id)
     else:
         form = ThreadForm()
-    return render(request, 'forum/thread_form.html', {'form': form})
+    return render(request, 'forum/thread_form.html', {'form': form, 'creating': True})
 
 @login_required
 def thread_edit(request, thread_id):
@@ -111,24 +65,6 @@ def thread_edit(request, thread_id):
         'form': form,
         'creating': False,
         'thread': thread,
-    })
-
-def user_profile(request, user_id):
-    """
-    Simple user profile view showing their recent threads and posts.
-    Adjust imported User model if you use a custom user model.
-    """
-    from django.contrib.auth import get_user_model
-    User = get_user_model()
-    user_obj = get_object_or_404(User, id=user_id)
-
-    recent_threads = Thread.objects.filter(user=user_obj).order_by('-created_at')[:20]
-    recent_posts = Post.objects.filter(user=user_obj).select_related('thread').order_by('-created_at')[:20]
-
-    return render(request, 'user_profile.html', {
-        'profile_user': user_obj,
-        'recent_threads': recent_threads,
-        'recent_posts': recent_posts,
     })
 
 @login_required

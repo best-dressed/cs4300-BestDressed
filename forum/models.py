@@ -1,5 +1,3 @@
-from django.db import models
-
 # Create your models here.
 from django.db import models
 from django.urls import reverse
@@ -15,9 +13,6 @@ class Thread(models.Model):
     def __str__(self):
         return f"Thread: {self.title} by {self.user.username}"
 
-
-
-# items saved by a user to their wardrobe
 class Post(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='posts')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
