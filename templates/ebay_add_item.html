@@ -20,12 +20,15 @@
 {% endfor %}
 {% endif %}
 
-<!-- primary item -->
+<!-- form -->
 <section class="py-5">
+
   <div class="container px-3 px-lg-4 mt-5 w-50">
     <div class="text-center">
       <h1>Add Items via Ebay Search</h1>
-      <form method="POST" >
+
+      <!-- ✅ Added ID here -->
+      <form id="ebay-search-form" method="POST">
         {% csrf_token %}
         {% for field in form %}
         <div class="form-group">
@@ -41,45 +44,61 @@
         </div>
         {% endfor %}
         <div style="margin-top:20px;">
-          <button type="submit" class="btn btn-primary w-100" >Submit</button>
+          <button type="submit" class="btn btn-primary w-100">Submit</button>
         </div>
       </form>
-
+      <!-- Loading Indicator -->
+      <div id="loading-indicator" class="text-center my-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Searching eBay for items...</p>
+      </div>
 
       <div style="padding-bottom: 10%">
-      <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
-        Back to item listing </a>
+        <a href="{% url 'item_listing' %}" class="btn btn-primary">Back to item listing</a>
       </div>
     </div>
   </div>
-  <!-- Recently Added Items just takes the logic from Related items -->
+
   {% if recent_items %}
-    <section class="py-5" style="background-color: #2d3238">
-      <div class="container px-4 px-lg-5">
-        <h2 class="fw-bold mb-4 text-white">Added Items</h2>
-        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
-          {% for related_item in recent_items|slice:":4" %}
-          <div class="col mb-4">
-            <div class="card h-100 bg-dark border border-secondary shadow-sm" style="transition: transform 0.2s;">
-              <!-- Product image -->
-              <a href="{{ related_item.get_absolute_url }}" class="text-decoration-none">
-                <img class="card-img-top" src="{{ related_item.image_url }}" alt="{{ related_item.title }}" style="height: 200px; object-fit: cover;">
+  <section class="py-5" style="background-color: #2d3238">
+    <div class="container px-4 px-lg-5">
+      <h2 class="fw-bold mb-4 text-white">Added Items</h2>
+      <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+        {% for related_item in recent_items %}
+        <div class="col mb-4">
+          <div class="card h-100 bg-dark border border-secondary shadow-sm" style="transition: transform 0.2s;">
+            <a href="{{ related_item.get_absolute_url }}" class="text-decoration-none">
+              <img class="card-img-top" src="{{ related_item.image_url }}" alt="{{ related_item.title }}" style="height: 200px; object-fit: cover;">
+            </a>
+            <div class="card-body p-3">
+              <h5 class="fw-bolder mb-2 text-white">{{ related_item.title }}</h5>
+              <p class="small text-muted mb-3">{{ related_item.description|truncatewords:10 }}</p>
+              <a href="{{ related_item.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">
+                View Details
               </a>
-              <!-- Product details -->
-              <div class="card-body p-3">
-                <h5 class="fw-bolder mb-2 text-white">{{ related_item.title }}</h5>
-                <p class="small text-muted mb-3">{{ related_item.description|truncatewords:10 }}</p>
-                <a href="{{ related_item.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">
-                  View Details
-                </a>
-              </div>
             </div>
           </div>
-          {% endfor %}
         </div>
+        {% endfor %}
       </div>
-    </section>
+    </div>
+  </section>
   {% endif %}
 </section>
 
+<!-- ✅ Working script -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    const form = document.getElementById("ebay-search-form");
+    const loadingIndicator = document.getElementById("loading-indicator");
+
+    if (form && loadingIndicator) {
+      form.addEventListener("submit", function() {
+        loadingIndicator.style.display = "block"; // show spinner
+      });
+    }
+  });
+</script>
 {% endblock content %}

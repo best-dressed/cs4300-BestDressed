@@ -86,6 +86,7 @@ def item_detail(request, pk):
 
 # view for adding an item manually
 # per chatGPT
+@login_required
 def add_item(request):
     context = {}
 

@@ -11,6 +11,7 @@ import os
 import requests
 import base64
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.decorators import login_required
 import logging
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
@@ -109,12 +110,14 @@ def ebay_marketplace_deletion_notification(request):
         return HttpResponseBadRequest()
 
 @csrf_exempt
+@login_required
 def ebay_get_items(request):
 
     context = {}
 
     # when POSTing send our query info
     if request.method == "POST":
+
         logger.warning(f"Running Ebay Get items search")
         form = EbaySearchForm(request.POST)
         if form.is_valid():
