@@ -1,13 +1,18 @@
 # chatGPT with small tweaks
 
-from django.test import TestCase, Client
+from django.test import TestCase, Client, RequestFactory
 from django.urls import reverse
 from unittest.mock import patch, MagicMock
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes, serialization
 from django.http import JsonResponse
 import os
 import base64
+import logging
 import json
 from best_dressed_app.models import Item
+
+logger = logging.getLogger(__name__)
 
 # Set environment variables for testing
 os.environ['EBAY_VERIFICATION_TOKEN'] = 'test_verification_token'
@@ -108,3 +113,66 @@ J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'ebay_add_item.html')
         self.assertIn('form', response.context)
+
+from api.views import ebay_marketplace_deletion_notification
+
+
+class EbaySignatureValidationSuccessTest(TestCase):
+    """
+    ✅ Tests that a valid eBay signature passes verification successfully.
+    """
+
+    def setUp(self):
+        self.factory = RequestFactory()
+
+        # Generate ECDSA key pair
+        self.private_key = ec.generate_private_key(ec.SECP256R1())
+        self.public_key = self.private_key.public_key()
+
+        # Export PEM public key to simulate eBay's returned key
+        self.public_key_pem = self.public_key.public_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PublicFormat.SubjectPublicKeyInfo
+        ).decode("utf-8")
+
+        # Example JSON message body
+        self.fake_body = json.dumps({
+            "user_id": "12345",
+            "action": "delete"
+        }).encode("utf-8")
+
+        # Sign message using private key (ECDSA with SHA1)
+        signature = self.private_key.sign(self.fake_body, ec.ECDSA(hashes.SHA1()))
+
+        # Build eBay-style signature header
+        encoded_signature = base64.b64encode(signature).decode("utf-8")
+        header_json = json.dumps({
+            "kid": "test_key_id",
+            "signature": encoded_signature
+        }).encode("utf-8")
+        self.encoded_header = base64.b64encode(header_json).decode("utf-8")
+
+    @patch("api.views.requests.get")
+    @patch("api.views.get_oath_token", return_value="fake_token")
+    def test_valid_signature_returns_200(self, mock_token, mock_get):
+        """
+        Ensures that a correctly signed request returns HTTP 200.
+        """
+        # Mock the public key fetch
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = {"key": self.public_key_pem}
+
+        # Build fake POST request
+        request = self.factory.post(
+            "/auth/ebay_market_delete/",
+            data=self.fake_body,
+            content_type="application/json",
+            HTTP_X_EBAY_SIGNATURE=self.encoded_header
+        )
+
+        # Call the actual view
+        logger.warning("CALLING EBAY MARKET DELETE")
+        response = ebay_marketplace_deletion_notification(request)
+
+        # Expect success
+        self.assertEqual(response.status_code, 200)
