@@ -118,8 +118,7 @@ def dashboard(request):
     
     # get actual counts (of number of items in Wardrobe) from the database for the logged in user
     wardrobe_count = WardrobeItem.objects.filter(user=user).count()
-    # implement this later when we build Outfits
-    outfit_count = 0  
+    outfit_count = Outfit.objects.filter(user=user).count()
     # implement this later with AI recommendations
     recommendation_count = 0  
 
@@ -487,14 +486,89 @@ def create_outfit(request):
 @login_required
 def my_outfits(request):
     """
-    Display all outfits created by the user.
-    (Full implementation coming in Phase 6C)
+    Display all outfits created by the user with filtering options.
     """
     user = request.user
+    
+    # Get filter parameters from URL
+    occasion_filter = request.GET.get('occasion', None)
+    season_filter = request.GET.get('season', None)
+    favorites_only = request.GET.get('favorites', None)
+    
+    # Start with all user's outfits
     outfits = Outfit.objects.filter(user=user)
+    
+    # Apply occasion filter if specified
+    if occasion_filter and occasion_filter != 'all':
+        outfits = outfits.filter(occasion=occasion_filter)
+    
+    # Apply season filter if specified
+    if season_filter and season_filter != 'all':
+        outfits = outfits.filter(season=season_filter)
+    
+    # Apply favorites filter if specified
+    if favorites_only == 'true':
+        outfits = outfits.filter(is_favorite=True)
+    
+    # Prefetch related items for efficiency
+    # This loads all items for all outfits in one database query
+    # instead of making a separate query for each outfit (N+1 problem)
+    outfits = outfits.prefetch_related('items')
+    
+    # Get available filter options from the model choices
+    occasion_choices = Outfit._meta.get_field('occasion').choices
+    season_choices = Outfit._meta.get_field('season').choices
     
     context = {
         'outfits': outfits,
+        'occasion_filter': occasion_filter or 'all',
+        'season_filter': season_filter or 'all',
+        'favorites_only': favorites_only == 'true',
+        'occasion_choices': occasion_choices,
+        'season_choices': season_choices,
     }
     
     return render(request, 'my_outfits.html', context)
+
+@login_required
+def outfit_detail(request, outfit_pk):
+    """
+    View detailed information about a specific outfit.
+    """
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    context = {
+        'outfit': outfit,
+    }
+    
+    return render(request, 'outfit_detail.html', context)
+
+@login_required
+def edit_outfit(request, outfit_pk):
+    """
+    Edit an existing outfit.
+    """
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    # Redirect to create page for now
+    messages.info(request, 'Edit functionality coming soon!')
+    return redirect('my_outfits')
+
+@login_required
+def delete_outfit(request, outfit_pk):
+    """
+    Delete an outfit.
+    """
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    if request.method == 'POST':
+        outfit_name = outfit.name
+        outfit.delete()
+        messages.success(request, f'Outfit "{outfit_name}" has been deleted.')
+        return redirect('my_outfits')
+    
+    # Show confirmation page
+    context = {
+        'outfit': outfit,
+    }
+    return render(request, 'confirm_delete_outfit.html', context)
