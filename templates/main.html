@@ -11,7 +11,7 @@
 	  type="text/css" />
   </head>
 
-  <body>
+  <body class="{% block body_class %}{% endblock %}">
     <header>
       {% include "header.html" %}
     </header>
