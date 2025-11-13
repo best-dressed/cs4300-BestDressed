@@ -11,6 +11,7 @@ import base64
 import logging
 import json
 from best_dressed_app.models import Item
+from django.contrib.auth.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,11 @@ os.environ['EBAY_BASE64_AUTHORIZATION_TOKEN'] = 'dGVzdF9iYXNlNjRfYXV0aF90b2tlbg=
 class EbayViewsTestCase(TestCase):
 
     def setUp(self):
+
+        # create a user so we can access login only views
         self.client = Client()
+        self.user = User.objects.create_user(username='testuser', password='testpass')
+        self.client.login(username='testuser', password='testpass')
 
     def test_challenge_code_response(self):
         """
