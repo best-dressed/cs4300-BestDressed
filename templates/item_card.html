@@ -1,21 +1,18 @@
 <!-- SUB TEMPLATE FOR A SINGLE ITEM IN ITEM LISTING OR ITEM-DETAIL-RECOMMENDED -->
 {% load static %}
-<div class="col mb-5">
-  <div class="card h-100 ">
-
-    <!-- Product image-->
-    <a href = "{{ item.get_absolute_url }}">
-      <img class="card-img-top " src ="{{item.image_url}}" alt="Logo"></img>
+<div class="col mb-4">
+  <div class="card h-100 bg-dark border border-secondary shadow-sm" style="transition: transform 0.2s;">
+    <!-- Product image -->
+    <a href="{{ item.get_absolute_url }}" class="text-decoration-none">
+      <img class="card-img-top" src="{{ item.image_url }}" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
     </a>
-    <!-- Product details-->
-    <div class="card-body p-4">
-      <div class="text-center">
-        <!-- Product name-->
-        <h5 class="fw-bolder">{{item.title}}</h5>
-        <p>{{item.short_description}} </p>
-        <a href = "#" class = "btn btn-primary" >
-          Add to Outfit </a>
-      </div>
+    <!-- Product details -->
+    <div class="card-body p-3">
+      <h5 class="fw-bolder mb-2 text-white">{{ item.title|truncatewords:8 }}</h5>
+      <p class="small text-muted mb-3">{{ item.description|truncatewords:10 }}</p>
+      <a href="{{ related_item.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">
+        View Details
+      </a>
     </div>
   </div>
 </div>

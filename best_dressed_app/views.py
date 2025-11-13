@@ -40,8 +40,12 @@ def signup(request):
     return render(request, 'signup.html')
 
 def item_listing(request):
-    items = Item.objects.all()
-    return render(request, "item_listing.html", {'items': items})
+    query = request.GET.get("q")
+    if query:
+        items = Item.objects.filter(title__icontains=query) | Item.objects.filter(description__icontains=query)
+    else:
+        items = Item.objects.all()
+    return render(request, "item_listing.html", {'items': items, 'query': query})
 
 # # for a particular item view
 # def item_detail(request, pk):

@@ -215,6 +215,10 @@ def get_oath_token():
             headers = token_headers,
             data= token_data
         )
+        logger.warning(f"--- ATTEMPTING TO GET OAUTH TOKEN ---:")
+        # TESTING --- DO NOT UNCOMMENT IN MAIN CODE EVEN THO PROD TERMINAL IS PRIVATE ---
+        #logger.warning(f"DEBUG: {tokenRequest.json}")
+        #logger.warning(f"DEBUG: {EBAY_BASE64_AUTHORIZATION_TOKEN}")
         oauth_access_token = tokenRequest.json()['access_token']
         logger.warning(f"--- OAUTH ACCESS TOKEN SUCCESS ---:")
         return oauth_access_token
