@@ -18,6 +18,10 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.exceptions import InvalidSignature, InvalidKey
 from best_dressed_app.models import Item
 from .forms import *
+
+# for a better interactive item adding
+from django.views.decorators.http import require_POST
+
 logger = logging.getLogger(__name__)
 
 ## Basically a giant amalgamation of
@@ -167,17 +171,8 @@ def ebay_get_items(request):
                     })
 
                 recent_items = []
-                for idx, p in enumerate(parsed_items, 1):
-                    # Create a new Item instance using data from parsed JSON
-                    item = Item(
-                        title=p.get("title"),
-                        description=p.get("description"),
-                        image_url=p.get("image_url"),
-                        tag = "Accessory"
-                    )
-                    item.save()
-                    recent_items.append(item)
-                    context['recent_items'] = recent_items
+                recent_items = parsed_items
+                context['recent_items'] = recent_items
 
             # per chatGPT
             except Exception as e:
@@ -231,3 +226,44 @@ def get_oath_token():
     except KeyError:
         logger.error("OAuth token not found in response")
         return None
+
+# ebay interactive item adding per chatGPT w ajax
+@csrf_exempt
+@require_POST
+@login_required
+def ajax_add_item(request):
+    """
+    Adds a single eBay item via AJAX without a redirect.
+    Prevents duplicates using the eBay item_id.
+    """
+    try:
+        # gets from parsed items somehow
+        data = json.loads(request.body)
+        title = data.get("title")
+        description = data.get("description")
+        image_url = data.get("image_url")
+        item_id = data.get("item_id")  # ✅ new
+        logger.warning(f"DATA:::  {data}")
+        item_url = data.get("item_url")
+
+        if not title or not description:
+            return JsonResponse({"error": "Missing required fields"}, status=400)
+
+        # ✅ Duplicate check based on eBay item_id
+        if item_id and Item.objects.filter(item_id=item_id).exists():
+            return JsonResponse({"error": "Item already exists in catalog."}, status=200)
+
+        # ✅ Create new item only if not a duplicate
+        item = Item.objects.create(
+            title=title,
+            description=description,
+            image_url=image_url,
+            tag="Accessory",
+            item_id=item_id,  # ✅ new
+            item_ebay_url = item_url
+        )
+        return JsonResponse({"message": "Item added successfully", "id": item.id})
+
+    except Exception as e:
+        logger.error(f"Error adding item: {e}")
+        return JsonResponse({"error": str(e)}, status=500)

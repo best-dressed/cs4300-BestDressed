@@ -22,6 +22,10 @@ class Item(models.Model):
     image_url = models.URLField(max_length=2000, default="")
     tag = models.CharField(max_length=20, choices=ITEM_TAG_CHOICES, default="")
 
+    # ebay ID For market delete and duplicate checking
+    item_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    item_ebay_url = models.URLField(blank=True, null=True)
+
     # make it so short description created automatically from description
     def save(self, *args, **kwargs):
         if self.description:
