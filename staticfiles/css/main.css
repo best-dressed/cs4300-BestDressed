@@ -422,4 +422,9 @@ a.btn-outline-primary {
   min-height: 100vh;
 }
 
+/* Fix for forum page top spacing */
+.landing-hero-bg.forum-page {
+  padding-top: 2rem;
+  margin-top: -1px; /* This will hide the border line */
+}
 
