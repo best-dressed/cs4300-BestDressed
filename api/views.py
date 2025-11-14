@@ -18,7 +18,7 @@ from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.exceptions import InvalidSignature, InvalidKey
 from best_dressed_app.models import Item
 from .forms import *
-
+from safetext import SafeText
 # for a better interactive item adding
 from django.views.decorators.http import require_POST
 
@@ -118,6 +118,8 @@ def ebay_marketplace_deletion_notification(request):
 def ebay_get_items(request):
 
     context = {}
+    # for blocking inappropriate searches
+    flagged_any_item = False
 
     # when POSTing send our query info
     if request.method == "POST":
@@ -128,6 +130,7 @@ def ebay_get_items(request):
 
             # set up url based on user input
             search_term = form.cleaned_data['search_term']
+            # DEAR CHATGPT ADD ERROR CHECKING HERE
             item_count = form.cleaned_data['item_count']
 
             ebay_items_url = f"https://api.ebay.com/buy/browse/v1/item_summary/search?q={search_term}&limit={item_count}"
@@ -159,17 +162,22 @@ def ebay_get_items(request):
                     if (description == None):
                         description = "Ebay Seller did not Provide Description for this item"
 
+                    # when inappropriate items are found flag so we send an error message
+                    if is_inappropriate(item.get("title")) or is_inappropriate(description):
+                        flagged_any_item = True
+                    else:
+                        parsed_items.append({
+                            "item_id": item_id,
+                            "title": item.get("title"),
+                            "price": f"{item['price']['value']} {item['price']['currency']}" if "price" in item else None,
+                            "seller_username": item.get("seller", {}).get("username"),
+                            "item_url": item.get("itemWebUrl"),
+                            "image_url": item.get("image", {}).get("imageUrl"),
+                            "description": description
+                        })
 
-                    parsed_items.append({
-                        "item_id": item_id,
-                        "title": item.get("title"),
-                        "price": f"{item['price']['value']} {item['price']['currency']}" if "price" in item else None,
-                        "seller_username": item.get("seller", {}).get("username"),
-                        "item_url": item.get("itemWebUrl"),
-                        "image_url": item.get("image", {}).get("imageUrl"),
-                        "description": description
-                    })
-
+                if flagged_any_item:
+                    messages.warning(request, "Some inappropriate items were removed from search results")
                 recent_items = []
                 recent_items = parsed_items
                 context['recent_items'] = recent_items
@@ -267,3 +275,17 @@ def ajax_add_item(request):
     except Exception as e:
         logger.error(f"Error adding item: {e}")
         return JsonResponse({"error": str(e)}, status=500)
+
+# filter so nsfw stuff won't be added from ebay if a user searches for it, and block searches too
+def is_inappropriate(text):
+    if not text:
+        return False
+    else:
+        # using adult.txt file as the word blacklist basically
+        content_filter = SafeText(
+            language='en',
+            custom_words_dir='/content_filters'
+        )
+        # also checks some basic profanity
+        matches = content_filter.check_profanity(text)
+        return bool(matches)
