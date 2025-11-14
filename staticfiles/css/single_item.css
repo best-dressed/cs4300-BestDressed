@@ -1,0 +1,74 @@
+h1 {
+    text-align: center;
+}
+
+p {
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+/* Footer positioning */
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+}
+
+/* Header spacing */
+.header {
+    text-align: left;
+    margin-top: 50px;
+    margin-bottom: 50px;
+    margin-left: 50px;
+}
+
+/* Form spacing */
+form {
+    padding: 50px;
+}
+
+/* Image sizing for previews */
+img {
+    max-width: 800px;
+    max-height: 800px;
+}
+
+/* Navbar links */
+.navbar-nav li a {
+    color: white;
+}
+
+/* Pull in your global theme colors so this file knows them too  */
+:root {
+    --bd-purple: #CDB4FF;       /* pastel lavender */
+    --bd-purple-dark: #B89CFF;  /* slightly deeper hover tone */
+    --bd-light: #F6F2FF;        /* soft lavender-white background */
+  }
+
+/* 🌸 Unified pastel lavender buttons */
+.btn-primary,
+button[type="submit"],
+.btn {
+    background-color: var(--bd-purple) !important;
+    border-color: var(--bd-purple) !important;
+    color: #1C1C1C !important; /* readable dark text */
+    transition: 0.2s ease-in-out;
+}
+
+.btn-primary:hover,
+button[type="submit"]:hover,
+.btn:hover {
+    background-color: var(--bd-purple-dark) !important;
+    border-color: var(--bd-purple-dark) !important;
+    transform: scale(1.03);
+}
+
+/* Card images */
+.card-img-top {
+    width: 100%;
+    height: 13vw;
+    object-fit: cover;
+}
+
