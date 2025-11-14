@@ -393,12 +393,10 @@ def edit_wardrobe_item(request, item_pk):
 def recommendations(request):
     """
     View to display the recommendations page.
-    The page loads immediately with a loading indicator,
-    then JavaScript fetches the actual recommendations via AJAX.
+    The page shows a prompt input form where users can specify
+    what kind of recommendations they want before generating them.
     """
-    context = {
-        'loading': True,
-    }
+    context = {}
     return render(request, 'recommendations.html', context)
 
 @login_required
@@ -407,19 +405,38 @@ def generate_recommendations_ajax(request):
     AJAX endpoint to generate AI-based clothing recommendations.
     
     Process:
-    1. Fetch user profile and available items
-    2. Generate AI recommendations
-    3. Return JSON response with recommendations
+    1. Get user's custom prompt from POST request
+    2. Fetch user profile and available items
+    3. Generate AI recommendations using the custom prompt
+    4. Return JSON response with recommendations
     """
     user = request.user
     
+    # Only accept POST requests with a user prompt
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request method. Use POST.'
+        }, status=405)
+    
     try:
+        # Get the user's custom prompt from the request
+        import json
+        data = json.loads(request.body)
+        user_prompt = data.get('prompt', '').strip()
+        
+        if not user_prompt:
+            return JsonResponse({
+                'success': False,
+                'error': 'Please provide a prompt describing what you\'re looking for.'
+            }, status=400)
+        
         # Get user profile and available items
         available_items = Item.objects.all()
         user_profile = UserProfile.objects.get(user=user)
         
-        # Generate AI recommendations
-        ai_recommendations = generate_recommendations(available_items, user_profile)
+        # Generate AI recommendations with the user's custom prompt
+        ai_recommendations = generate_recommendations(available_items, user_profile, user_prompt)
         
         return JsonResponse({
             'success': True,
@@ -431,6 +448,12 @@ def generate_recommendations_ajax(request):
             'success': False,
             'error': 'User profile not found. Please complete your profile first.'
         }, status=404)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request data.'
+        }, status=400)
     
     except Exception as e:
         print(f"Error generating recommendations: {e}")
