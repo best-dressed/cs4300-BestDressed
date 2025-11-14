@@ -67,11 +67,17 @@
         {% for item in recent_items %}
         <div class="col mb-4">
           <div class="card h-100 bg-dark border border-secondary shadow-sm">
-            <a href="{{ item.item_url }}" target="_blank" class="text-decoration-none">
-              <img class="card-img-top" src="{{ item.image_url }}" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
+
+            <!-- ✅ eBay Link Icon in top-right -->
+            <a href="{{ item.item_url }}" target="_blank"
+               class="ebay-link-icon position-absolute top-0 end-0 m-2"
+               title="View on eBay">
+              <img src="{% static 'img/arrow_link.png' %}" alt="eBay" style="width:36px; height:36px;">
             </a>
+
+              <img class="card-img-top" src="{{ item.image_url }}" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
             <div class="card-body p-3 text-white">
-              <h5 class="fw-bolder mb-2">{{ item.title }}</h5>
+              <h5 class="fw-bolder mb-2">{{ item.title|truncatewords:8 }}</h5>
               <p class="small text-muted mb-3">{{ item.description|truncatewords:10 }}</p>
               <!-- PASSES SOME DATA TO AJAX FROM RECENT_ITEMS TEMP LIST IN VIEW -->
               <button
@@ -110,8 +116,12 @@
       const title = this.dataset.title;
       const description = this.dataset.description;
       const image = this.dataset.image;
+      // This pulls from the button post above with
+      // data-title =
+      // data-description = ...
+      // and item-id converts to itemId for some reason, same w itemUrl
       const item_id = this.dataset.itemId;
-      const item_url = this.dataset.item_url;
+      const item_url = this.dataset.itemUrl;
 
       this.disabled = true;
       this.textContent = "Adding...";
@@ -122,7 +132,7 @@
           "Content-Type": "application/json",
           "X-CSRFToken": "{{ csrf_token }}",
         },
-        body: JSON.stringify({ title, description, image_url: image, item_id })
+        body: JSON.stringify({ title, description, image_url: image, item_id, item_url })
       });
 
       if (response.ok) {

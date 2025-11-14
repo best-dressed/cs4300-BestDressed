@@ -19,7 +19,8 @@ class Item(models.Model):
 
     # for main item listing so everything is more clean with user-added data
     short_description = models.CharField(max_length=75, default="")
-    image_url = models.URLField(max_length=2000, default="")
+    # 5000 is kind of insane but for some reason a lot of google image urls are >2000 length so goin with it
+    image_url = models.URLField(max_length=5000, default="")
     tag = models.CharField(max_length=20, choices=ITEM_TAG_CHOICES, default="")
 
     # ebay ID For market delete and duplicate checking

@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 ## Basically a giant amalgamation of
 # https://stackoverflow.com/questions/68569773/ebay-marketplace-account-deletion-closure-notifications
-# and a bunch of chatGPT code for processing json, and adapting signature validation to use cryptography lib
+# and a bunch of chatGPT/Claude code for processing json, and adapting signature validation to use cryptography lib
 
 EBAY_VERIFICATION_TOKEN = os.environ.get('EBAY_VERIFICATION_TOKEN')
 EBAY_BASE64_AUTHORIZATION_TOKEN = os.environ.get("EBAY_BASE64_AUTHORIZATION_TOKEN")
@@ -130,8 +130,14 @@ def ebay_get_items(request):
 
             # set up url based on user input
             search_term = form.cleaned_data['search_term']
-            # DEAR CHATGPT ADD ERROR CHECKING HERE
             item_count = form.cleaned_data['item_count']
+
+            # Check if search term itself is inappropriate before making API call
+            if is_inappropriate(search_term):
+                messages.warning(request, "Search term contains inappropriate content and will likely result in filtered items. Please try a different search term.")
+                form = EbaySearchForm()  # reset form to empty
+                context['form'] = form
+                return render(request, "ebay_add_item.html", context)
 
             ebay_items_url = f"https://api.ebay.com/buy/browse/v1/item_summary/search?q={search_term}&limit={item_count}"
             try:
@@ -159,6 +165,8 @@ def ebay_get_items(request):
 
                     detail_data = detail_response.json()
                     description = detail_data.get("shortDescription")
+                    # get image url from details because we already pulled it and it is better than img url from search.
+                    image_url = detail_data.get("image", {}).get("imageUrl")
                     if (description == None):
                         description = "Ebay Seller did not Provide Description for this item"
 
@@ -172,7 +180,7 @@ def ebay_get_items(request):
                             "price": f"{item['price']['value']} {item['price']['currency']}" if "price" in item else None,
                             "seller_username": item.get("seller", {}).get("username"),
                             "item_url": item.get("itemWebUrl"),
-                            "image_url": item.get("image", {}).get("imageUrl"),
+                            "image_url": image_url,
                             "description": description
                         })
 
@@ -247,11 +255,12 @@ def ajax_add_item(request):
     try:
         # gets from parsed items somehow
         data = json.loads(request.body)
+        logger.warning(f"DATA:::  {data}")
         title = data.get("title")
         description = data.get("description")
         image_url = data.get("image_url")
         item_id = data.get("item_id")  # ✅ new
-        logger.warning(f"DATA:::  {data}")
+
         item_url = data.get("item_url")
 
         if not title or not description:
