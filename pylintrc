@@ -1,0 +1,6 @@
+[MAIN]
+# Disable trailing whitespace\
+[Message Control]
+# Disable trailing whitespace
+# https://pylint.pycqa.org/en/latest/user_guide/messages/convention/trailing-whitespace.html
+disable=C0303
