@@ -107,6 +107,64 @@ def add_item_success(request, pk):
 @login_required
 def dashboard(request):
     """
+    Enhanced user dashboard - central hub with statistics and quick actions.
+    
+    Displays:
+    - Wardrobe and outfit counts
+    - Outfit statistics (by season, occasion, favorites)
+    - Recent outfits
+    - Random outfit suggestion
+    """
+    user = request.user
+    
+    # get or create user profile, retrieves database record; if it doesnt exist, create it
+    # profile: UserProfile object
+    # created: boolean for if object was just created (True) or if it already exists (False)
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    
+    # get actual counts (of number of items in Wardrobe and number of Outfits) from the database for the logged in user
+    wardrobe_count = WardrobeItem.objects.filter(user=user).count()
+    outfit_count = Outfit.objects.filter(user=user).count()
+    # implement later
+    recommendation_count = 0  
+    
+    # Outfit statistics by category
+    favorites_count = Outfit.objects.filter(user=user, is_favorite=True).count()
+    
+    # Count outfits by season
+    # values('season') groups the results by season
+    # annotate(count=Count('id')) counts how many in each group
+    season_stats = Outfit.objects.filter(user=user).values('season').annotate(count=Count('id'))
+    
+    # Count outfits by occasion
+    occasion_stats = Outfit.objects.filter(user=user).values('occasion').annotate(count=Count('id'))
+    
+    # Recent outfits (last 4)
+    # prefetch_related loads all items for these outfits efficiently
+    recent_outfits = Outfit.objects.filter(user=user).prefetch_related('items').order_by('-created_at')[:4]
+    
+    # Random outfit suggestion ("Outfit of the Day")
+    # order_by('?') randomizes the order, [:1] gets just one
+    random_outfit = Outfit.objects.filter(user=user).order_by('?').first()
+
+    # python dictionary that passes data from Python (Django view) to the HTML template   
+    context = {
+        'wardrobe_count': wardrobe_count,
+        'outfit_count': outfit_count,
+        'recommendation_count': recommendation_count,
+        'favorites_count': favorites_count,
+        'season_stats': season_stats,
+        'occasion_stats': occasion_stats,
+        'recent_outfits': recent_outfits,
+        'random_outfit': random_outfit,
+    }
+    
+    return render(request, 'dashboard.html', context)
+
+
+@login_required
+def dashboard(request):
+    """
     User dashboard - central hub for accessing all user features
     """
     user = request.user
@@ -557,18 +615,76 @@ def edit_outfit(request, outfit_pk):
 @login_required
 def delete_outfit(request, outfit_pk):
     """
-    Delete an outfit.
+    Delete an outfit with confirmation.
+    
+    GET: Show confirmation page
+    POST: Actually delete the outfit
+    
+    Security: Only the owner can delete their outfits
     """
+    # Get the outfit, ensuring it belongs to current user (security)
     outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
     
     if request.method == 'POST':
-        outfit_name = outfit.name
-        outfit.delete()
+        # User confirmed deletion
+        outfit_name = outfit.name  # Save name for success message
+        outfit.delete()  # Delete from database
+        
         messages.success(request, f'Outfit "{outfit_name}" has been deleted.')
         return redirect('my_outfits')
     
-    # Show confirmation page
+    # GET request: show confirmation page
     context = {
         'outfit': outfit,
     }
     return render(request, 'confirm_delete_outfit.html', context)
+
+@login_required
+def edit_outfit(request, outfit_pk):
+    """
+    Edit an existing outfit.
+    
+    Allows user to:
+    - Change name, description, occasion, season, favorite status
+    - Add or remove items from the outfit
+    
+    GET: Display pre-filled form
+    POST: Save changes
+    """
+    # Get the outfit, ensuring it belongs to current user (security)
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    if request.method == 'POST':
+        # User submitted the form with changes
+        # instance=outfit tells the form to update the existing outfit, not create a new one
+        form = OutfitForm(request.user, request.POST, instance=outfit)
+        
+        if form.is_valid():
+            # Save changes to the outfit
+            # commit=False means "create the object but don't save to DB yet"
+            outfit = form.save(commit=False)
+            outfit.user = request.user  # Ensure user doesn't change (security)
+            outfit.save()
+            
+            # Save the many-to-many relationships (the items)
+            # This must happen after the outfit is saved
+            form.save_m2m()
+            
+            messages.success(request, f'Outfit "{outfit.name}" has been updated!')
+            return redirect('outfit_detail', outfit_pk=outfit.pk)
+    else:
+        # GET request: show form pre-filled with current outfit data
+        # instance=outfit pre-fills the form with existing values
+        form = OutfitForm(request.user, instance=outfit)
+    
+    # Get user's wardrobe items to display with images
+    wardrobe_items = WardrobeItem.objects.filter(user=request.user)
+    
+    context = {
+        'form': form,
+        'wardrobe_items': wardrobe_items,
+        'outfit': outfit,
+        'mode': 'edit',  # Tell template this is edit mode (not create)
+    }
+    
+    return render(request, 'edit_outfit.html', context)
