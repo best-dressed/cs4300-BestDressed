@@ -1,6 +1,8 @@
 [MAIN]
-# Disable trailing whitespace\
+# Disable trailing whitespace
 [Message Control]
 # Disable trailing whitespace
 # https://pylint.pycqa.org/en/latest/user_guide/messages/convention/trailing-whitespace.html
 disable=C0303
+# disable line too long error
+disable=C0301
