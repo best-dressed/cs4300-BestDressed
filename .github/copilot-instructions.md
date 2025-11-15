@@ -177,3 +177,13 @@ return JsonResponse({'status': 'success', 'data': ...})
 - For static file issues, ensure `collectstatic` ran and check `STATIC_ROOT`
 - OpenAI errors: confirm `OPENAI_API_KEY` env var set
 - Forum permission errors: check `request.user == obj.user or request.user.is_staff` patterns
+
+## Building a New Feature
+1. **Clarify Requirements**: Understand the feature scope and user stories. This may include questions being asked to the user before proceeding.
+2. **Build tests first**: Write unit and integration tests covering the new feature.
+3. **Plan the Feature**: Define models, views, templates, and URLs needed.
+4. **Create/Update Models**: Add new models or fields in `models.py`, run migrations.
+5. **Develop Views**: Implement view functions or class-based views in `views.py`, following existing patterns.
+6. **Design Templates**: Create or modify HTML templates in the appropriate `templates/` directory.
+7. **Set Up URLs**: Add URL patterns in the app's `urls.py` and include them in the main `urls.py`.
+8. **Test the Feature**: Run the tests created in step 2 to ensure the feature works as expected.

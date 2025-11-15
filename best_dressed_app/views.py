@@ -408,7 +408,8 @@ def generate_recommendations_ajax(request):
     1. Get user's custom prompt from POST request
     2. Fetch user profile and available items
     3. Generate AI recommendations using the custom prompt
-    4. Return JSON response with recommendations
+    4. Parse recommended item IDs from AI response
+    5. Return JSON response with recommendations and item details
     """
     user = request.user
     
@@ -422,6 +423,7 @@ def generate_recommendations_ajax(request):
     try:
         # Get the user's custom prompt from the request
         import json
+        import re
         data = json.loads(request.body)
         user_prompt = data.get('prompt', '').strip()
         
@@ -438,9 +440,43 @@ def generate_recommendations_ajax(request):
         # Generate AI recommendations with the user's custom prompt
         ai_recommendations = generate_recommendations(available_items, user_profile, user_prompt)
         
+        # Parse the recommended item IDs from the AI response
+        # Look for pattern: RECOMMENDED_ITEMS: [id1, id2, id3, ...]
+        recommended_item_ids = []
+        match = re.search(r'RECOMMENDED_ITEMS:\s*\[([\d,\s]+)\]', ai_recommendations)
+        if match:
+            # Extract the IDs and convert to integers
+            ids_str = match.group(1)
+            recommended_item_ids = [int(id.strip()) for id in ids_str.split(',') if id.strip().isdigit()]
+            
+            # Remove the RECOMMENDED_ITEMS line from the text
+            ai_recommendations = re.sub(r'\n*RECOMMENDED_ITEMS:\s*\[[\d,\s]+\]\n*', '', ai_recommendations).strip()
+        
+        # Fetch the actual Item objects
+        recommended_items = []
+        if recommended_item_ids:
+            items = Item.objects.filter(id__in=recommended_item_ids)
+            # Create a dictionary to maintain order
+            items_dict = {item.id: item for item in items}
+            
+            # Build the list in the order specified by the AI
+            for item_id in recommended_item_ids:
+                if item_id in items_dict:
+                    item = items_dict[item_id]
+                    recommended_items.append({
+                        'id': item.id,
+                        'title': item.title,
+                        'description': item.description,
+                        'short_description': item.short_description,
+                        'image_url': item.image_url,
+                        'tag': item.tag,
+                        'detail_url': item.get_absolute_url(),
+                    })
+        
         return JsonResponse({
             'success': True,
-            'recommendations': ai_recommendations
+            'recommendations': ai_recommendations,
+            'items': recommended_items
         })
     
     except UserProfile.DoesNotExist:
