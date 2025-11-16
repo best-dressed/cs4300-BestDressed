@@ -4,7 +4,9 @@ from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.db.models import Count, Max
-from .models import Thread, Post
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import Thread, Post, ThreadLike, PostLike
 from .forms import ThreadForm, PostForm
 
 # Create your views here.
@@ -120,3 +122,40 @@ def post_edit(request, post_id):
         form = PostForm(instance=post)
 
     return render(request, 'forum/post_edit.html', {'form': form, 'post': post})
+
+# NEW: Like/Unlike views
+@login_required
+@require_POST
+def toggle_thread_like(request, thread_id):
+    thread = get_object_or_404(Thread, id=thread_id)
+    like, created = ThreadLike.objects.get_or_create(thread=thread, user=request.user)
+    
+    if not created:
+        # Unlike if already liked
+        like.delete()
+        liked = False
+    else:
+        liked = True
+    
+    return JsonResponse({
+        'liked': liked,
+        'like_count': thread.like_count()
+    })
+
+@login_required
+@require_POST
+def toggle_post_like(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    like, created = PostLike.objects.get_or_create(post=post, user=request.user)
+    
+    if not created:
+        # Unlike if already liked
+        like.delete()
+        liked = False
+    else:
+        liked = True
+    
+    return JsonResponse({
+        'liked': liked,
+        'like_count': post.like_count()
+    })
