@@ -398,12 +398,10 @@ def edit_wardrobe_item(request, item_pk):
 def recommendations(request):
     """
     View to display the recommendations page.
-    The page loads immediately with a loading indicator,
-    then JavaScript fetches the actual recommendations via AJAX.
+    The page shows a prompt input form where users can specify
+    what kind of recommendations they want before generating them.
     """
-    context = {
-        'loading': True,
-    }
+    context = {}
     return render(request, 'recommendations.html', context)
 
 @login_required
@@ -412,23 +410,78 @@ def generate_recommendations_ajax(request):
     AJAX endpoint to generate AI-based clothing recommendations.
     
     Process:
-    1. Fetch user profile and available items
-    2. Generate AI recommendations
-    3. Return JSON response with recommendations
+    1. Get user's custom prompt from POST request
+    2. Fetch user profile and available items
+    3. Generate AI recommendations using the custom prompt
+    4. Parse recommended item IDs from AI response
+    5. Return JSON response with recommendations and item details
     """
     user = request.user
     
+    # Only accept POST requests with a user prompt
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request method. Use POST.'
+        }, status=405)
+    
     try:
+        # Get the user's custom prompt from the request
+        import json
+        import re
+        data = json.loads(request.body)
+        user_prompt = data.get('prompt', '').strip()
+        
+        if not user_prompt:
+            return JsonResponse({
+                'success': False,
+                'error': 'Please provide a prompt describing what you\'re looking for.'
+            }, status=400)
+        
         # Get user profile and available items
         available_items = Item.objects.all()
         user_profile = UserProfile.objects.get(user=user)
         
-        # Generate AI recommendations
-        ai_recommendations = generate_recommendations(available_items, user_profile)
+        # Generate AI recommendations with the user's custom prompt
+        ai_recommendations = generate_recommendations(available_items, user_profile, user_prompt)
+        
+        # Parse the recommended item IDs from the AI response
+        # Look for pattern: RECOMMENDED_ITEMS: [id1, id2, id3, ...]
+        recommended_item_ids = []
+        match = re.search(r'RECOMMENDED_ITEMS:\s*\[([\d,\s]+)\]', ai_recommendations)
+        if match:
+            # Extract the IDs and convert to integers
+            ids_str = match.group(1)
+            recommended_item_ids = [int(id.strip()) for id in ids_str.split(',') if id.strip().isdigit()]
+            
+            # Remove the RECOMMENDED_ITEMS line from the text
+            ai_recommendations = re.sub(r'\n*RECOMMENDED_ITEMS:\s*\[[\d,\s]+\]\n*', '', ai_recommendations).strip()
+        
+        # Fetch the actual Item objects
+        recommended_items = []
+        if recommended_item_ids:
+            items = Item.objects.filter(id__in=recommended_item_ids)
+            # Create a dictionary to maintain order
+            items_dict = {item.id: item for item in items}
+            
+            # Build the list in the order specified by the AI
+            for item_id in recommended_item_ids:
+                if item_id in items_dict:
+                    item = items_dict[item_id]
+                    recommended_items.append({
+                        'id': item.id,
+                        'title': item.title,
+                        'description': item.description,
+                        'short_description': item.short_description,
+                        'image_url': item.image_url,
+                        'tag': item.tag,
+                        'detail_url': item.get_absolute_url(),
+                    })
         
         return JsonResponse({
             'success': True,
-            'recommendations': ai_recommendations
+            'recommendations': ai_recommendations,
+            'items': recommended_items
         })
     
     except UserProfile.DoesNotExist:
@@ -436,6 +489,12 @@ def generate_recommendations_ajax(request):
             'success': False,
             'error': 'User profile not found. Please complete your profile first.'
         }, status=404)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request data.'
+        }, status=400)
     
     except Exception as e:
         print(f"Error generating recommendations: {e}")
