@@ -87,6 +87,7 @@
                       data-image="{{ item.image_url }}"
                       data-item-id="{{ item.item_id }}"
                       data-item-url="{{ item.item_url }}"
+                      data-seller-id="{{ item.seller_id }}"
               >
                 Add Item
               </button>
@@ -122,6 +123,7 @@
       // and item-id converts to itemId for some reason, same w itemUrl
       const item_id = this.dataset.itemId;
       const item_url = this.dataset.itemUrl;
+      const seller_id = this.dataset.sellerId;
 
       this.disabled = true;
       this.textContent = "Adding...";
@@ -132,7 +134,7 @@
           "Content-Type": "application/json",
           "X-CSRFToken": "{{ csrf_token }}",
         },
-        body: JSON.stringify({ title, description, image_url: image, item_id, item_url })
+        body: JSON.stringify({ title, description, image_url: image, item_id, item_url, seller_id })
       });
 
       if (response.ok) {

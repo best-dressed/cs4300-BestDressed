@@ -98,9 +98,22 @@ def ebay_marketplace_deletion_notification(request):
             pk.verify(base64.b64decode(signature), msg_body_bytes, ec.ECDSA(hashes.SHA1()))
             logger.info("Ebay Signature verified successfully")
 
-            # TODO::::::
-            # Remove items from database if seller_id matches, or Something like that.
-            # could dump entire db as well if simpler
+            try:
+                deletion_payload = json.loads(request.body.decode("utf-8"))
+
+                # Ebay sends "username" for marketplace data deletion
+                ebay_username = deletion_payload.get("username")
+                logger.warning(f"EBAY MARKETPLACE DELETE REQUEST FOR USER: {ebay_username}")
+
+                if ebay_username:
+                    # Delete all items where seller_id matches this username
+                    deleted_count, _ = Item.objects.filter(seller_id=ebay_username).delete()
+                    logger.warning(f"Deleted {deleted_count} Item(s) belonging to deleted eBay user: {ebay_username}")
+                else:
+                    logger.error("Deletion payload missing 'username' field")
+            except Exception as e:
+                logger.error(f"Error processing marketplace deletion payload: {e}")
+                return JsonResponse({"error": "Invalid deletion payload"}, status=400)
 
         except InvalidSignature:
             logger.warning("Invalid eBay signature")
@@ -121,7 +134,7 @@ def ebay_get_items(request):
     # for blocking inappropriate searches
     flagged_any_item = False
 
-    # when POSTing send our query info
+    # when POSTing send our query info to ebay
     if request.method == "POST":
 
         logger.warning(f"Running Ebay Get items search")
@@ -165,12 +178,17 @@ def ebay_get_items(request):
 
                     detail_data = detail_response.json()
                     description = detail_data.get("shortDescription")
+                    seller_id = detail_data.get("seller", {}).get("sellerId")
+                    logger.warning(f"SELLER ID: {seller_id}")
+                    logger.warning(f"DETAIL DATA {detail_data}")
                     # get image url from details because we already pulled it and it is better than img url from search.
                     image_url = detail_data.get("image", {}).get("imageUrl")
+
+                    # sometimes there is no desc so account for that
                     if (description == None):
                         description = "Ebay Seller did not Provide Description for this item"
 
-                    # when inappropriate items are found flag so we send an error message
+                    # when inappropriate items are found flag so we send an error message and dont add that item
                     if is_inappropriate(item.get("title")) or is_inappropriate(description):
                         flagged_any_item = True
                     else:
@@ -178,10 +196,10 @@ def ebay_get_items(request):
                             "item_id": item_id,
                             "title": item.get("title"),
                             "price": f"{item['price']['value']} {item['price']['currency']}" if "price" in item else None,
-                            "seller_username": item.get("seller", {}).get("username"),
+                            "seller_id": item.get("seller", {}).get("username"),
                             "item_url": item.get("itemWebUrl"),
                             "image_url": image_url,
-                            "description": description
+                            "description": description,
                         })
 
                 if flagged_any_item:
@@ -253,7 +271,7 @@ def ajax_add_item(request):
     Prevents duplicates using the eBay item_id.
     """
     try:
-        # gets from parsed items somehow
+        # so this json is sent in the ajax JS script in ebay_add_item.html
         data = json.loads(request.body)
         logger.warning(f"DATA:::  {data}")
         title = data.get("title")
@@ -262,6 +280,7 @@ def ajax_add_item(request):
         item_id = data.get("item_id")  # ✅ new
 
         item_url = data.get("item_url")
+        seller_id = data.get("seller_id")
 
         if not title or not description:
             return JsonResponse({"error": "Missing required fields"}, status=400)
@@ -277,7 +296,8 @@ def ajax_add_item(request):
             image_url=image_url,
             tag="Accessory",
             item_id=item_id,  # ✅ new
-            item_ebay_url = item_url
+            item_ebay_url = item_url,
+            seller_id = seller_id
         )
         return JsonResponse({"message": "Item added successfully", "id": item.id})
 

@@ -24,8 +24,10 @@ class Item(models.Model):
     tag = models.CharField(max_length=20, choices=ITEM_TAG_CHOICES, default="")
 
     # ebay ID For market delete and duplicate checking
-    item_id = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    item_id = models.CharField(max_length=200, unique=True, null=True, blank=True)
+    # blank = true allows these to be blank in forms, as we support non ebay items too.
     item_ebay_url = models.URLField(blank=True, null=True)
+    seller_id = models.CharField(max_length=200, null=True, blank=True)
 
     # make it so short description created automatically from description
     def save(self, *args, **kwargs):
