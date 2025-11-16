@@ -38,8 +38,14 @@ urlpatterns = [
     path('wardrobe/add/', views.add_wardrobe_item, name="add_wardrobe_item"),
     path('wardrobe/edit/<int:item_pk>/', views.edit_wardrobe_item, name="edit_wardrobe_item"),
     path('wardrobe/delete/<int:item_pk>/', views.delete_wardrobe_item, name="delete_wardrobe_item"),
+
+
+    # outfits and outfit features
     path('outfits/create/', views.create_outfit, name='create_outfit'),
     path('outfits/', views.my_outfits, name='my_outfits'),
+    path('outfits/<int:outfit_pk>/', views.outfit_detail, name='outfit_detail'),
+    path('outfits/<int:outfit_pk>/edit/', views.edit_outfit, name='edit_outfit'),
+    path('outfits/<int:outfit_pk>/delete/', views.delete_outfit, name='delete_outfit'),
 
 
     # item listing/catalog
