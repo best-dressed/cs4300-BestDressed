@@ -20,7 +20,7 @@ updates:
         patterns:
           - "*"
         update-types:
-          - "security"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -42,4 +42,4 @@ updates:
         patterns:
           - "*"
         update-types:
-          - "security"
+          - "patch"
