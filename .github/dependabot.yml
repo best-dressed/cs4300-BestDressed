@@ -3,27 +3,43 @@ updates:
   - package-ecosystem: "pip"
     directory: "/" 
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00" # UTC
-    open-pull-requests-limit: 5
+      interval: "daily" # Check daily for security updates
+    open-pull-requests-limit: 10 # Allow more PRs for security fixes
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
     labels:
       - "dependencies"
       - "dependabot"
+    # Enable vulnerability alerts and security updates
+    allow:
+      - dependency-type: "all"
+    # Group security updates together
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "04:00" # UTC
-    open-pull-requests-limit: 5
+      interval: "daily" # Check daily for security updates
+    open-pull-requests-limit: 10 # Allow more PRs for security fixes
     commit-message:
       prefix: "chore(deps)"
       include: "scope"
     labels:
       - "dependencies"
       - "dependabot"
+    # Enable vulnerability alerts and security updates
+    allow:
+      - dependency-type: "all"
+    # Group security updates together
+    groups:
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
