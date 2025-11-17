@@ -3,10 +3,10 @@
 import re
 from django.http import HttpResponseRedirect
 from django.urls import reverse
+from .models import BannedIP
 
 REDIRECT = 0
-VALID = 1
-
+VALID = 1    
 
 def get_content_filters() :
     filters = [] 
@@ -45,8 +45,39 @@ def content_filter_decorator(*accessors,validator=(lambda value : True)) :
                             if pattern.match(accessor(request)) :
                                 return HttpResponseRedirect(reverse("filtered_content"))
                 else :
-                    return HttpResponseRedirect(reverse(""))
+                    return HttpResponseRedirect(reverse("invalid_post"))
             return func(request,*args,**kwargs)
         return wrapper
     return decorator
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
+    if x_forwarded_for:
+        # Can be a comma-separated list if multiple proxies are involved
+        ip = x_forwarded_for.split(",")[0].strip()
+    else:
+        ip = request.META.get("REMOTE_ADDR")
+    return ip
+
+def not_ip_banned(*, check=lambda request: True):
+    """
+    Blocks requests from banned IPs.
+
+    By default it blocks all requests, but you can pass a custom
+    `check` function (e.g. only block POSTs).
+    """
+    def decorator(func):
+        def wrapper(request, *args, **kwargs):
+            user_ip = get_client_ip(request)
+            bans = BannedIP.objects.filter(ip_address=user_ip)
+
+            # If the request is relevant and user has active bans
+            if check(request) and any(ban.is_active() for ban in bans):
+                # Redirect to your IP ban page
+                return redirect("ip_ban")
+            return func(request, *args, **kwargs)
+        return wrapper
+    return decorator
+                
+
 
