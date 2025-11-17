@@ -3,7 +3,7 @@ Django views for the Best Dressed application.
 """
 
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Item, UserProfile, WardrobeItem, Outfit
+from .models import Item, UserProfile, WardrobeItem, Outfit, HiddenItem
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
@@ -39,14 +39,41 @@ def signup(request):
     """
     return render(request, 'signup.html')
 
+# primary item listing view for main page
 def item_listing(request):
     query = request.GET.get("q")
     if query:
-        items = Item.objects.filter(title__icontains=query) | Item.objects.filter(description__icontains=query)
+        from django.db.models import Q
+        items = Item.objects.filter(Q(title__icontains=query) | Q(description__icontains=query))
     else:
         items = Item.objects.all()
+
+    # Filter out items hidden by current user
+    if request.user.is_authenticated:
+        hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
+        items = items.exclude(pk__in=hidden_ids)
+
     return render(request, "item_listing.html", {'items': items, 'query': query})
 
+# handle ajax post from item_card.html when the user hides items from item listing w the little icon
+@login_required
+def ajax_hide_item(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=400)
+
+    item_id = request.POST.get("item_id")
+    if not item_id:
+        return JsonResponse({"error": "Missing item_id"}, status=400)
+
+    item = get_object_or_404(Item, pk=item_id)
+
+    # Create or get
+    obj, created = HiddenItem.objects.get_or_create(
+        user=request.user,
+        item=item
+    )
+
+    return JsonResponse({"success": True, "hidden": created})
 # # for a particular item view
 # def item_detail(request, pk):
 #     item = get_object_or_404(Item, pk=pk)
@@ -252,48 +279,47 @@ def save_to_wardrobe(request, item_pk):
         request: The HTTP request object
         item_pk: Primary key of the Item to save
     """
-    
+
     # Get the catalog item or return 404 if it doesn't exist
-    # This is safer than Item.objects.get() which would raise an exception
     catalog_item = get_object_or_404(Item, pk=item_pk)
-    
+
     # Only allow POST requests (security best practice)
-    # Prevents accidental saves from just visiting a URL
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
         return redirect('item_detail', pk=item_pk)
-    
-    # using try/except:
-    # - guarantees no dupes (or race conditions)
-    # - allows for less code and fewer db queries
+
+    # Try to create the item, catch if it already exists
     try:
-        # Try to create a new wardrobe item
-        # If it already exists (violates unique_together), this will raise IntegrityError
-        wardrobe_item = WardrobeItem.objects.create(
+        WardrobeItem.objects.create(
             user=request.user,
             title=catalog_item.title,
             description=catalog_item.description,
             image_url=catalog_item.image_url,
-            category='other',  # Default category, user can change later
+            category='other',
             catalog_item=catalog_item
         )
-        
-        # show a success message
-        messages.success(
-            request, 
-            f'"{catalog_item.title}" has been added to your wardrobe!'
-        )
-        
+        success_message = 'Item added to wardrobe!'
+        status = 'added'
+
     except IntegrityError:
-        # Item already exists in wardrobe (unique_together constraint violated)
-        # This is not really an error, just inform the user
-        messages.info(
-            request,
-            f'"{catalog_item.title}" is already in your wardrobe.'
-        )
-    
-    # Redirect back to the item detail page
-    # Using redirect prevents form resubmission if user refreshes the page
+        # Item already exists in wardrobe
+        success_message = 'Already in wardrobe'
+        status = 'exists'
+
+    # AJAX response
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': success_message,
+            'status': status
+        })
+
+    # Normal redirect
+    if status == 'exists':
+        messages.info(request, f'"{catalog_item.title}" is already in your wardrobe.')
+    else:
+        messages.success(request, f'"{catalog_item.title}" has been added to your wardrobe!')
+
     return redirect('item_detail', pk=item_pk)
 
 @login_required

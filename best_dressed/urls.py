@@ -51,6 +51,7 @@ urlpatterns = [
     # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
     path('item/<int:pk>/', views.item_detail, name="item_detail"),
+    path('ajax/hide-item/', views.ajax_hide_item, name='ajax_hide_item'),
     # pattern (item/<int:item_pk>/save/):
     # - item/: text
     # - <int:item_pk>: captures an integer from URL, passes it as `item_pk` parameter

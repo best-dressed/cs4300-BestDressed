@@ -51,12 +51,10 @@ def ebay_marketplace_deletion_notification(request):
         x_ebay_signature_decoded = json.loads(base64.b64decode(x_ebay_signature).decode('utf-8'))
         kid = x_ebay_signature_decoded['kid']
         signature = x_ebay_signature_decoded['signature']
-        logger.warning(f"SIGNATURE: {signature}")
-        logger.warning(f"kid: {kid}")
+        #logger.warning(f"SIGNATURE: {signature}")
+        #logger.warning(f"kid: {kid}")
 
-        # get public key for verification
-        # DOES NOT WORK, Probably... needs to be tested on Prod with actual requests from ebay.
-        # afaik impossible to do the ebay call for public key unless ebay themselves sent req.
+        # So maybe this works, but I really have no idea how to verify it from eBay themselves.
         # https://developer.ebay.com/api-docs/commerce/notification/resources/public_key/methods/getPublicKey
         public_key = None
         try:
@@ -70,7 +68,7 @@ def ebay_marketplace_deletion_notification(request):
                                                 'Authorization': f'Bearer {oauth_access_token}'
                                             },
                                             data = {})
-            logger.warning(f"PKRESPONSE: {pkRequest.json()}")
+            #logger.warning(f"PKRESPONSE: {pkRequest.json()}")
             if pkRequest.status_code == 200:
                 pkResponse = pkRequest.json()
                 public_key = pkResponse['key']
@@ -179,8 +177,6 @@ def ebay_get_items(request):
                     detail_data = detail_response.json()
                     description = detail_data.get("shortDescription")
                     seller_id = detail_data.get("seller", {}).get("sellerId")
-                    logger.warning(f"SELLER ID: {seller_id}")
-                    logger.warning(f"DETAIL DATA {detail_data}")
                     # get image url from details because we already pulled it and it is better than img url from search.
                     image_url = detail_data.get("image", {}).get("imageUrl")
 
@@ -273,7 +269,7 @@ def ajax_add_item(request):
     try:
         # so this json is sent in the ajax JS script in ebay_add_item.html
         data = json.loads(request.body)
-        logger.warning(f"DATA:::  {data}")
+        #logger.warning(f"DATA:::  {data}")
         title = data.get("title")
         description = data.get("description")
         image_url = data.get("image_url")

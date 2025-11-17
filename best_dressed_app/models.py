@@ -209,3 +209,14 @@ class Outfit(models.Model):
     def item_count(self):
         """Helper method to get the number of items in this outfit"""
         return self.items.count()
+
+# For hiding items from user's particular view in item listing
+class HiddenItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hidden_items")
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="hidden_by_users")
+
+    class Meta:
+        unique_together = [["user", "item"]]  # prevent duplicates
+
+    def __str__(self):
+        return f"{self.user.username} hid {self.item.title}"
