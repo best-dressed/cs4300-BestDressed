@@ -12,6 +12,7 @@ from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
 from .recommendation import generate_recommendations
 from django.http import JsonResponse
 import threading
+from django.http import JsonResponse
 
 def index(request):
     """
@@ -688,3 +689,55 @@ def edit_outfit(request, outfit_pk):
     }
     
     return render(request, 'edit_outfit.html', context)
+
+@login_required
+def toggle_outfit_favorite(request, outfit_pk):
+    """
+    Toggle the favorite status of an outfit (AJAX endpoint).
+    
+    Returns JSON with the new favorite status.
+    Security: Only the owner can toggle their outfit's favorite status.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+    
+    # Get the outfit, ensuring it belongs to current user
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    # Toggle the favorite status
+    # If it was True, make it False; if False, make it True
+    outfit.is_favorite = not outfit.is_favorite
+    outfit.save()
+    
+    # Return JSON response
+    # This tells JavaScript whether the outfit is now favorited or not
+    return JsonResponse({
+        'success': True,
+        'is_favorite': outfit.is_favorite
+    })
+
+@login_required
+def duplicate_outfit(request, outfit_pk):
+    """
+    Create a copy of an existing outfit.
+    
+    The duplicated outfit will have "(Copy)" appended to the name
+    and will include all the same items as the original.
+    """
+    # Get the original outfit
+    original_outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    # Create a new outfit with copied data
+    # pk=None means Django will create a new object instead of updating existing
+    duplicate = Outfit.objects.get(pk=outfit_pk)
+    duplicate.pk = None  # This makes it a new object
+    duplicate.name = f"{original_outfit.name} (Copy)"
+    duplicate.is_favorite = False  # Copies aren't automatically favorites
+    duplicate.save()
+    
+    # Copy the many-to-many relationships (items)
+    # We need to do this after save() because M2M requires a saved object
+    duplicate.items.set(original_outfit.items.all())
+    
+    messages.success(request, f'Created a copy of "{original_outfit.name}"!')
+    return redirect('outfit_detail', outfit_pk=duplicate.pk)

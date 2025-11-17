@@ -46,6 +46,8 @@ urlpatterns = [
     path('outfits/<int:outfit_pk>/', views.outfit_detail, name='outfit_detail'),
     path('outfits/<int:outfit_pk>/edit/', views.edit_outfit, name='edit_outfit'),
     path('outfits/<int:outfit_pk>/delete/', views.delete_outfit, name='delete_outfit'),
+    path('outfits/<int:outfit_pk>/toggle-favorite/', views.toggle_outfit_favorite, name='toggle_outfit_favorite'),
+    path('outfits/<int:outfit_pk>/duplicate/', views.duplicate_outfit, name='duplicate_outfit'),
 
 
     # item listing/catalog
