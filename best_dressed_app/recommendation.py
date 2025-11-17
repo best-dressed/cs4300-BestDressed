@@ -39,6 +39,12 @@ def generate_recommendations(available_items, user_profile, user_prompt: str = N
     client = create_openai_client(openai_api_key)
     model = "gpt-4"
     
+    # Format items with ID, title, description, and tag for the AI
+    items_list = []
+    for item in available_items:
+        items_list.append(f"ID: {item.id} | Title: {item.title} | Description: {item.description} | Category: {item.tag}")
+    items_formatted = "\n".join(items_list)
+    
     # Build the base prompt with user profile information
     base_prompt = f"""
             You are a fashion recommendation engine talking directly to the end user. Do not use the user's name or username, only use "you" instead. 
@@ -50,8 +56,8 @@ def generate_recommendations(available_items, user_profile, user_prompt: str = N
             Favorite Colors: 
             {user_profile.favorite_colors}
 
-            Available Items: 
-            {available_items}
+            Available Items (with IDs): 
+            {items_formatted}
         """
     
     # Add the user's custom prompt if provided
@@ -62,11 +68,21 @@ def generate_recommendations(available_items, user_profile, user_prompt: str = N
             {user_prompt}
             
             Generate personalized clothing recommendations based on the user's profile, preferences, and their specific request above.
+            
+            IMPORTANT: At the end of your response, list the IDs of recommended items in the following format:
+            RECOMMENDED_ITEMS: [id1, id2, id3, ...]
+            
+            Include 3-6 item IDs that best match the user's request.
         """
     else:
         prompt = base_prompt + """
             
             Generate personalized clothing recommendations based on the user's profile and preferences.
+            
+            IMPORTANT: At the end of your response, list the IDs of recommended items in the following format:
+            RECOMMENDED_ITEMS: [id1, id2, id3, ...]
+            
+            Include 3-6 item IDs that best match the user's profile.
         """
     
     try:
