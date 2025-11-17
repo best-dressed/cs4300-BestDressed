@@ -43,7 +43,6 @@ def content_filter_decorator(*accessors,validator=(lambda value : True)) :
                 # Get the values and filter them with the word filters.
                     for accessor in accessors :
                         for pattern in filters : 
-                            print(accessor(request))
                             if pattern.match(accessor(request)) :
                                 return HttpResponseRedirect(reverse("filtered_content"))
                 else :

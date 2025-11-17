@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import Thread, Post, ThreadLike, PostLike, SavedThread
 from .forms import ThreadForm, PostForm
-from moderation.moderation_common import content_filter_decorator, not_ip_banned
+from moderation.moderation_common import content_filter_decorator, not_ip_banned, poster_not_ip_banned
 from moderation.moderation_common import unbanned_ip_and_login, poster_unbanned_ip_and_login
 
 def create_validator(Form) :
@@ -129,7 +129,7 @@ def thread_delete(request, thread_id):
     # If a GET sneaks through, redirect to detail (we only accept POST deletes)
     return redirect('thread_detail', thread_id=thread.id)
 
-@poster_unbanned_ip_and_login
+@poster_not_ip_banned
 @post_content_filter_decorator
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
