@@ -167,7 +167,7 @@ def dashboard(request):
     wardrobe_count = WardrobeItem.objects.filter(user=user).count()
     outfit_count = Outfit.objects.filter(user=user).count()
     # implement later
-    recommendation_count = 0  
+    recommendation_count = SavedRecommendation.objects.filter(user=user).count()
     
     # Outfit statistics by category
     favorites_count = Outfit.objects.filter(user=user, is_favorite=True).count()
