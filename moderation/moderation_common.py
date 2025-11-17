@@ -59,7 +59,7 @@ def get_client_ip(request):
         ip = request.META.get("REMOTE_ADDR")
     return ip
 
-def not_ip_banned(*, check=lambda request: True):
+def not_ip_banned_generator(*, check=lambda request: True):
     """
     Blocks requests from banned IPs.
 
@@ -78,6 +78,5 @@ def not_ip_banned(*, check=lambda request: True):
             return func(request, *args, **kwargs)
         return wrapper
     return decorator
-                
 
-
+not_ip_banned = not_ip_banned_generator()

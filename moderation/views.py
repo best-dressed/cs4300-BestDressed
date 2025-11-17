@@ -3,14 +3,13 @@ from .models import BannedIP
 
 # Create your views here.
 from django.shortcuts import render
+from .moderation_common import get_client_ip
 
 def filtered_content_message(request):
     return render(
         request,
-        "filtered_content.html"
+        "errors/filtered_content.html"
     )
-
-
 
 def ip_ban_page(request):
     user_ip = get_client_ip(request)
