@@ -54,11 +54,34 @@ jobs:
       # If you prefer to disable the Oryx build process during deployment, follow these steps:
       # 1. Remove the SCM_DO_BUILD_DURING_DEPLOYMENT app setting from your Azure App Service Environment variables.
       # 2. Refer to sample workflows for alternative deployment strategies: https://github.com/Azure/actions-workflow-samples/tree/master/AppService
-      
+     
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+            python-version: '3.12'
+      - name: Install dependencies
+        run: |
+            python -m pip install --upgrade pip
+            pip install -r requirements.txt
+      - name: Build databases
+        run: |
+            python manage.py makemigrations
+            python manage.py makemigrations best_dressed_app
+            python manage.py makemigrations users
+            python manage.py migrate
+      - name: Test with django
+        run: |
+            coverage run manage.py test
+
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
