@@ -48,9 +48,10 @@ def get_pull_request_diff(token: str, repo_full_name: str, pr_number: int) -> st
 
     url = f"https://api.github.com/repos/{repo_full_name}/pulls/{pr_number}"
     headers = {
-        "Accept": "application/vnd.github.v3.diff",
-        "Authorization": f"token {token}",
+        "Accept": "application/vnd.github.diff",
+        "Authorization": f"Bearer {token}",
         "User-Agent": "ai-review-script",
+        "X-GitHub-Api-Version": "2022-11-28",
     }
 
     resp = requests.get(url, headers=headers, timeout=30)

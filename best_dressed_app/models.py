@@ -210,6 +210,46 @@ class Outfit(models.Model):
         """Helper method to get the number of items in this outfit"""
         return self.items.count()
 
+
+class SavedRecommendation(models.Model):
+    """
+    Represents a saved AI recommendation for a user.
+    
+    Users receive AI-generated fashion recommendations based on their prompts.
+    This model stores the history of these recommendations for later reference.
+    """
+    
+    # Foreign Key: links this recommendation to a specific user
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_recommendations')
+    
+    # The user's prompt/request that generated this recommendation
+    prompt = models.TextField(max_length=1000, help_text="User's request for recommendations")
+    
+    # The AI-generated recommendation text
+    ai_response = models.TextField(help_text="AI-generated fashion recommendations")
+    
+    # ManyToMany relationship: track which catalog items were recommended
+    recommended_items = models.ManyToManyField(
+        Item,
+        related_name='recommendations',
+        blank=True,
+        help_text="Catalog items that were recommended to the user"
+    )
+    
+    # Automatic timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        # Default ordering: newest recommendations first
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.prompt[:50]}... ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def item_count(self):
+        """Helper method to get the number of recommended items"""
+        return self.recommended_items.count()
+
 # For hiding items from user's particular view in item listing
 class HiddenItem(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hidden_items")
