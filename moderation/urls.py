@@ -7,4 +7,6 @@ urlpatterns = [
 
     # Filtered content page (generic moderation)
     path("filtered_content/", views.filtered_content_message, name="filtered_content"),
+
+    path("invalid_post/", views.invalid_post, name="invalid_post"),
 ]

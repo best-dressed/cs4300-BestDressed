@@ -23,3 +23,9 @@ def ip_ban_page(request):
         "errors/ip_ban.html",
         {"ban_reason": active_ban.reason if active_ban else None}
     )
+
+def invalid_post(request):
+    """
+    Display an error page when a post is invalid.
+    """
+    return render(request, "invalid_post.html")
