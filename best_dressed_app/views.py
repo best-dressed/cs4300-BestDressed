@@ -521,7 +521,7 @@ def create_outfit(request):
 @login_required
 def my_outfits(request):
     """
-    Display all outfits created by the user with filtering options.
+    Display all outfits created by the user with filtering, search, and sorting.
     """
     user = request.user
     
@@ -529,31 +529,135 @@ def my_outfits(request):
     occasion_filter = request.GET.get('occasion', None)
     season_filter = request.GET.get('season', None)
     favorites_only = request.GET.get('favorites', None)
+    collection = request.GET.get('collection', None)
+    
+    # Get search and sort parameters
+    search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort', '-created_at')  # default: newest first
     
     # Start with all user's outfits
     outfits = Outfit.objects.filter(user=user)
     
-    # Apply occasion filter if specified
-    if occasion_filter and occasion_filter != 'all':
-        outfits = outfits.filter(occasion=occasion_filter)
+    # Apply smart collection filters
+    if collection:
+        if collection == 'favorites':
+            outfits = outfits.filter(is_favorite=True)
+        elif collection == 'summer':
+            outfits = outfits.filter(season='summer')
+        elif collection == 'winter':
+            outfits = outfits.filter(season='winter')
+        elif collection == 'casual':
+            outfits = outfits.filter(occasion='casual')
+        elif collection == 'work':
+            outfits = outfits.filter(occasion='business')
+        elif collection == 'date':
+            outfits = outfits.filter(occasion='date')
+        elif collection == 'formal':
+            outfits = outfits.filter(occasion='formal')
+        elif collection == 'recent':
+            from django.utils import timezone
+            from datetime import timedelta
+            thirty_days_ago = timezone.now() - timedelta(days=30)
+            outfits = outfits.filter(created_at__gte=thirty_days_ago)
+        elif collection == 'incomplete':
+            from django.db.models import Count
+            outfits = outfits.annotate(item_count_computed=Count('items')).filter(item_count_computed__lt=3)
+    else:
+        # Apply regular filters only if no collection is selected
+        if occasion_filter and occasion_filter != 'all':
+            outfits = outfits.filter(occasion=occasion_filter)
+        
+        if season_filter and season_filter != 'all':
+            outfits = outfits.filter(season=season_filter)
+        
+        if favorites_only == 'true':
+            outfits = outfits.filter(is_favorite=True)
     
-    # Apply season filter if specified
-    if season_filter and season_filter != 'all':
-        outfits = outfits.filter(season=season_filter)
+    # Apply search filter
+    if search_query:
+        # Q objects allow complex queries with OR logic
+        # icontains = case-insensitive contains
+        from django.db.models import Q
+        outfits = outfits.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(occasion__icontains=search_query) |
+            Q(season__icontains=search_query)
+        )
     
-    # Apply favorites filter if specified
-    if favorites_only == 'true':
-        outfits = outfits.filter(is_favorite=True)
+    # Validate sort_by to prevent SQL injection
+    valid_sorts = [
+        'name', '-name',  # A-Z, Z-A
+        'created_at', '-created_at',  # oldest first, newest first
+        'updated_at', '-updated_at',  # least recently updated, most recently updated
+    ]
+    
+    if sort_by in valid_sorts:
+        outfits = outfits.order_by(sort_by)
+    else:
+        outfits = outfits.order_by('-created_at')  # default fallback
+    
+    # For item count sorting, we need to annotate
+    if sort_by in ['item_count', '-item_count']:
+        from django.db.models import Count
+        outfits = outfits.annotate(items_count=Count('items')).order_by(sort_by.replace('item_count', 'items_count'))
     
     # Prefetch related items for efficiency
-    # This loads all items for all outfits in one database query
-    # instead of making a separate query for each outfit (N+1 problem)
     outfits = outfits.prefetch_related('items')
     
-    # Get available filter options from the model choices
+    # Get available filter options
     occasion_choices = Outfit._meta.get_field('occasion').choices
     season_choices = Outfit._meta.get_field('season').choices
     
+    # Collection counts
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Count
+    
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    
+    collection_counts = {
+        'favorites': Outfit.objects.filter(user=user, is_favorite=True).count(),
+        'summer': Outfit.objects.filter(user=user, season='summer').count(),
+        'winter': Outfit.objects.filter(user=user, season='winter').count(),
+        'casual': Outfit.objects.filter(user=user, occasion='casual').count(),
+        'work': Outfit.objects.filter(user=user, occasion='business').count(),
+        'date': Outfit.objects.filter(user=user, occasion='date').count(),
+        'formal': Outfit.objects.filter(user=user, occasion='formal').count(),
+        'recent': Outfit.objects.filter(user=user, created_at__gte=thirty_days_ago).count(),
+        'incomplete': Outfit.objects.filter(user=user).annotate(
+            item_count_computed=Count('items')
+        ).filter(item_count_computed__lt=3).count(),
+    }
+    
+    # Define sort options for dropdown
+    sort_options = [
+        ('-created_at', 'Newest First'),
+        ('created_at', 'Oldest First'),
+        ('name', 'Name (A-Z)'),
+        ('-name', 'Name (Z-A)'),
+        ('-updated_at', 'Recently Updated'),
+        ('updated_at', 'Least Recently Updated'),
+        ('-item_count', 'Most Items'),
+        ('item_count', 'Fewest Items'),
+    ]
+    
+    context = {
+        'outfits': outfits,
+        'occasion_filter': occasion_filter or 'all',
+        'season_filter': season_filter or 'all',
+        'favorites_only': favorites_only == 'true',
+        'occasion_choices': occasion_choices,
+        'season_choices': season_choices,
+        'current_collection': collection,
+        'collection_counts': collection_counts,
+        'search_query': search_query,  # NEW
+        'current_sort': sort_by,  # NEW
+        'sort_options': sort_options,  # NEW
+    }
+    
+    return render(request, 'my_outfits.html', context)
+
     context = {
         'outfits': outfits,
         'occasion_filter': occasion_filter or 'all',

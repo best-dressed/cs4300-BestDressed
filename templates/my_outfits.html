@@ -6,6 +6,7 @@
 {% block content %}
 <div class="clean-glass-outfits">
   <div class="container py-5">
+    {% include 'includes/messages.html' %}
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
       <div>
@@ -20,14 +21,195 @@
       </a>
     </div>
 
-    <!-- Filter Bar -->
+    <!-- Smart Collections -->
+    <div class="mb-4">
+      <h5 class="mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-collection me-2" viewBox="0 0 16 16">
+          <path d="M2.5 3.5a.5.5 0 0 1 0-1h11a.5.5 0 0 1 0 1zm2-2a.5.5 0 0 1 0-1h7a.5.5 0 0 1 0 1zM0 13a1.5 1.5 0 0 0 1.5 1.5h13A1.5 1.5 0 0 0 16 13V6a1.5 1.5 0 0 0-1.5-1.5h-13A1.5 1.5 0 0 0 0 6zm1.5.5A.5.5 0 0 1 1 13V6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-.5.5z"/>
+        </svg>
+        Quick Collections
+      </h5>
+      
+      <div class="collections-grid">
+        <!-- All Outfits -->
+        <a href="{% url 'my_outfits' %}" 
+          class="collection-card {% if not current_collection %}active{% endif %}">
+          <div class="collection-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-grid-3x3" viewBox="0 0 16 16">
+              <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5zM1.5 1a.5.5 0 0 0-.5.5V5h4V1zM5 6H1v4h4zm1 4h4V6H6zm-1 1H1v3.5a.5.5 0 0 0 .5.5H5zm1 0v4h4v-4zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11zm0-1h4V6h-4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11zm-1 0V1H6v4z"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">All Outfits</div>
+            <div class="collection-count">{{ outfits.count }}</div>
+          </div>
+        </a>
+
+        <!-- Favorites -->
+        <a href="{% url 'my_outfits' %}?collection=favorites" 
+          class="collection-card {% if current_collection == 'favorites' %}active{% endif %}">
+          <div class="collection-icon collection-icon-gold">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-star-fill" viewBox="0 0 16 16">
+              <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Favorites</div>
+            <div class="collection-count">{{ collection_counts.favorites }}</div>
+          </div>
+        </a>
+
+        <!-- Recent (Last 30 Days) -->
+        <a href="{% url 'my_outfits' %}?collection=recent" 
+          class="collection-card {% if current_collection == 'recent' %}active{% endif %}">
+          <div class="collection-icon collection-icon-blue">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16">
+              <path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z"/>
+              <path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z"/>
+              <path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Recent</div>
+            <div class="collection-count">{{ collection_counts.recent }}</div>
+          </div>
+        </a>
+
+        <!-- Summer -->
+        <a href="{% url 'my_outfits' %}?collection=summer" 
+          class="collection-card {% if current_collection == 'summer' %}active{% endif %}">
+          <div class="collection-icon collection-icon-orange">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-sun-fill" viewBox="0 0 16 16">
+              <path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Summer</div>
+            <div class="collection-count">{{ collection_counts.summer }}</div>
+          </div>
+        </a>
+
+        <!-- Winter -->
+        <a href="{% url 'my_outfits' %}?collection=winter" 
+          class="collection-card {% if current_collection == 'winter' %}active{% endif %}">
+          <div class="collection-icon collection-icon-cyan">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-snow" viewBox="0 0 16 16">
+              <path d="M8 16a.5.5 0 0 1-.5-.5v-1.293l-.646.647a.5.5 0 0 1-.707-.708L7.5 12.793V8.866l-3.4 1.963-.496 1.85a.5.5 0 1 1-.966-.26l.237-.882-1.12.646a.5.5 0 0 1-.5-.866l1.12-.646-.884-.237a.5.5 0 1 1 .26-.966l1.848.495L7 8 3.6 6.037l-1.85.495a.5.5 0 0 1-.258-.966l.883-.237-1.12-.646a.5.5 0 1 1 .5-.866l1.12.646-.237-.883a.5.5 0 1 1 .966-.258l.495 1.849L7.5 7.134V3.207L6.147 1.854a.5.5 0 1 1 .707-.708l.646.647V.5a.5.5 0 1 1 1 0v1.293l.647-.647a.5.5 0 1 1 .707.708L8.5 3.207v3.927l3.4-1.963.496-1.85a.5.5 0 1 1 .966.26l-.236.882 1.12-.646a.5.5 0 0 1 .5.866l-1.12.646.883.237a.5.5 0 1 1-.26.966l-1.848-.495L9 8l3.4 1.963 1.849-.495a.5.5 0 0 1 .259.966l-.883.237 1.12.646a.5.5 0 0 1-.5.866l-1.12-.646.236.883a.5.5 0 1 1-.966.258l-.495-1.849-3.4-1.963v3.927l1.353 1.353a.5.5 0 0 1-.707.708l-.647-.647V15.5a.5.5 0 0 1-.5.5z"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Winter</div>
+            <div class="collection-count">{{ collection_counts.winter }}</div>
+          </div>
+        </a>
+
+        <!-- Casual -->
+        <a href="{% url 'my_outfits' %}?collection=casual" 
+          class="collection-card {% if current_collection == 'casual' %}active{% endif %}">
+          <div class="collection-icon collection-icon-green">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-person-walking" viewBox="0 0 16 16">
+              <path d="M9.5 1.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0M6.44 3.752A.75.75 0 0 1 7 3.5h1.445c.742 0 1.32.643 1.243 1.38l-.43 4.083a1.8 1.8 0 0 1-.088.395l-.318.906.213.242a.8.8 0 0 1 .114.175l2 4.25a.75.75 0 1 1-1.357.638l-1.956-4.154-1.68-1.921A.75.75 0 0 1 6 8.96l.138-2.613-.435.489-.464 2.786a.75.75 0 1 1-1.48-.246l.5-3a.75.75 0 0 1 .18-.375l2-2.25Z"/>
+              <path d="M6.25 11.745v-1.418l1.204 1.375.261.524a.8.8 0 0 1-.12.231l-2.5 3.25a.75.75 0 1 1-1.19-.914zm4.22-4.215-.494-.494.205-1.843.006-.067 1.124 1.124h1.44a.75.75 0 0 1 0 1.5H11a.75.75 0 0 1-.531-.22Z"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Casual</div>
+            <div class="collection-count">{{ collection_counts.casual }}</div>
+          </div>
+        </a>
+
+        <!-- Work -->
+        <a href="{% url 'my_outfits' %}?collection=work" 
+          class="collection-card {% if current_collection == 'work' %}active{% endif %}">
+          <div class="collection-icon collection-icon-purple">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-briefcase-fill" viewBox="0 0 16 16">
+              <path d="M6.5 1A1.5 1.5 0 0 0 5 2.5V3H1.5A1.5 1.5 0 0 0 0 4.5v1.384l7.614 2.03a1.5 1.5 0 0 0 .772 0L16 5.884V4.5A1.5 1.5 0 0 0 14.5 3H11v-.5A1.5 1.5 0 0 0 9.5 1zm0 1h3a.5.5 0 0 1 .5.5V3H6v-.5a.5.5 0 0 1 .5-.5"/>
+              <path d="M0 12.5A1.5 1.5 0 0 0 1.5 14h13a1.5 1.5 0 0 0 1.5-1.5V6.85L8.129 8.947a.5.5 0 0 1-.258 0L0 6.85z"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Work</div>
+            <div class="collection-count">{{ collection_counts.work }}</div>
+          </div>
+        </a>
+
+        <!-- Date Night -->
+        <a href="{% url 'my_outfits' %}?collection=date" 
+          class="collection-card {% if current_collection == 'date' %}active{% endif %}">
+          <div class="collection-icon collection-icon-pink">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-heart-fill" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Date Night</div>
+            <div class="collection-count">{{ collection_counts.date }}</div>
+          </div>
+        </a>
+
+        <!-- Formal -->
+        <a href="{% url 'my_outfits' %}?collection=formal" 
+          class="collection-card {% if current_collection == 'formal' %}active{% endif %}">
+          <div class="collection-icon collection-icon-dark">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-suit-diamond-fill" viewBox="0 0 16 16">
+              <path d="M2.45 7.4 7.2 1.067a1 1 0 0 1 1.6 0L13.55 7.4a1 1 0 0 1 0 1.2L8.8 14.933a1 1 0 0 1-1.6 0L2.45 8.6a1 1 0 0 1 0-1.2"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Formal</div>
+            <div class="collection-count">{{ collection_counts.formal }}</div>
+          </div>
+        </a>
+
+        <!-- Incomplete (Need More Items) -->
+        <a href="{% url 'my_outfits' %}?collection=incomplete" 
+          class="collection-card {% if current_collection == 'incomplete' %}active{% endif %}">
+          <div class="collection-icon collection-icon-red">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-exclamation-triangle-fill" viewBox="0 0 16 16">
+              <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+            </svg>
+          </div>
+          <div class="collection-info">
+            <div class="collection-name">Incomplete</div>
+            <div class="collection-count">{{ collection_counts.incomplete }}</div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Search, Filter, and Sort Bar -->
     <div class="glass-card-simple p-4 mb-4">
       <form method="get" action="{% url 'my_outfits' %}" class="row g-3 align-items-end">
-        <!-- Occasion Filter -->
+        <!-- Search -->
+        <div class="col-md-4">
+          <label for="searchInput" class="form-label small text-white-50">Search Outfits</label>
+          <input 
+            type="text" 
+            name="search"
+            id="searchInput"
+            class="glass-select" 
+            placeholder="Search by name or description..." 
+            value="{{ search_query }}"
+            aria-label="Search outfits">
+        </div>
+        
+        <!-- Sort -->
         <div class="col-md-3">
+          <label for="sortSelect" class="form-label small text-white-50">Sort By</label>
+          <select name="sort" id="sortSelect" class="glass-select" onchange="this.form.submit()">
+            {% for sort_value, sort_label in sort_options %}
+            <option value="{{ sort_value }}" {% if current_sort == sort_value %}selected{% endif %}>
+              {{ sort_label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <!-- Occasion Filter -->
+        <div class="col-md-2">
           <label for="occasionFilter" class="form-label small text-white-50">Occasion</label>
           <select name="occasion" id="occasionFilter" class="glass-select" onchange="this.form.submit()">
-            <option value="all" {% if occasion_filter == 'all' %}selected{% endif %}>All Occasions</option>
+            <option value="all" {% if occasion_filter == 'all' %}selected{% endif %}>All</option>
             {% for value, label in occasion_choices %}
               <option value="{{ value }}" {% if occasion_filter == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
@@ -38,15 +220,20 @@
         <div class="col-md-3">
           <label for="seasonFilter" class="form-label small text-white-50">Season</label>
           <select name="season" id="seasonFilter" class="glass-select" onchange="this.form.submit()">
-            <option value="all" {% if season_filter == 'all' %}selected{% endif %}>All Seasons</option>
+            <option value="all" {% if season_filter == 'all' %}selected{% endif %}>All</option>
             {% for value, label in season_choices %}
               <option value="{{ value }}" {% if season_filter == value %}selected{% endif %}>{{ label }}</option>
             {% endfor %}
           </select>
         </div>
         
-        <!-- Favorites Toggle -->
-        <div class="col-md-3">
+        <!-- Hidden field to preserve collection if one is selected -->
+        {% if current_collection %}
+        <input type="hidden" name="collection" value="{{ current_collection }}">
+        {% endif %}
+        
+        <!-- Favorites checkbox -->
+        <div class="col-md-6">
           <label class="form-label small text-white-50 d-block">Filter</label>
           <div class="glass-checkbox-wrapper">
             <input 
@@ -64,10 +251,20 @@
         </div>
         
         <!-- Actions -->
-        <div class="col-md-3">
-          {% if occasion_filter != 'all' or season_filter != 'all' or favorites_only %}
-            <a href="{% url 'my_outfits' %}" class="btn-clean-glass-secondary w-100">Clear Filters</a>
-          {% endif %}
+        <div class="col-md-6 text-end">
+          <button class="btn-clean-glass me-2" type="submit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-search me-1" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+            </svg>
+            Apply Filters
+          </button>
+          <a href="{% url 'my_outfits' %}{% if current_collection %}?collection={{ current_collection }}{% endif %}" class="btn-clean-glass-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-arrow-counterclockwise me-1" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2z"/>
+              <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466"/>
+            </svg>
+            Reset Filters
+          </a>
         </div>
       </form>
       
@@ -75,7 +272,7 @@
       <div class="mt-3">
         <small class="text-white-50">
           Showing {{ outfits.count }} outfit{{ outfits.count|pluralize }}
-          {% if occasion_filter != 'all' or season_filter != 'all' or favorites_only %}
+          {% if search_query or occasion_filter != 'all' or season_filter != 'all' or favorites_only or current_collection %}
             (filtered)
           {% endif %}
         </small>
@@ -128,7 +325,7 @@
                   {% endif %}
                   
                   <!-- Items Preview -->
-                  <div class="mb-3">
+                  <div class="outfit-items-section mb-3">
                     <h6 class="text-white-50 small mb-2">Items ({{ outfit.item_count }})</h6>
                     
                     {% if outfit.items.all %}
@@ -284,6 +481,7 @@
     display: flex;
     flex-direction: column;
     height: 100%;
+    min-height: 500px; /* NEW: Ensures consistent minimum height */
   }
 
   /* ==================== */
@@ -300,6 +498,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 450px; /* NEW: Consistent card height */
   }
 
   .outfit-glass-card:hover {
@@ -313,6 +512,169 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+  }
+
+  /* Make items preview section flexible */
+  .outfit-items-section {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 120px; /* Ensures space for items grid */
+  }
+
+  /* ==================== */
+  /* SMART COLLECTIONS    */
+  /* ==================== */
+  .collections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+
+  .collection-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 1.25rem;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+
+  .collection-card:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(205, 180, 255, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(109, 17, 227, 0.2);
+  }
+
+  /* Active state - much more prominent */
+  .collection-card.active {
+    background: linear-gradient(135deg, rgba(109, 17, 227, 0.3), rgba(90, 5, 174, 0.3));
+    border-color: #CDB4FF;
+    box-shadow: 0 8px 32px rgba(109, 17, 227, 0.4);
+    transform: translateY(-2px);
+  }
+
+  /* Add a subtle glow pulse to active collection */
+  .collection-card.active::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, #6D11E3, #CDB4FF);
+    border-radius: 12px;
+    z-index: -1;
+    opacity: 0.5;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+
+  .collection-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(205, 180, 255, 0.2);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #CDB4FF;
+    transition: all 0.3s ease;
+  }
+
+  /* Make active collection icon brighter and larger */
+  .collection-card.active .collection-icon {
+    background: rgba(205, 180, 255, 0.4);
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(205, 180, 255, 0.3);
+  }
+
+  .collection-icon-gold { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+  .collection-icon-blue { background: rgba(13, 110, 253, 0.2); color: #0d6efd; }
+  .collection-icon-orange { background: rgba(255, 136, 0, 0.2); color: #ff8800; }
+  .collection-icon-cyan { background: rgba(0, 188, 212, 0.2); color: #00bcd4; }
+  .collection-icon-green { background: rgba(25, 135, 84, 0.2); color: #198754; }
+  .collection-icon-purple { background: rgba(109, 17, 227, 0.2); color: #6D11E3; }
+  .collection-icon-pink { background: rgba(255, 0, 127, 0.2); color: #ff007f; }
+  .collection-icon-dark { background: rgba(255, 255, 255, 0.2); color: #fff; }
+  .collection-icon-red { background: rgba(220, 53, 69, 0.2); color: #dc3545; }
+
+  /* Brighten colored icons when active */
+  .collection-card.active .collection-icon-gold { background: rgba(255, 193, 7, 0.4); }
+  .collection-card.active .collection-icon-blue { background: rgba(13, 110, 253, 0.4); }
+  .collection-card.active .collection-icon-orange { background: rgba(255, 136, 0, 0.4); }
+  .collection-card.active .collection-icon-cyan { background: rgba(0, 188, 212, 0.4); }
+  .collection-card.active .collection-icon-green { background: rgba(25, 135, 84, 0.4); }
+  .collection-card.active .collection-icon-purple { background: rgba(109, 17, 227, 0.4); }
+  .collection-card.active .collection-icon-pink { background: rgba(255, 0, 127, 0.4); }
+  .collection-card.active .collection-icon-dark { background: rgba(255, 255, 255, 0.4); }
+  .collection-card.active .collection-icon-red { background: rgba(220, 53, 69, 0.4); }
+
+  .collection-info {
+    text-align: center;
+  }
+
+  .collection-name {
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    transition: all 0.3s ease;
+  }
+
+  /* Make active collection name brighter */
+  .collection-card.active .collection-name {
+    color: #CDB4FF;
+    font-weight: 700;
+  }
+
+  .collection-count {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1.25rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+  }
+
+  /* Make active collection count brighter */
+  .collection-card.active .collection-count {
+    color: #fff;
+  }
+
+  @media (max-width: 768px) {
+    .collections-grid {
+      grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+      gap: 0.75rem;
+    }
+    
+    .collection-card {
+      padding: 1rem;
+    }
+    
+    .collection-icon {
+      width: 40px;
+      height: 40px;
+    }
+    
+    .collection-icon svg {
+      width: 20px;
+      height: 20px;
+    }
   }
 
   /* ==================== */
