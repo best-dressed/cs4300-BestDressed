@@ -415,3 +415,9 @@ a.btn-outline-primary {
   0%, 100% { opacity: 0.6; transform: scale(0.95); }
   50% { opacity: 1; transform: scale(1.05); }
 }
+
+.landing-hero-bg {
+  background: radial-gradient(circle at top, rgba(205,180,255,0.12) 0%, rgba(205,180,255,0.04) 50%, transparent 100%);
+  min-height: 100vh;
+}
+

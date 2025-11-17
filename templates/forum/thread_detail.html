@@ -2,92 +2,196 @@
 {% load static %}
 {% block content %}
   
+<div class="landing-hero-bg" style="padding-top: 2rem;">
 <div class="container my-4">
   <div class="row">
     <div class="col-lg-8">
 
-      <!-- Thread header -->
-      <div class="card mb-3">
+      <!-- Thread header - More social media style -->
+      <div class="card mb-3 border-0 shadow-sm">
         <div class="card-body">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <h1 class="h4 mb-1">{{ thread.title }}</h1>
-              <p class="mb-1 text-muted">
-                Started by
-                <strong class="text-body">{{ thread.user.username }}</strong>
-                &middot;
-                <small>{{ thread.created_at|date:"M d, Y g:ia" }}</small>
-              </p>
+          <!-- Author info like a social post -->
+          <div class="d-flex align-items-center mb-3">
+            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px;">
+              <span class="text-white fw-bold">{{ thread.user.username|slice:":1"|upper }}</span>
             </div>
-
-            <div class="text-end">
-              {% if user.is_authenticated  %}
-                {% if user == thread.user or user.is_staff %}
-                  <a href="{% url 'thread_edit' thread_id=thread.id %}" class="btn btn-sm btn-outline-secondary me-2">Edit</a>
-
-                  <form method="post" action="{% url 'thread_delete' thread_id=thread.id %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger"
-                            onclick="return confirm('Delete thread &quot;{{ thread.title }}&quot;? This cannot be undone.');">
-                      Delete
-                    </button>
-                  </form>
-                {% endif %}
+            <div class="flex-grow-1">
+              <div class="fw-bold">{{ thread.user.username }}</div>
+              <small class="text-muted">{{ thread.created_at|date:"M d, Y g:ia" }}</small>
+            </div>
+            
+            <!-- Edit/Delete buttons -->
+            {% if user.is_authenticated %}
+              {% if user == thread.user or user.is_staff %}
+                <div class="dropdown">
+                  <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                    </svg>
+                  </button>
+                  <ul class="dropdown-menu dropdown-menu-end">
+                    <li><a class="dropdown-item" href="{% url 'thread_edit' thread_id=thread.id %}">Edit</a></li>
+                    <li>
+                      <form method="post" action="{% url 'thread_delete' thread_id=thread.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete this thread?');">Delete</button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
               {% endif %}
-            </div>
+            {% endif %}
           </div>
 
+          <!-- Thread title and content -->
+          <h2 class="h5 fw-bold mb-3 text-start">{{ thread.title }}</h2>
+          
           {% if thread.content %}
-            <div class="mt-3 mb-0 text-muted thread-content">
+            <div class="mb-0 text-start thread-content">
               {{ thread.content|linebreaks }}
             </div>
           {% endif %}
+
+          <!-- Action buttons: Like and Share -->
+          <div class="d-flex gap-3 mt-3 pt-3 border-top">
+            <!-- Like button -->
+            {% if user.is_authenticated %}
+              <button class="btn btn-sm btn-link text-decoration-none like-btn p-0" 
+                      data-type="thread" 
+                      data-id="{{ thread.id }}"
+                      data-liked="{{ thread.is_liked_by|default:False }}">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" 
+                     fill="{% if thread.is_liked_by %}#CDB4FF{% else %}currentColor{% endif %}" 
+                     class="like-icon" viewBox="0 0 16 16">
+                  <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                </svg>
+                <span class="ms-1 like-count">{{ thread.like_count }}</span>
+              </button>
+            {% else %}
+              <span class="text-muted small">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                </svg>
+                {{ thread.like_count }} likes
+              </span>
+            {% endif %}
+
+            <!-- Share button -->
+            <button class="btn btn-sm btn-link text-decoration-none p-0" 
+                    onclick="shareThread({{ thread.id }}, '{{ thread.title|escapejs }}')">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/>
+              </svg>
+              <span class="ms-1">Share</span>
+            </button>
+
+            <!-- Thread stats -->
+            <div class="ms-auto d-flex gap-3 text-muted small align-items-center">
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat me-1" viewBox="0 0 16 16">
+                  <path d="M2.678 11.894a1 1 0 0 1 .287.801 11 11 0 0 1-.398 2c1.395-.323 2.247-.697 2.634-.893a1 1 0 0 1 .71-.074A8 8 0 0 0 8 14c3.996 0 7-2.807 7-6s-3.004-6-7-6-7 2.808-7 6c0 1.468.617 2.83 1.678 3.894m-.493 3.905a22 22 0 0 1-.713.129c-.2.032-.352-.176-.273-.362a10 10 0 0 0 .244-.637l.003-.01c.248-.72.45-1.548.524-2.319C.743 11.37 0 9.76 0 8c0-3.866 3.582-7 8-7s8 3.134 8 7-3.582 7-8 7a9 9 0 0 1-2.347-.306c-.52.263-1.639.742-3.468 1.105"/>
+                </svg>
+                {{ thread.posts.count }}
+              </span>
+              <span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye me-1" viewBox="0 0 16 16">
+                  <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                  <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+                </svg>
+                {{ thread.view_count|default:0 }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- Posts list -->
+      <!-- Replies section -->
       <div class="mb-4">
-        <h5 class="mb-3">Replies ({{ posts|length }})</h5>
+        <h5 class="mb-3 fw-bold">{{ posts|length }} Replies</h5>
 
         {% if posts %}
-          <div class="list-group">
-            {% for post in posts %}
-              <div class="list-group-item">
-                <div class="d-flex justify-content-between align-items-start">
-                  <div>
-                    <strong class="text-body">{{ post.user.username }}</strong>
-                    <span class="text-muted small"> &middot; {{ post.created_at|date:"M d, Y g:ia" }}</span>
+          {% for post in posts %}
+            <div class="card mb-3 border-0 shadow-sm">
+              <div class="card-body">
+                <!-- Reply author info -->
+                <div class="d-flex align-items-center mb-3">
+                  <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                    <span class="text-white fw-bold">{{ post.user.username|slice:":1"|upper }}</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="fw-bold">{{ post.user.username }}</div>
+                    <small class="text-muted">{{ post.created_at|date:"M d, Y g:ia" }}</small>
                   </div>
 
-                  <div class="text-end">
-                    {% if user.is_authenticated %}
-                      {% if user == post.user or user.is_staff %}
-                        <a href="{% url 'post_edit' post_id=post.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                        <form method="post" action="{% url 'post_delete' post_id=post.id %}" class="d-inline">
-                          {% csrf_token %}
-                          <button type="submit" class="btn btn-sm btn-outline-danger"
-                            onclick="return confirm('Delete this post?');">Delete</button>
-                        </form>
-                      {% endif %}
+                  <!-- Edit/Delete for replies -->
+                  {% if user.is_authenticated %}
+                    {% if user == post.user or user.is_staff %}
+                      <div class="dropdown">
+                        <button class="btn btn-sm btn-link text-muted" type="button" data-bs-toggle="dropdown">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M3 9.5a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3m5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3"/>
+                          </svg>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                          <li><a class="dropdown-item" href="{% url 'post_edit' post_id=post.id %}">Edit</a></li>
+                          <li>
+                            <form method="post" action="{% url 'post_delete' post_id=post.id %}" class="d-inline">
+                              {% csrf_token %}
+                              <button type="submit" class="dropdown-item text-danger" onclick="return confirm('Delete this reply?');">Delete</button>
+                            </form>
+                          </li>
+                        </ul>
+                      </div>
                     {% endif %}
-                  </div>
+                  {% endif %}
                 </div>
 
-                <div class="mt-2">
-                  <p class="mt-3 mb-0 text-muted post-content">{{ post.content|linebreaks }}</p>  
+                <!-- Reply content -->
+                <div class="mb-3 text-start post-content">
+                  {{ post.content|linebreaks }}
                 </div>
+
+                <!-- Like button for replies -->
+                {% if user.is_authenticated %}
+                  <button class="btn btn-sm btn-link text-decoration-none like-btn p-0" 
+                          data-type="post" 
+                          data-id="{{ post.id }}"
+                          data-liked="{{ post.is_liked_by|default:False }}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" 
+                         fill="{% if post.is_liked_by %}#CDB4FF{% else %}currentColor{% endif %}" 
+                         class="like-icon" viewBox="0 0 16 16">
+                      <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                    </svg>
+                    <span class="ms-1 like-count small">{{ post.like_count }}</span>
+                  </button>
+                {% else %}
+                  <span class="text-muted small">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                      <path d="m8 2.748-.717-.737C5.6.281 2.514.878 1.4 3.053c-.523 1.023-.641 2.5.314 4.385.92 1.815 2.834 3.989 6.286 6.357 3.452-2.368 5.365-4.542 6.286-6.357.955-1.886.838-3.362.314-4.385C13.486.878 10.4.28 8.717 2.01zM8 15C-7.333 4.868 3.279-3.04 7.824 1.143q.09.083.176.171a3 3 0 0 1 .176-.17C12.72-3.042 23.333 4.867 8 15"/>
+                    </svg>
+                    {{ post.like_count }}
+                  </span>
+                {% endif %}
               </div>
-            {% endfor %}
-          </div>
+            </div>
+          {% endfor %}
         {% else %}
-          <div class="alert alert-secondary">No replies yet. Be the first to reply.</div>
+          <div class="card border-0 shadow-sm">
+            <div class="card-body text-center text-muted py-5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-chat-dots mb-3 opacity-50" viewBox="0 0 16 16">
+                <path d="M5 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                <path d="m2.165 15.803.02-.004c1.83-.363 2.948-.842 3.468-1.105A9 9 0 0 0 8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6a10.4 10.4 0 0 1-.524 2.318l-.003.011a11 11 0 0 1-.244.637c-.079.186.074.394.273.362a22 22 0 0 0 .693-.125m.8-3.108a1 1 0 0 0-.287-.801C1.618 10.83 1 9.468 1 8c0-3.192 3.004-6 7-6s7 2.808 7 6-3.004 6-7 6a8 8 0 0 1-2.088-.272 1 1 0 0 0-.711.074c-.387.196-1.24.57-2.634.893a11 11 0 0 0 .398-2"/>
+              </svg>
+              <p class="mb-0">No replies yet. Be the first to reply!</p>
+            </div>
+          </div>
         {% endif %}
       </div>
 
       <!-- Reply form -->
-      <div class="card">
+      <div class="card border-0 shadow-sm">
         <div class="card-body">
-          <h5 class="card-title mb-3">Reply</h5>
+          <h5 class="fw-bold mb-3">Add a Reply</h5>
 
           {% if user.is_authenticated %}
             <form method="post" action="{% url 'thread_detail' thread_id=thread.id %}">
@@ -111,28 +215,108 @@
 
               <div class="d-flex gap-2">
                 <button type="submit" name="reply_submit" class="btn btn-primary">Post Reply</button>
-                <a href="{% url 'threads' %}" class="btn btn-secondary">Back to Threads</a>
+                <a href="{% url 'threads' %}" class="btn btn-outline-secondary">Back to Threads</a>
               </div>
             </form>
           {% else %}
-            <p class="mb-0">You must <a href="{% url 'login' %}">log in</a> to post a reply.</p>
+            <div class="alert alert-info">
+              You must <a href="{% url 'login' %}" class="alert-link">log in</a> to post a reply.
+            </div>
           {% endif %}
         </div>
       </div>
 
     </div>
 
-    <!-- Sidebar with thread stats -->
+    <!-- Sidebar with thread info -->
     <div class="col-lg-4">
-      <div class="card mb-3">
+      <div class="card border-0 shadow-sm sticky-top" style="top: 1rem;">
         <div class="card-body">
-          <h6 class="card-title">Thread Info</h6>
-          <p class="mb-1"><strong>Replies</strong>: {{ thread.posts.count }}</p>
-          <p class="mb-1"><strong>Created</strong>: {{ thread.created_at|date:"M d, Y g:ia" }}</p>
-          <p class="mb-0"><strong>Author</strong>: <span class="text-body">{{ thread.user.username }}</span></p>
+          <h6 class="fw-bold mb-3">Thread Info</h6>
+          <div class="mb-2">
+            <small class="text-muted d-block">Replies</small>
+            <strong>{{ thread.posts.count }}</strong>
+          </div>
+          <div class="mb-2">
+            <small class="text-muted d-block">Created</small>
+            <strong>{{ thread.created_at|date:"M d, Y g:ia" }}</strong>
+          </div>
+          <div class="mb-0">
+            <small class="text-muted d-block">Author</small>
+            <strong>{{ thread.user.username }}</strong>
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+</div>
+
+<!-- JavaScript for Like and Share functionality -->
+<script>
+// Get CSRF token
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+// Like/Unlike functionality
+document.querySelectorAll('.like-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const type = this.dataset.type;
+    const id = this.dataset.id;
+    const url = type === 'thread' ? `/forum/thread/${id}/like/` : `/forum/post/${id}/like/`;
+    
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      const icon = this.querySelector('.like-icon');
+      const count = this.querySelector('.like-count');
+      
+      if (data.liked) {
+        icon.setAttribute('fill', '#CDB4FF');
+      } else {
+        icon.setAttribute('fill', 'currentColor');
+      }
+      
+      count.textContent = data.like_count;
+    });
+  });
+});
+
+// Share functionality
+function shareThread(threadId, title) {
+  const url = window.location.href;
+  
+  // Try native share API first (mobile)
+  if (navigator.share) {
+    navigator.share({
+      title: title,
+      url: url
+    }).catch(() => {});
+  } else {
+    // Fallback: copy to clipboard
+    navigator.clipboard.writeText(url).then(() => {
+      // Show a temporary "Copied!" message
+      alert('Link copied to clipboard!');
+    });
+  }
+}
+</script>
 {% endblock %}
