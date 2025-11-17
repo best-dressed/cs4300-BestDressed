@@ -108,8 +108,9 @@ def item_detail(request, pk):
     items = Item.objects.exclude(pk=pk)
 
     # block hidden items here too
-    hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
-    items = items.exclude(pk__in=hidden_ids)
+    if request.user.is_authenticated:
+        hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
+        items = items.exclude(pk__in=hidden_ids)
 
     context = {
         "item": item,
