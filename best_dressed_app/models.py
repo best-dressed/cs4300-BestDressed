@@ -19,8 +19,15 @@ class Item(models.Model):
 
     # for main item listing so everything is more clean with user-added data
     short_description = models.CharField(max_length=75, default="")
-    image_url = models.URLField(max_length=2000, default="")
+    # 5000 is kind of insane but for some reason a lot of google image urls are >2000 length so goin with it
+    image_url = models.URLField(max_length=5000, default="")
     tag = models.CharField(max_length=20, choices=ITEM_TAG_CHOICES, default="")
+
+    # ebay ID For market delete and duplicate checking
+    item_id = models.CharField(max_length=200, unique=True, null=True, blank=True)
+    # blank = true allows these to be blank in forms, as we support non ebay items too.
+    item_ebay_url = models.URLField(blank=True, null=True)
+    seller_id = models.CharField(max_length=200, null=True, blank=True)
 
     # make it so short description created automatically from description
     def save(self, *args, **kwargs):
@@ -202,3 +209,14 @@ class Outfit(models.Model):
     def item_count(self):
         """Helper method to get the number of items in this outfit"""
         return self.items.count()
+
+# For hiding items from user's particular view in item listing
+class HiddenItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hidden_items")
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="hidden_by_users")
+
+    class Meta:
+        unique_together = [["user", "item"]]  # prevent duplicates
+
+    def __str__(self):
+        return f"{self.user.username} hid {self.item.title}"

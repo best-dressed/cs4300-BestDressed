@@ -1,20 +1,44 @@
 <!-- SUB TEMPLATE FOR A SINGLE ITEM IN ITEM LISTING OR ITEM-DETAIL-RECOMMENDED -->
+<!-- The wardrobe save functionality requires the <script> in "item_card_logic.html" to work, so only use item_card.html with that script. -->
 {% load static %}
-<div class="col mb-5">
-  <div class="card h-100 ">
+<div class="col mb-4">
+  <div class="card h-100 bg-dark border border-secondary shadow-sm" style="transition: transform 0.2s;">
 
-    <!-- Product image-->
-    <a href = "{{ item.get_absolute_url }}">
-      <img class="card-img-top " src ="{{item.image_url}}" alt="Logo"></img>
+    <!-- Product image -->
+    <a href="{{ item.get_absolute_url }}" class="text-decoration-none">
+      <img class="card-img-top" src="{{ item.image_url }}" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
     </a>
-    <!-- Product details-->
-    <div class="card-body p-4">
-      <div class="text-center">
-        <!-- Product name-->
-        <h5 class="fw-bolder">{{item.title}}</h5>
-        <p>{{item.short_description}} </p>
-        <a href = "#" class = "btn btn-primary" >
-          Add to Outfit </a>
+
+    <!-- Product details -->
+    <div class="card-body p-3">
+      <h5 class="fw-bolder mb-2 text-white">{{ item.title|truncatewords:8 }}</h5>
+      <p class="small text-muted mb-3">{{ item.description|truncatewords:10 }}</p>
+      <!-- Action Buttons -->
+      <div class="card-footer bg-transparent border-0 pb-3">
+        <div class="d-grid gap-2">
+          <a href="{{ item.get_absolute_url }}" class="btn btn-sm btn-outline-light w-100">
+            View Details
+          </a>
+
+          <!-- Save to wardrobe form -->
+          <form class="save-to-wardrobe-form" data-item-id="{{ item.pk }}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-light w-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bag-plus me-2" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+              </svg>
+              <span class="btn-text">Save to Wardrobe</span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+      <!-- Hide Item Button -->
+      <div class="text-center mb-2">
+        <button class="hide-item-btn" data-item-id="{{ item.pk }}" style="background:none; border:none; cursor:pointer;">
+          <img src="{% static 'img/red_eye_chatGPT.png' %}" alt="Hide Item" width="26" height="26">
+        </button>
       </div>
     </div>
   </div>

@@ -256,149 +256,287 @@ class PromptAITests(TestCase):
         self.assertEqual(result, "Test response with whitespace")
 
 
+# class GenerateRecommendationsTests(TestCase):
+#     """Tests for the generate_recommendations function"""
+#
+#     def setUp(self):
+#         """Set up test fixtures"""
+#         # Create a test user
+#         User = get_user_model()
+#         self.user = User.objects.create_user(
+#             username='testuser',
+#             password='testpass123'
+#         )
+#
+#         # Create a user profile
+#         self.user_profile = UserProfile.objects.create(
+#             user=self.user,
+#             bio="I love casual and comfortable clothes",
+#             style_preferences="casual, streetwear",
+#             favorite_colors="blue, black, white"
+#         )
+#
+#     @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+#     @patch('best_dressed_app.recommendation.create_openai_client')
+#     @patch('best_dressed_app.recommendation.prompt_ai')
+#     def test_generate_recommendations_success(self, mock_prompt_ai, mock_create_client):
+#         """Test successful recommendation generation"""
+#         # Setup mocks
+#         mock_client = Mock()
+#         mock_create_client.return_value = mock_client
+#         mock_prompt_ai.return_value = "Here are your personalized recommendations: 1. Blue jeans 2. Black hoodie"
+#
+#         available_items = "T-shirts, jeans, hoodies, sneakers"
+#
+#         # Call function
+#         result = generate_recommendations(available_items, self.user_profile)
+#
+#         # Assertions
+#         self.assertEqual(result, "Here are your personalized recommendations: 1. Blue jeans 2. Black hoodie")
+#         mock_create_client.assert_called_once_with('sk-test-key-123')
+#         mock_prompt_ai.assert_called_once()
+#
+#         # Verify the prompt contains user profile information
+#         call_args = mock_prompt_ai.call_args
+#         prompt_text = call_args[0][0]
+#         self.assertIn(self.user_profile.bio, prompt_text)
+#         self.assertIn(self.user_profile.style_preferences, prompt_text)
+#         self.assertIn(self.user_profile.favorite_colors, prompt_text)
+#         self.assertIn(available_items, prompt_text)
+#
+#     @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+#     @patch('best_dressed_app.recommendation.create_openai_client')
+#     @patch('best_dressed_app.recommendation.prompt_ai')
+#     def test_generate_recommendations_uses_correct_model(self, mock_prompt_ai, mock_create_client):
+#         """Test that the function uses gpt-4 model"""
+#         mock_client = Mock()
+#         mock_create_client.return_value = mock_client
+#         mock_prompt_ai.return_value = "Recommendations"
+#
+#         available_items = "Various items"
+#         generate_recommendations(available_items, self.user_profile)
+#
+#         # Check that prompt_ai was called with gpt-4 model
+#         call_args = mock_prompt_ai.call_args
+#         self.assertEqual(call_args[0][2], "gpt-4")  # Third argument is the model
+#
+#     @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+#     @patch('best_dressed_app.recommendation.create_openai_client')
+#     @patch('best_dressed_app.recommendation.prompt_ai')
+#     def test_generate_recommendations_error_handling(self, mock_prompt_ai, mock_create_client):
+#         """Test that errors are caught and proper error message is returned"""
+#         # Setup mock to raise an exception
+#         mock_client = Mock()
+#         mock_create_client.return_value = mock_client
+#         mock_prompt_ai.side_effect = Exception("API Error")
+#
+#         available_items = "T-shirts, jeans"
+#
+#         # Call function
+#         result = generate_recommendations(available_items, self.user_profile)
+#
+#         # Should return error message instead of raising exception
+#         self.assertEqual(result, "Error generating recommendations.")
+#
+#     @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+#     @patch('best_dressed_app.recommendation.create_openai_client')
+#     @patch('best_dressed_app.recommendation.prompt_ai')
+#     def test_generate_recommendations_with_empty_available_items(self, mock_prompt_ai, mock_create_client):
+#         """Test recommendation generation when no items are available"""
+#         mock_client = Mock()
+#         mock_create_client.return_value = mock_client
+#         mock_prompt_ai.return_value = "No items available for recommendations."
+#
+#         available_items = ""
+#         result = generate_recommendations(available_items, self.user_profile)
+#
+#         # Should still call the API and return a response
+#         self.assertEqual(result, "No items available for recommendations.")
+#         mock_prompt_ai.assert_called_once()
+#
+#     @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+#     @patch('best_dressed_app.recommendation.create_openai_client')
+#     @patch('best_dressed_app.recommendation.prompt_ai')
+#     def test_generate_recommendations_prompt_format(self, mock_prompt_ai, mock_create_client):
+#         """Test that the prompt is formatted correctly and doesn't use user's name"""
+#         mock_client = Mock()
+#         mock_create_client.return_value = mock_client
+#         mock_prompt_ai.return_value = "Recommendations"
+#
+#         available_items = "Shirts and pants"
+#         generate_recommendations(available_items, self.user_profile)
+#
+#         # Get the prompt that was sent
+#         call_args = mock_prompt_ai.call_args
+#         prompt_text = call_args[0][0]
+#
+#         # Check that prompt contains expected elements
+#         self.assertIn("fashion recommendation engine", prompt_text.lower())
+#         self.assertIn("User Bio:", prompt_text)
+#         self.assertIn("Style Preferences:", prompt_text)
+#         self.assertIn("Favorite Colors:", prompt_text)
+#         self.assertIn("Available Items:", prompt_text)
+#
+#         # Verify it tells AI not to use username
+#         self.assertIn('Do not use the user\'s name or username', prompt_text)
+#         self.assertIn('only use "you" instead', prompt_text)
+#
+#     @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+#     @patch('best_dressed_app.recommendation.create_openai_client')
+#     @patch('best_dressed_app.recommendation.prompt_ai')
+#     def test_generate_recommendations_with_special_characters(self, mock_prompt_ai, mock_create_client):
+#         """Test that special characters in user profile are handled correctly"""
+#         # Create profile with special characters
+#         self.user_profile.bio = "I love clothes with 'quotes' and \"double quotes\""
+#         self.user_profile.style_preferences = "edgy & bold"
+#         self.user_profile.favorite_colors = "red, green, blue"
+#         self.user_profile.save()
+#
+#         mock_client = Mock()
+#         mock_create_client.return_value = mock_client
+#         mock_prompt_ai.return_value = "Edgy recommendations"
+#
+#         available_items = "Leather jackets & boots"
+#         result = generate_recommendations(available_items, self.user_profile)
+#
+#         # Should handle special characters without errors
+#         self.assertEqual(result, "Edgy recommendations")
+#         mock_prompt_ai.assert_called_once()
+
+# some chatGPT stuff that seems to work good enough
+from unittest.mock import patch, Mock
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from best_dressed_app.models import UserProfile, Item
+from best_dressed_app.recommendation import generate_recommendations
+
 class GenerateRecommendationsTests(TestCase):
     """Tests for the generate_recommendations function"""
-    
+
     def setUp(self):
-        """Set up test fixtures"""
-        # Create a test user
+        """Set up test user, profile, and sample items"""
         User = get_user_model()
         self.user = User.objects.create_user(
             username='testuser',
             password='testpass123'
         )
-        
-        # Create a user profile
+
         self.user_profile = UserProfile.objects.create(
             user=self.user,
             bio="I love casual and comfortable clothes",
             style_preferences="casual, streetwear",
             favorite_colors="blue, black, white"
         )
-    
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+
+        # Create sample Item objects
+        self.item1 = Item.objects.create(
+            title="Blue Jeans",
+            description="Comfortable denim jeans",
+            tag="Legs"
+        )
+        self.item2 = Item.objects.create(
+            title="Black Hoodie",
+            description="Warm cotton hoodie",
+            tag="Torso"
+        )
+        self.item3 = Item.objects.create(
+            title="White Sneakers",
+            description="Stylish casual shoes",
+            tag="Shoes"
+        )
+
+        self.items_list = [self.item1, self.item2, self.item3]
+
+    @patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-123'})
     @patch('best_dressed_app.recommendation.create_openai_client')
     @patch('best_dressed_app.recommendation.prompt_ai')
     def test_generate_recommendations_success(self, mock_prompt_ai, mock_create_client):
-        """Test successful recommendation generation"""
-        # Setup mocks
         mock_client = Mock()
         mock_create_client.return_value = mock_client
-        mock_prompt_ai.return_value = "Here are your personalized recommendations: 1. Blue jeans 2. Black hoodie"
-        
-        available_items = "T-shirts, jeans, hoodies, sneakers"
-        
-        # Call function
-        result = generate_recommendations(available_items, self.user_profile)
-        
-        # Assertions
-        self.assertEqual(result, "Here are your personalized recommendations: 1. Blue jeans 2. Black hoodie")
+        mock_prompt_ai.return_value = "Here are your personalized recommendations: 1. Blue Jeans 2. Black Hoodie"
+
+        result = generate_recommendations(self.items_list, self.user_profile)
+
+        self.assertEqual(result, "Here are your personalized recommendations: 1. Blue Jeans 2. Black Hoodie")
         mock_create_client.assert_called_once_with('sk-test-key-123')
         mock_prompt_ai.assert_called_once()
-        
-        # Verify the prompt contains user profile information
-        call_args = mock_prompt_ai.call_args
-        prompt_text = call_args[0][0]
+
+        prompt_text = mock_prompt_ai.call_args[0][0]
         self.assertIn(self.user_profile.bio, prompt_text)
         self.assertIn(self.user_profile.style_preferences, prompt_text)
         self.assertIn(self.user_profile.favorite_colors, prompt_text)
-        self.assertIn(available_items, prompt_text)
-    
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+        # Check that item info is in the prompt
+        self.assertIn(self.item1.title, prompt_text)
+        self.assertIn(self.item2.title, prompt_text)
+        self.assertIn(self.item3.title, prompt_text)
+
+    @patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-123'})
     @patch('best_dressed_app.recommendation.create_openai_client')
     @patch('best_dressed_app.recommendation.prompt_ai')
     def test_generate_recommendations_uses_correct_model(self, mock_prompt_ai, mock_create_client):
-        """Test that the function uses gpt-4 model"""
         mock_client = Mock()
         mock_create_client.return_value = mock_client
         mock_prompt_ai.return_value = "Recommendations"
-        
-        available_items = "Various items"
-        generate_recommendations(available_items, self.user_profile)
-        
-        # Check that prompt_ai was called with gpt-4 model
+
+        generate_recommendations(self.items_list, self.user_profile)
+
         call_args = mock_prompt_ai.call_args
-        self.assertEqual(call_args[0][2], "gpt-4")  # Third argument is the model
-    
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+
+    @patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-123'})
     @patch('best_dressed_app.recommendation.create_openai_client')
     @patch('best_dressed_app.recommendation.prompt_ai')
     def test_generate_recommendations_error_handling(self, mock_prompt_ai, mock_create_client):
-        """Test that errors are caught and proper error message is returned"""
-        # Setup mock to raise an exception
         mock_client = Mock()
         mock_create_client.return_value = mock_client
         mock_prompt_ai.side_effect = Exception("API Error")
-        
-        available_items = "T-shirts, jeans"
-        
-        # Call function
-        result = generate_recommendations(available_items, self.user_profile)
-        
-        # Should return error message instead of raising exception
+
+        result = generate_recommendations(self.items_list, self.user_profile)
         self.assertEqual(result, "Error generating recommendations.")
-    
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+
+    @patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-123'})
     @patch('best_dressed_app.recommendation.create_openai_client')
     @patch('best_dressed_app.recommendation.prompt_ai')
     def test_generate_recommendations_with_empty_available_items(self, mock_prompt_ai, mock_create_client):
-        """Test recommendation generation when no items are available"""
         mock_client = Mock()
         mock_create_client.return_value = mock_client
         mock_prompt_ai.return_value = "No items available for recommendations."
-        
-        available_items = ""
-        result = generate_recommendations(available_items, self.user_profile)
-        
-        # Should still call the API and return a response
+
+        result = generate_recommendations([], self.user_profile)
         self.assertEqual(result, "No items available for recommendations.")
         mock_prompt_ai.assert_called_once()
-    
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+
+    @patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-123'})
     @patch('best_dressed_app.recommendation.create_openai_client')
     @patch('best_dressed_app.recommendation.prompt_ai')
     def test_generate_recommendations_prompt_format(self, mock_prompt_ai, mock_create_client):
-        """Test that the prompt is formatted correctly and doesn't use user's name"""
         mock_client = Mock()
         mock_create_client.return_value = mock_client
         mock_prompt_ai.return_value = "Recommendations"
-        
-        available_items = "Shirts and pants"
-        generate_recommendations(available_items, self.user_profile)
-        
-        # Get the prompt that was sent
-        call_args = mock_prompt_ai.call_args
-        prompt_text = call_args[0][0]
-        
-        # Check that prompt contains expected elements
+
+        generate_recommendations(self.items_list, self.user_profile)
+
+        prompt_text = mock_prompt_ai.call_args[0][0]
         self.assertIn("fashion recommendation engine", prompt_text.lower())
         self.assertIn("User Bio:", prompt_text)
         self.assertIn("Style Preferences:", prompt_text)
         self.assertIn("Favorite Colors:", prompt_text)
-        self.assertIn("Available Items:", prompt_text)
-        
-        # Verify it tells AI not to use username
-        self.assertIn('Do not use the user\'s name or username', prompt_text)
+        self.assertIn("Available Items", prompt_text)
+        self.assertIn("Do not use the user's name or username", prompt_text)
         self.assertIn('only use "you" instead', prompt_text)
-    
-    @patch.dict(os.environ, {'OPENAI_API_KEY': 'sk-test-key-123'})
+
+    @patch.dict('os.environ', {'OPENAI_API_KEY': 'sk-test-key-123'})
     @patch('best_dressed_app.recommendation.create_openai_client')
     @patch('best_dressed_app.recommendation.prompt_ai')
     def test_generate_recommendations_with_special_characters(self, mock_prompt_ai, mock_create_client):
-        """Test that special characters in user profile are handled correctly"""
-        # Create profile with special characters
         self.user_profile.bio = "I love clothes with 'quotes' and \"double quotes\""
         self.user_profile.style_preferences = "edgy & bold"
         self.user_profile.favorite_colors = "red, green, blue"
         self.user_profile.save()
-        
+
         mock_client = Mock()
         mock_create_client.return_value = mock_client
         mock_prompt_ai.return_value = "Edgy recommendations"
-        
-        available_items = "Leather jackets & boots"
-        result = generate_recommendations(available_items, self.user_profile)
-        
-        # Should handle special characters without errors
+
+        result = generate_recommendations(self.items_list, self.user_profile)
         self.assertEqual(result, "Edgy recommendations")
         mock_prompt_ai.assert_called_once()

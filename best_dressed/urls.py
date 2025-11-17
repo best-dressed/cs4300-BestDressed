@@ -38,13 +38,20 @@ urlpatterns = [
     path('wardrobe/add/', views.add_wardrobe_item, name="add_wardrobe_item"),
     path('wardrobe/edit/<int:item_pk>/', views.edit_wardrobe_item, name="edit_wardrobe_item"),
     path('wardrobe/delete/<int:item_pk>/', views.delete_wardrobe_item, name="delete_wardrobe_item"),
+
+
+    # outfits and outfit features
     path('outfits/create/', views.create_outfit, name='create_outfit'),
     path('outfits/', views.my_outfits, name='my_outfits'),
+    path('outfits/<int:outfit_pk>/', views.outfit_detail, name='outfit_detail'),
+    path('outfits/<int:outfit_pk>/edit/', views.edit_outfit, name='edit_outfit'),
+    path('outfits/<int:outfit_pk>/delete/', views.delete_outfit, name='delete_outfit'),
 
 
     # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
     path('item/<int:pk>/', views.item_detail, name="item_detail"),
+    path('ajax/hide-item/', views.ajax_hide_item, name='ajax_hide_item'),
     # pattern (item/<int:item_pk>/save/):
     # - item/: text
     # - <int:item_pk>: captures an integer from URL, passes it as `item_pk` parameter
