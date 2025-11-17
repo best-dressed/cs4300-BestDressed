@@ -25,12 +25,7 @@ jobs:
             python manage.py migrate
       - name: Analysing the code with pylint
         run: |
-            pylint best_dressed/. || true
-            pylint best_dressed_app/. || true
-            pylint forum/. || true 
-            pylint users/. || true
-            pylint api/. || true
-            pylint tools/. || true
+            pylint api/. best_dressed/. best_dressed_app/. forum/. users/. tools/. || true
       - name: Test with django
         run: |
             coverage run manage.py test
