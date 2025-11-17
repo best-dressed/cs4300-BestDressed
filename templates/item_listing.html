@@ -26,10 +26,20 @@
           <div class="container">
               <div class="row justify-content-left">
                   <div class="col-md-6">
-                      <div class="search-container">
-                          <input type="text" class="form-control search-input" placeholder="Search for an Item...">
-                      </div>
 
+                      <!-- Search Form -->
+                      <form method="get" action="{% url 'item_listing' %}" class="search-container d-flex mb-3" role="search">
+                          <input
+                                  type="text"
+                                  class="form-control search-input me-2"
+                                  name="q"
+                                  placeholder="Search for an Item..."
+                                  value="{{ query|default:'' }}"
+                                  style="font-size:20px;"
+                          >
+                          <button class="btn btn-primary" type="submit" style="font-size:20px;">Search</button>
+                      </form>
+                      <!-- End Search Form -->
                       <!-- Dropdown Add Button -->
                       <div class="dropdown" style="margin-top:20px;">
                           <button class="btn btn-primary dropdown-toggle" type="button" id="addItemDropdown"
