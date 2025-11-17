@@ -3,7 +3,7 @@ Django views for the Best Dressed application.
 """
 
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Item, UserProfile, WardrobeItem, Outfit, HiddenItem
+from .models import Item, UserProfile, WardrobeItem, Outfit, SavedRecommendation, HiddenItem
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
@@ -488,8 +488,16 @@ def recommendations(request):
     View to display the recommendations page.
     The page shows a prompt input form where users can specify
     what kind of recommendations they want before generating them.
+    Also displays past AI recommendations with their prompts.
     """
-    context = {}
+    user = request.user
+    
+    # Fetch past recommendations for this user (newest first)
+    past_recommendations = SavedRecommendation.objects.filter(user=user).prefetch_related('recommended_items')
+    
+    context = {
+        'past_recommendations': past_recommendations,
+    }
     return render(request, 'recommendations.html', context)
 
 @login_required
@@ -547,6 +555,7 @@ def generate_recommendations_ajax(request):
         
         # Fetch the actual Item objects
         recommended_items = []
+        item_objects = []
         if recommended_item_ids:
             items = Item.objects.filter(id__in=recommended_item_ids)
             # Create a dictionary to maintain order
@@ -556,6 +565,7 @@ def generate_recommendations_ajax(request):
             for item_id in recommended_item_ids:
                 if item_id in items_dict:
                     item = items_dict[item_id]
+                    item_objects.append(item)
                     recommended_items.append({
                         'id': item.id,
                         'title': item.title,
@@ -565,6 +575,17 @@ def generate_recommendations_ajax(request):
                         'tag': item.tag,
                         'detail_url': item.get_absolute_url(),
                     })
+        
+        # Save the recommendation to the database
+        saved_rec = SavedRecommendation.objects.create(
+            user=user,
+            prompt=user_prompt,
+            ai_response=ai_recommendations
+        )
+        
+        # Associate the recommended items with the saved recommendation
+        if item_objects:
+            saved_rec.recommended_items.set(item_objects)
         
         return JsonResponse({
             'success': True,
