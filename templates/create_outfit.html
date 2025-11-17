@@ -4,41 +4,41 @@
 {% block title %}Create Outfit · Best Dressed{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="display-6 fw-bold">Create New Outfit</h1>
-      <p class="text-muted">Combine items from your wardrobe into a complete outfit</p>
+<div class="clean-glass-create-outfit">
+  <div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="display-6 fw-bold text-white">Create New Outfit</h1>
+        <p class="text-white-50 mb-0">Combine items from your wardrobe into a complete outfit</p>
+      </div>
+      <a href="{% url 'my_outfits' %}" class="btn-clean-glass">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+        </svg>
+        Back to Outfits
+      </a>
     </div>
-    <a href="{% url 'my_outfits' %}" class="btn btn-outline-secondary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-      </svg>
-      Back to Outfits
-    </a>
-  </div>
 
-  {% if wardrobe_items %}
-  <form method="post" action="{% url 'create_outfit' %}">
-    {% csrf_token %}
-    
-    <div class="row">
-      <!-- Left Column: Outfit Details -->
-      <div class="col-lg-4 mb-4">
-        <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
-          <div class="card-body">
-            <h5 class="card-title mb-4">Outfit Details</h5>
+    {% if wardrobe_items %}
+    <form method="post" action="{% url 'create_outfit' %}">
+      {% csrf_token %}
+      
+      <div class="row">
+        <!-- Left Column: Outfit Details -->
+        <div class="col-lg-4 mb-4">
+          <div class="glass-card-simple p-4 sticky-form">
+            <h5 class="text-white mb-4">Outfit Details</h5>
             
             <!-- Name Field -->
             <div class="mb-3">
-              <label for="{{ form.name.id_for_label }}" class="form-label">
+              <label for="{{ form.name.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.name.label }}
                 <span class="text-danger">*</span>
               </label>
               {{ form.name }}
               {% if form.name.help_text %}
-                <div class="form-text">{{ form.name.help_text }}</div>
+                <div class="form-text text-white-50 small">{{ form.name.help_text }}</div>
               {% endif %}
               {% if form.name.errors %}
                 <div class="text-danger small">{{ form.name.errors }}</div>
@@ -47,18 +47,18 @@
             
             <!-- Description Field -->
             <div class="mb-3">
-              <label for="{{ form.description.id_for_label }}" class="form-label">
+              <label for="{{ form.description.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.description.label }}
               </label>
               {{ form.description }}
               {% if form.description.help_text %}
-                <div class="form-text">{{ form.description.help_text }}</div>
+                <div class="form-text text-white-50 small">{{ form.description.help_text }}</div>
               {% endif %}
             </div>
             
             <!-- Occasion Field -->
             <div class="mb-3">
-              <label for="{{ form.occasion.id_for_label }}" class="form-label">
+              <label for="{{ form.occasion.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.occasion.label }}
               </label>
               {{ form.occasion }}
@@ -66,30 +66,32 @@
             
             <!-- Season Field -->
             <div class="mb-3">
-              <label for="{{ form.season.id_for_label }}" class="form-label">
+              <label for="{{ form.season.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.season.label }}
               </label>
               {{ form.season }}
             </div>
             
             <!-- Favorite Checkbox -->
-            <div class="mb-3 form-check">
-              {{ form.is_favorite }}
-              <label class="form-check-label" for="{{ form.is_favorite.id_for_label }}">
-                {{ form.is_favorite.label }}
-              </label>
+            <div class="mb-3">
+              <div class="glass-checkbox-wrapper">
+                {{ form.is_favorite }}
+                <label class="glass-checkbox-label" for="{{ form.is_favorite.id_for_label }}">
+                  {{ form.is_favorite.label }}
+                </label>
+              </div>
             </div>
             
-            <hr class="my-4">
+            <hr style="border-color: rgba(255, 255, 255, 0.1);" class="my-4">
             
             <!-- Selected Items Counter -->
             <div class="mb-3">
-              <h6 class="text-muted">Items Selected: <span id="selectedCount" class="text-primary fw-bold">0</span></h6>
+              <h6 class="text-white-50 small">Items Selected: <span id="selectedCount" class="text-white fw-bold fs-5">0</span></h6>
             </div>
             
             <!-- Submit Button -->
             <div class="d-grid">
-              <button type="submit" class="btn btn-primary btn-lg">
+              <button type="submit" class="btn-clean-glass btn-lg">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
                   <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
                 </svg>
@@ -98,14 +100,12 @@
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Right Column: Item Selection -->
-      <div class="col-lg-8">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title mb-3">Select Items</h5>
-            <p class="text-muted small mb-4">{{ form.items.help_text }}</p>
+        
+        <!-- Right Column: Item Selection -->
+        <div class="col-lg-8">
+          <div class="glass-card-simple p-4">
+            <h5 class="text-white mb-3">Select Items</h5>
+            <p class="text-white-50 small mb-4">{{ form.items.help_text }}</p>
             
             {% if form.items.errors %}
               <div class="alert alert-danger">{{ form.items.errors }}</div>
@@ -115,139 +115,282 @@
             <div class="row row-cols-2 row-cols-md-3 row-cols-xl-4 g-3">
               {% for item in wardrobe_items %}
               <div class="col">
-                <div class="card h-100 border item-card" data-item-id="{{ item.id }}">
-                  <!-- Hidden checkbox (we'll trigger it with the card click) -->
+                <div class="item-selection-card">
                   <input 
                     type="checkbox" 
                     name="items" 
                     value="{{ item.id }}" 
                     id="item_{{ item.id }}"
-                    class="item-checkbox d-none">
+                    class="item-checkbox">
                   
-                  <!-- Card becomes clickable label -->
-                  <label for="item_{{ item.id }}" class="item-label mb-0" style="cursor: pointer;">
-                    <!-- Image -->
+                  <label for="item_{{ item.id }}" class="item-label">
                     <img src="{{ item.image_url }}" 
-                         class="card-img-top" 
-                         alt="{{ item.title }}"
-                         style="height: 150px; object-fit: cover;">
+                         alt="{{ item.title }}">
                     
-                    <!-- Checkmark overlay (shown when selected) -->
+                    <!-- Checkmark overlay -->
                     <div class="checkmark-overlay">
                       <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="white" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
                         <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
                       </svg>
                     </div>
                     
-                    <!-- Item info -->
-                    <div class="card-body p-2">
-                      <p class="mb-0 small fw-semibold text-truncate">{{ item.title }}</p>
-                      <p class="mb-0 text-muted" style="font-size: 0.75rem;">{{ item.get_category_display }}</p>
+                    <div class="item-info">
+                      <p class="item-title">{{ item.title }}</p>
+                      <p class="item-category">{{ item.get_category_display }}</p>
                     </div>
                   </label>
                 </div>
               </div>
               {% endfor %}
             </div>
-            
-            {% if not wardrobe_items %}
-              <div class="text-center py-5">
-                <p class="text-muted">You don't have any items in your wardrobe yet.</p>
-                <a href="{% url 'my_wardrobe' %}" class="btn btn-primary">Add Items to Wardrobe</a>
-              </div>
-            {% endif %}
           </div>
         </div>
       </div>
+    </form>
+    
+    {% else %}
+    <!-- Empty wardrobe state -->
+    <div class="glass-card-simple p-5 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-inbox text-white-50 mb-3 opacity-50" viewBox="0 0 16 16">
+        <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
+      </svg>
+      <h4 class="text-white mb-2">Your wardrobe is empty</h4>
+      <p class="text-white-50 mb-4">Add items to your wardrobe before creating outfits.</p>
+      <div class="d-flex gap-2 justify-content-center">
+        <a href="{% url 'item_listing' %}" class="btn-clean-glass">Browse Catalog</a>
+        <a href="{% url 'add_wardrobe_item' %}" class="btn-clean-glass-secondary">Add Item</a>
+      </div>
     </div>
-  </form>
-  
-  {% else %}
-  <!-- Empty wardrobe state -->
-  <div class="text-center py-5">
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-inbox text-muted mb-3" viewBox="0 0 16 16">
-      <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
-    </svg>
-    <h4 class="text-muted">Your wardrobe is empty</h4>
-    <p class="text-muted">Add items to your wardrobe before creating outfits.</p>
-    <div class="mt-3">
-      <a href="{% url 'item_listing' %}" class="btn btn-primary me-2">Browse Catalog</a>
-      <a href="{% url 'add_wardrobe_item' %}" class="btn btn-outline-primary">Add Item</a>
-    </div>
+    {% endif %}
   </div>
-  {% endif %}
 </div>
 
 <style>
-/* Item card styling */
-.item-card {
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.item-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0,0,0,.15);
-}
-
-.item-label {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-/* Checkmark overlay (hidden by default) */
-.checkmark-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(109, 17, 227, 0.7);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-}
-
-/* Show overlay when checkbox is checked */
-.item-checkbox:checked ~ .item-label .checkmark-overlay {
-  display: flex;
-}
-
-/* Add border highlight when selected */
-.item-checkbox:checked ~ .item-label {
-  border-color: #6D11E3 !important;
-  border-width: 3px;
-}
-
-/* Sticky card on desktop */
-@media (min-width: 992px) {
-  .sticky-top {
-    position: sticky;
+  /* Base */
+  .clean-glass-create-outfit {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
   }
-}
+
+  .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Glass Cards */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+  }
+
+  .sticky-form {
+    position: sticky;
+    top: 20px;
+  }
+
+  /* Form Inputs */
+  .glass-card-simple input[type="text"],
+  .glass-card-simple textarea,
+  .glass-card-simple select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    color: #fff;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-simple input[type="text"]:focus,
+  .glass-card-simple textarea:focus,
+  .glass-card-simple select:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(205, 180, 255, 0.4);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(205, 180, 255, 0.1);
+  }
+
+  .glass-card-simple select option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+
+  .glass-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .glass-checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #6D11E3;
+  }
+
+  .glass-checkbox-label {
+    margin-left: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+
+  /* Item Selection Cards */
+  .item-selection-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .item-checkbox {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .item-label {
+    display: block;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .item-label:hover {
+    transform: translateY(-4px);
+    border-color: rgba(205, 180, 255, 0.3);
+  }
+
+  .item-label img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .checkmark-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(109, 17, 227, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+  }
+
+  .item-checkbox:checked ~ .item-label .checkmark-overlay {
+    display: flex;
+  }
+
+  .item-checkbox:checked ~ .item-label {
+    border-color: #6D11E3;
+    border-width: 3px;
+    box-shadow: 0 0 20px rgba(109, 17, 227, 0.4);
+  }
+
+  .item-info {
+    padding: 0.75rem;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .item-title {
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-category {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.75rem;
+    margin: 0;
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass.btn-lg {
+    padding: 0.85rem 1.5rem;
+    font-size: 1rem;
+  }
+
+  .btn-clean-glass-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  /* Responsive */
+  @media (max-width: 992px) {
+    .sticky-form {
+      position: relative;
+      top: 0;
+    }
+  }
 </style>
 
 <script>
-// Update selected items counter
-document.addEventListener('DOMContentLoaded', function() {
-  const checkboxes = document.querySelectorAll('.item-checkbox');
-  const counter = document.getElementById('selectedCount');
-  
-  function updateCounter() {
-    const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
-    counter.textContent = checkedCount;
-  }
-  
-  // Update counter when any checkbox changes
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', updateCounter);
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkboxes = document.querySelectorAll('.item-checkbox');
+    const counter = document.getElementById('selectedCount');
+    
+    function updateCounter() {
+      const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+      counter.textContent = checkedCount;
+    }
+    
+    checkboxes.forEach(checkbox => {
+      checkbox.addEventListener('change', updateCounter);
+    });
+    
+    updateCounter();
   });
-  
-  // Initial count
-  updateCounter();
-});
 </script>
 {% endblock %}

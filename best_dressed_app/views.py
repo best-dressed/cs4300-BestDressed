@@ -13,6 +13,9 @@ from .recommendation import generate_recommendations
 from django.http import JsonResponse
 import threading
 from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Count
 
 def index(request):
     """
@@ -162,33 +165,6 @@ def dashboard(request):
     
     return render(request, 'dashboard.html', context)
 
-
-@login_required
-def dashboard(request):
-    """
-    User dashboard - central hub for accessing all user features
-    """
-    user = request.user
-    
-    # get or create user profile, retrieves database record; if it doesnt exist, create it
-    # profile: UserProfile object
-    # created: boolean for if object was just created (True) or if it already exists (False)
-    profile, created = UserProfile.objects.get_or_create(user=user)
-    
-    # get actual counts (of number of items in Wardrobe) from the database for the logged in user
-    wardrobe_count = WardrobeItem.objects.filter(user=user).count()
-    outfit_count = Outfit.objects.filter(user=user).count()
-    # implement this later with AI recommendations
-    recommendation_count = 0  
-
-    # python dictionary that passes data from Python (Django view) to the HTML template
-    context = {
-        'wardrobe_count': wardrobe_count,
-        'outfit_count': outfit_count,
-        'recommendation_count': recommendation_count,
-    }
-    
-    return render(request, 'dashboard.html', context)
 
 @login_required
 def account_settings(request):
@@ -741,3 +717,40 @@ def duplicate_outfit(request, outfit_pk):
     
     messages.success(request, f'Created a copy of "{original_outfit.name}"!')
     return redirect('outfit_detail', outfit_pk=duplicate.pk)
+
+@login_required
+def quick_add_to_outfit(request, item_pk):
+    """
+    Show a modal/page to quickly add a wardrobe item to an existing outfit.
+    
+    GET: Show list of outfits to choose from
+    POST: Add the item to selected outfit
+    """
+    # Get the wardrobe item
+    wardrobe_item = get_object_or_404(WardrobeItem, pk=item_pk, user=request.user)
+    
+    if request.method == 'POST':
+        # User selected an outfit
+        outfit_id = request.POST.get('outfit_id')
+        outfit = get_object_or_404(Outfit, pk=outfit_id, user=request.user)
+        
+        # Add the item to the outfit if not already there
+        if wardrobe_item not in outfit.items.all():
+            outfit.items.add(wardrobe_item)
+            messages.success(request, f'Added "{wardrobe_item.title}" to "{outfit.name}"!')
+        else:
+            messages.info(request, f'"{wardrobe_item.title}" is already in "{outfit.name}"')
+        
+        # Redirect back to wardrobe
+        return redirect('my_wardrobe')
+    
+    # GET: Show outfit selection page
+    # Get all user's outfits
+    user_outfits = Outfit.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'wardrobe_item': wardrobe_item,
+        'outfits': user_outfits,
+    }
+    
+    return render(request, 'quick_add_to_outfit.html', context)
