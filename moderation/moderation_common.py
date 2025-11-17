@@ -4,6 +4,8 @@ import re
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 from .models import BannedIP
+from django.contrib.auth.decorators import login_required
+
 
 REDIRECT = 0
 VALID = 1    
@@ -71,12 +73,36 @@ def not_ip_banned_generator(*, check=lambda request: True):
             user_ip = get_client_ip(request)
             bans = BannedIP.objects.filter(ip_address=user_ip)
 
+            print(user_ip)
             # If the request is relevant and user has active bans
             if check(request) and any(ban.is_active() for ban in bans):
                 # Redirect to your IP ban page
-                return redirect("ip_ban")
+                return HttpResponseRedirect(reverse("ip_ban"))
             return func(request, *args, **kwargs)
         return wrapper
     return decorator
 
+def is_post(request) :
+    request.method == "POST"
+
 not_ip_banned = not_ip_banned_generator()
+poster_not_ip_banned = not_ip_banned_generator(check=is_post)
+
+def combine_decorators(*decorators):
+    """
+    Combine arbitrarily many decorators into one.
+
+    Usage:
+        @combine_decorators(decorator_a, decorator_b, decorator_c)
+        def my_function(...):
+            ...
+    """
+    def _decorator(func):
+        # Apply decorators in the order they were given
+        for dec in reversed(decorators):
+            func = dec(func)
+        return func
+    return _decorator
+
+poster_unbanned_ip_and_login = combine_decorators(poster_not_ip_banned,login_required)
+unbanned_ip_and_login = combine_decorators(not_ip_banned,login_required)

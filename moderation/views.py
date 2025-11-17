@@ -20,6 +20,6 @@ def ip_ban_page(request):
 
     return render(
         request,
-        "moderation/ip_ban.html",
+        "errors/ip_ban.html",
         {"ban_reason": active_ban.reason if active_ban else None}
     )
