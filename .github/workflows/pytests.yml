@@ -23,12 +23,6 @@ jobs:
             python manage.py makemigrations best_dressed_app
             python manage.py makemigrations users
             python manage.py migrate
-      - name: Test with django
-        run: |
-            coverage run manage.py test
-      - name: Show coverage report
-        run: |
-            coverage report
       - name: Analysing the code with pylint
         run: |
             pylint best_dressed/. || true
@@ -36,4 +30,10 @@ jobs:
             pylint forum/. || true 
             pylint users/. || true
             pylint api/. || true
-            pylint tools/.
+            pylint tools/. || true
+      - name: Test with django
+        run: |
+            coverage run manage.py test
+      - name: Show coverage report
+        run: |
+            coverage report
