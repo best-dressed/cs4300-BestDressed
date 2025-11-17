@@ -25,7 +25,8 @@ jobs:
             python manage.py migrate
       - name: Analysing the code with pylint
         run: |
-            pylint api/. best_dressed/. best_dressed_app/. forum/. users/. tools/. || true
+            find ./* \( -path "./$(basename "${VIRTUAL_ENV:-/dev/null}")/*" -o -type d -name migrations \) \
+             -prune -o -type f -name "*.py" -print0 | xargs -0 pylint
       - name: Test with django
         run: |
             coverage run manage.py test
