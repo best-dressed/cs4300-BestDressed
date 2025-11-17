@@ -107,6 +107,11 @@ def item_detail(request, pk):
     # related items list, exclude the item we are primarily viewing
     items = Item.objects.exclude(pk=pk)
 
+    # block hidden items here too
+    if request.user.is_authenticated:
+        hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
+        items = items.exclude(pk__in=hidden_ids)
+
     context = {
         "item": item,
         "items": items,
