@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from best_dressed_app import views
+from moderation.views import filtered_content_message 
 
 
 
@@ -61,4 +62,7 @@ urlpatterns = [
 
     # forums
     path("forum/", include("forum.urls")),
+    
+    #misc
+    path("filtered/", filtered_content_message, name="filtered_content"),
 ]

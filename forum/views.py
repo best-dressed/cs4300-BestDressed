@@ -6,6 +6,19 @@ from django.urls import reverse
 from django.db.models import Count, Max
 from .models import Thread, Post
 from .forms import ThreadForm, PostForm
+from moderation.moderation_common import content_filter_decorator
+
+thread_content_filter_decorator = content_filter_decorator(
+    lambda request : request.POST['title'], # filter the title
+    lambda request : request.POST['content'], # filter the content
+    validator=lambda request : ThreadForm(request.POST).is_valid()
+)
+
+post_content_filter_decorator = content_filter_decorator(
+    lambda request : request.POST['content'], # filter the content
+    validator = lambda request : PostForm(request.POST).is_valid()
+
+)
 
 # Create your views here.
 @login_required
@@ -29,7 +42,9 @@ def threads(request):
 
 
 
+
 @login_required
+@thread_content_filter_decorator
 def thread_create(request):
     """Create a new thread without creating an initial post."""
     if request.method == 'POST':
@@ -43,7 +58,9 @@ def thread_create(request):
         form = ThreadForm()
     return render(request, 'forum/thread_form.html', {'form': form, 'creating': True})
 
+
 @login_required
+@thread_content_filter_decorator
 def thread_edit(request, thread_id):
     """Edit a thread. Only the thread author may edit (adjust permission as needed)."""
     thread = get_object_or_404(Thread, id=thread_id)
@@ -88,6 +105,7 @@ def thread_delete(request, thread_id):
     # If a GET sneaks through, redirect to detail (we only accept POST deletes)
     return redirect('thread_detail', thread_id=thread.id)
 
+@post_content_filter_decorator
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     posts = thread.posts.select_related('user').order_by('created_at')
@@ -105,6 +123,7 @@ def thread_detail(request, thread_id):
     return render(request, 'forum/thread_detail.html', {'thread': thread, 'posts': posts, 'form': form})
 
 @login_required
+@post_content_filter_decorator
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     # only author or staff can edit
