@@ -71,4 +71,7 @@ urlpatterns = [
 
     # forums
     path("forum/", include("forum.urls")),
+    
+    #error pages
+    path("errors/", include("moderation.urls"))
 ]

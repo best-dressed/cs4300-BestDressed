@@ -8,6 +8,34 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from .models import Thread, Post, ThreadLike, PostLike, SavedThread
 from .forms import ThreadForm, PostForm
+from moderation.moderation_common import content_filter_decorator, not_ip_banned, poster_not_ip_banned
+from moderation.moderation_common import unbanned_ip_and_login, poster_unbanned_ip_and_login
+
+def create_validator(Form) :
+    """Create a validator that only checks for field errors, but not any 
+    other errors"""
+    def validator (request):
+        form = Form(request.POST)
+        if form.is_valid() :
+            return True 
+        else : 
+            # Act normal if they aren't field errors
+            return not any(name not in request.POST for name in form.fields)
+    return validator
+
+
+
+thread_content_filter_decorator = content_filter_decorator(
+    lambda request : request.POST['title'], # filter the title
+    lambda request : request.POST['content'], # filter the content
+    validator=create_validator(ThreadForm)
+)
+
+post_content_filter_decorator = content_filter_decorator(
+    lambda request : request.POST['content'], # filter the content
+    validator = create_validator(PostForm)
+
+)
 
 # Create your views here.
 @login_required
@@ -39,7 +67,8 @@ def threads(request):
     return render(request, 'forum/threads.html', {'threads': all_threads})
 
 
-@login_required
+@unbanned_ip_and_login
+@thread_content_filter_decorator
 def thread_create(request):
     """Create a new thread without creating an initial post."""
     if request.method == 'POST':
@@ -53,7 +82,9 @@ def thread_create(request):
         form = ThreadForm()
     return render(request, 'forum/thread_form.html', {'form': form, 'creating': True})
 
-@login_required
+
+@unbanned_ip_and_login
+@thread_content_filter_decorator
 def thread_edit(request, thread_id):
     """Edit a thread. Only the thread author may edit (adjust permission as needed)."""
     thread = get_object_or_404(Thread, id=thread_id)
@@ -98,6 +129,8 @@ def thread_delete(request, thread_id):
     # If a GET sneaks through, redirect to detail (we only accept POST deletes)
     return redirect('thread_detail', thread_id=thread.id)
 
+@poster_not_ip_banned
+@post_content_filter_decorator
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     posts = thread.posts.select_related('user').order_by('created_at')
@@ -114,7 +147,8 @@ def thread_detail(request, thread_id):
         form = PostForm()
     return render(request, 'forum/thread_detail.html', {'thread': thread, 'posts': posts, 'form': form})
 
-@login_required
+@unbanned_ip_and_login
+@post_content_filter_decorator
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     # only author or staff can edit

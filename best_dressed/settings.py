@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'forum',
     'api',
     'django_registration',
+    "moderation"
 ]
 
 MIDDLEWARE = [
