@@ -42,7 +42,7 @@ class ForumTests(TestCase):
     def test_thread_detail_shows_thread_content_and_post(self):
         url = reverse('thread_detail', kwargs={'thread_id': self.thread.id})
         resp = self.client.get(url)
-        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "Thread body")
         self.assertContains(resp, "Original reply")
 
