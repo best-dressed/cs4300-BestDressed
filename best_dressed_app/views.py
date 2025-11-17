@@ -12,6 +12,10 @@ from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
 from .recommendation import generate_recommendations
 from django.http import JsonResponse
 import threading
+from django.http import JsonResponse
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Count
 
 def index(request):
     """
@@ -198,33 +202,6 @@ def dashboard(request):
     
     return render(request, 'dashboard.html', context)
 
-
-@login_required
-def dashboard(request):
-    """
-    User dashboard - central hub for accessing all user features
-    """
-    user = request.user
-    
-    # get or create user profile, retrieves database record; if it doesnt exist, create it
-    # profile: UserProfile object
-    # created: boolean for if object was just created (True) or if it already exists (False)
-    profile, created = UserProfile.objects.get_or_create(user=user)
-    
-    # get actual counts (of number of items in Wardrobe) from the database for the logged in user
-    wardrobe_count = WardrobeItem.objects.filter(user=user).count()
-    outfit_count = Outfit.objects.filter(user=user).count()
-    # implement this later with AI recommendations
-    recommendation_count = 0  
-
-    # python dictionary that passes data from Python (Django view) to the HTML template
-    context = {
-        'wardrobe_count': wardrobe_count,
-        'outfit_count': outfit_count,
-        'recommendation_count': recommendation_count,
-    }
-    
-    return render(request, 'dashboard.html', context)
 
 @login_required
 def account_settings(request):
@@ -660,7 +637,7 @@ def create_outfit(request):
 @login_required
 def my_outfits(request):
     """
-    Display all outfits created by the user with filtering options.
+    Display all outfits created by the user with filtering, search, and sorting.
     """
     user = request.user
     
@@ -668,31 +645,135 @@ def my_outfits(request):
     occasion_filter = request.GET.get('occasion', None)
     season_filter = request.GET.get('season', None)
     favorites_only = request.GET.get('favorites', None)
+    collection = request.GET.get('collection', None)
+    
+    # Get search and sort parameters
+    search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort', '-created_at')  # default: newest first
     
     # Start with all user's outfits
     outfits = Outfit.objects.filter(user=user)
     
-    # Apply occasion filter if specified
-    if occasion_filter and occasion_filter != 'all':
-        outfits = outfits.filter(occasion=occasion_filter)
+    # Apply smart collection filters
+    if collection:
+        if collection == 'favorites':
+            outfits = outfits.filter(is_favorite=True)
+        elif collection == 'summer':
+            outfits = outfits.filter(season='summer')
+        elif collection == 'winter':
+            outfits = outfits.filter(season='winter')
+        elif collection == 'casual':
+            outfits = outfits.filter(occasion='casual')
+        elif collection == 'work':
+            outfits = outfits.filter(occasion='business')
+        elif collection == 'date':
+            outfits = outfits.filter(occasion='date')
+        elif collection == 'formal':
+            outfits = outfits.filter(occasion='formal')
+        elif collection == 'recent':
+            from django.utils import timezone
+            from datetime import timedelta
+            thirty_days_ago = timezone.now() - timedelta(days=30)
+            outfits = outfits.filter(created_at__gte=thirty_days_ago)
+        elif collection == 'incomplete':
+            from django.db.models import Count
+            outfits = outfits.annotate(item_count_computed=Count('items')).filter(item_count_computed__lt=3)
+    else:
+        # Apply regular filters only if no collection is selected
+        if occasion_filter and occasion_filter != 'all':
+            outfits = outfits.filter(occasion=occasion_filter)
+        
+        if season_filter and season_filter != 'all':
+            outfits = outfits.filter(season=season_filter)
+        
+        if favorites_only == 'true':
+            outfits = outfits.filter(is_favorite=True)
     
-    # Apply season filter if specified
-    if season_filter and season_filter != 'all':
-        outfits = outfits.filter(season=season_filter)
+    # Apply search filter
+    if search_query:
+        # Q objects allow complex queries with OR logic
+        # icontains = case-insensitive contains
+        from django.db.models import Q
+        outfits = outfits.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(occasion__icontains=search_query) |
+            Q(season__icontains=search_query)
+        )
     
-    # Apply favorites filter if specified
-    if favorites_only == 'true':
-        outfits = outfits.filter(is_favorite=True)
+    # Validate sort_by to prevent SQL injection
+    valid_sorts = [
+        'name', '-name',  # A-Z, Z-A
+        'created_at', '-created_at',  # oldest first, newest first
+        'updated_at', '-updated_at',  # least recently updated, most recently updated
+    ]
+    
+    if sort_by in valid_sorts:
+        outfits = outfits.order_by(sort_by)
+    else:
+        outfits = outfits.order_by('-created_at')  # default fallback
+    
+    # For item count sorting, we need to annotate
+    if sort_by in ['item_count', '-item_count']:
+        from django.db.models import Count
+        outfits = outfits.annotate(items_count=Count('items')).order_by(sort_by.replace('item_count', 'items_count'))
     
     # Prefetch related items for efficiency
-    # This loads all items for all outfits in one database query
-    # instead of making a separate query for each outfit (N+1 problem)
     outfits = outfits.prefetch_related('items')
     
-    # Get available filter options from the model choices
+    # Get available filter options
     occasion_choices = Outfit._meta.get_field('occasion').choices
     season_choices = Outfit._meta.get_field('season').choices
     
+    # Collection counts
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Count
+    
+    thirty_days_ago = timezone.now() - timedelta(days=30)
+    
+    collection_counts = {
+        'favorites': Outfit.objects.filter(user=user, is_favorite=True).count(),
+        'summer': Outfit.objects.filter(user=user, season='summer').count(),
+        'winter': Outfit.objects.filter(user=user, season='winter').count(),
+        'casual': Outfit.objects.filter(user=user, occasion='casual').count(),
+        'work': Outfit.objects.filter(user=user, occasion='business').count(),
+        'date': Outfit.objects.filter(user=user, occasion='date').count(),
+        'formal': Outfit.objects.filter(user=user, occasion='formal').count(),
+        'recent': Outfit.objects.filter(user=user, created_at__gte=thirty_days_ago).count(),
+        'incomplete': Outfit.objects.filter(user=user).annotate(
+            item_count_computed=Count('items')
+        ).filter(item_count_computed__lt=3).count(),
+    }
+    
+    # Define sort options for dropdown
+    sort_options = [
+        ('-created_at', 'Newest First'),
+        ('created_at', 'Oldest First'),
+        ('name', 'Name (A-Z)'),
+        ('-name', 'Name (Z-A)'),
+        ('-updated_at', 'Recently Updated'),
+        ('updated_at', 'Least Recently Updated'),
+        ('-item_count', 'Most Items'),
+        ('item_count', 'Fewest Items'),
+    ]
+    
+    context = {
+        'outfits': outfits,
+        'occasion_filter': occasion_filter or 'all',
+        'season_filter': season_filter or 'all',
+        'favorites_only': favorites_only == 'true',
+        'occasion_choices': occasion_choices,
+        'season_choices': season_choices,
+        'current_collection': collection,
+        'collection_counts': collection_counts,
+        'search_query': search_query,  # NEW
+        'current_sort': sort_by,  # NEW
+        'sort_options': sort_options,  # NEW
+    }
+    
+    return render(request, 'my_outfits.html', context)
+
     context = {
         'outfits': outfits,
         'occasion_filter': occasion_filter or 'all',
@@ -804,3 +885,92 @@ def edit_outfit(request, outfit_pk):
     }
     
     return render(request, 'edit_outfit.html', context)
+
+@login_required
+def toggle_outfit_favorite(request, outfit_pk):
+    """
+    Toggle the favorite status of an outfit (AJAX endpoint).
+    
+    Returns JSON with the new favorite status.
+    Security: Only the owner can toggle their outfit's favorite status.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+    
+    # Get the outfit, ensuring it belongs to current user
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    # Toggle the favorite status
+    # If it was True, make it False; if False, make it True
+    outfit.is_favorite = not outfit.is_favorite
+    outfit.save()
+    
+    # Return JSON response
+    # This tells JavaScript whether the outfit is now favorited or not
+    return JsonResponse({
+        'success': True,
+        'is_favorite': outfit.is_favorite
+    })
+
+@login_required
+def duplicate_outfit(request, outfit_pk):
+    """
+    Create a copy of an existing outfit.
+    
+    The duplicated outfit will have "(Copy)" appended to the name
+    and will include all the same items as the original.
+    """
+    # Get the original outfit
+    original_outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    # Create a new outfit with copied data
+    # pk=None means Django will create a new object instead of updating existing
+    duplicate = Outfit.objects.get(pk=outfit_pk)
+    duplicate.pk = None  # This makes it a new object
+    duplicate.name = f"{original_outfit.name} (Copy)"
+    duplicate.is_favorite = False  # Copies aren't automatically favorites
+    duplicate.save()
+    
+    # Copy the many-to-many relationships (items)
+    # We need to do this after save() because M2M requires a saved object
+    duplicate.items.set(original_outfit.items.all())
+    
+    messages.success(request, f'Created a copy of "{original_outfit.name}"!')
+    return redirect('outfit_detail', outfit_pk=duplicate.pk)
+
+@login_required
+def quick_add_to_outfit(request, item_pk):
+    """
+    Show a modal/page to quickly add a wardrobe item to an existing outfit.
+    
+    GET: Show list of outfits to choose from
+    POST: Add the item to selected outfit
+    """
+    # Get the wardrobe item
+    wardrobe_item = get_object_or_404(WardrobeItem, pk=item_pk, user=request.user)
+    
+    if request.method == 'POST':
+        # User selected an outfit
+        outfit_id = request.POST.get('outfit_id')
+        outfit = get_object_or_404(Outfit, pk=outfit_id, user=request.user)
+        
+        # Add the item to the outfit if not already there
+        if wardrobe_item not in outfit.items.all():
+            outfit.items.add(wardrobe_item)
+            messages.success(request, f'Added "{wardrobe_item.title}" to "{outfit.name}"!')
+        else:
+            messages.info(request, f'"{wardrobe_item.title}" is already in "{outfit.name}"')
+        
+        # Redirect back to wardrobe
+        return redirect('my_wardrobe')
+    
+    # GET: Show outfit selection page
+    # Get all user's outfits
+    user_outfits = Outfit.objects.filter(user=request.user).order_by('-created_at')
+    
+    context = {
+        'wardrobe_item': wardrobe_item,
+        'outfits': user_outfits,
+    }
+    
+    return render(request, 'quick_add_to_outfit.html', context)

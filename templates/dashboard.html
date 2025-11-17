@@ -4,32 +4,33 @@
 {% block title %}Dashboard · Best Dressed{% endblock %}
 
 {% block content %}
-<div class="landing-hero-bg">
-<div class="container py-5">
-  <div class="row mb-4">
-    <div class="col">
-      <h1 class="display-5 fw-bold">Welcome back, {{ user.username }}!</h1>
-      <p class="text-muted">Manage your wardrobe, outfits, and get style recommendations.</p>
+<div class="clean-glass-dashboard">
+  <div class="container py-5">
+    {% include 'includes/messages.html' %}
+    <!-- Header -->
+    <div class="mb-4">
+      <h1 class="display-6 fw-bold text-white mb-2">Welcome back, {{ user.username }}</h1>
+      <p class="text-white-50 mb-0">Your wardrobe at a glance</p>
     </div>
 
     <!-- Stats Bar -->
     <div class="stats-grid mb-5">
-      <div class="glass-stat-simple">
+      <a href="{% url 'my_wardrobe' %}" class="glass-stat-simple stat-link">
         <div class="stat-value">{{ wardrobe_count }}</div>
         <div class="stat-label">Items</div>
-      </div>
-      <div class="glass-stat-simple">
+      </a>
+      <a href="{% url 'my_outfits' %}" class="glass-stat-simple stat-link">
         <div class="stat-value">{{ outfit_count }}</div>
         <div class="stat-label">Outfits</div>
-      </div>
-      <div class="glass-stat-simple">
+      </a>
+      <a href="{% url 'my_outfits' %}?favorites=true" class="glass-stat-simple stat-link">
         <div class="stat-value">{{ favorites_count }}</div>
         <div class="stat-label">Favorites</div>
-      </div>
-      <div class="glass-stat-simple">
+      </a>
+      <a href="{% url 'recommendations' %}" class="glass-stat-simple stat-link">
         <div class="stat-value">{{ recommendation_count }}</div>
         <div class="stat-label">Suggestions</div>
-      </div>
+      </a>
     </div>
 
     <!-- Main Content -->
@@ -247,6 +248,43 @@
     padding: 2rem 1.5rem;
     text-align: center;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: block;
+  }
+
+  /* Clickable stat cards */
+  .stat-link {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-link::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(205, 180, 255, 0.1);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .stat-link:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .stat-link:hover {
+    transform: translateY(-6px);
+    border-color: rgba(205, 180, 255, 0.5);
+    box-shadow: 0 12px 32px rgba(109, 17, 227, 0.3);
+  }
+
+  .stat-link:active {
+    transform: translateY(-2px);
   }
 
   .glass-stat-simple:hover {
@@ -261,12 +299,27 @@
     color: #fff;
     line-height: 1;
     margin-bottom: 0.5rem;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+  }
+
+  .stat-link:hover .stat-value {
+    transform: scale(1.1);
+    color: #CDB4FF;
   }
 
   .stat-label {
     font-size: 0.875rem;
     color: rgba(255, 255, 255, 0.5);
     font-weight: 500;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+  }
+
+  .stat-link:hover .stat-label {
+    color: rgba(255, 255, 255, 0.8);
   }
 
   /* ==================== */

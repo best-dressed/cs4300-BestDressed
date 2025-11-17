@@ -4,53 +4,52 @@
 {% block title %}Edit {{ outfit.name }} · Best Dressed{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="display-6 fw-bold">Edit Outfit</h1>
-      <p class="text-muted">Update "{{ outfit.name }}"</p>
+<div class="clean-glass-edit-outfit">
+  <div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="display-6 fw-bold text-white">Edit Outfit</h1>
+        <p class="text-white-50 mb-0">Update "{{ outfit.name }}"</p>
+      </div>
+      <a href="{% url 'outfit_detail' outfit_pk=outfit.pk %}" class="btn-clean-glass">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+        </svg>
+        Cancel
+      </a>
     </div>
-    <a href="{% url 'outfit_detail' outfit_pk=outfit.pk %}" class="btn btn-outline-secondary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-      </svg>
-      Cancel
-    </a>
-  </div>
 
-  <!-- Success/Error Messages -->
-  {% if messages %}
-    {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-      {{ message }}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    {% endfor %}
-  {% endif %}
+    <!-- Success/Error Messages -->
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert-glass alert-{{ message.tags }} mb-4">
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
 
-  <!-- Edit Form -->
-  <form method="post" action="{% url 'edit_outfit' outfit_pk=outfit.pk %}">
-    {% csrf_token %}
-    
-    <div class="row">
-      <!-- Left Column: Form Fields -->
-      <div class="col-lg-5 mb-4">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h5 class="card-title mb-4">Outfit Details</h5>
+    <!-- Edit Form -->
+    <form method="post" action="{% url 'edit_outfit' outfit_pk=outfit.pk %}">
+      {% csrf_token %}
+      
+      <div class="row">
+        <!-- Left Column: Form Fields -->
+        <div class="col-lg-5 mb-4">
+          <div class="glass-card-simple p-4">
+            <h5 class="text-white mb-4">Outfit Details</h5>
             
             <!-- Outfit Name -->
             <div class="mb-3">
-              <label for="{{ form.name.id_for_label }}" class="form-label fw-semibold">
+              <label for="{{ form.name.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.name.label }}
               </label>
               {{ form.name }}
               {% if form.name.help_text %}
-                <div class="form-text text-muted">{{ form.name.help_text }}</div>
+                <div class="form-text text-white-50 small">{{ form.name.help_text }}</div>
               {% endif %}
               {% if form.name.errors %}
-                <div class="invalid-feedback d-block">
+                <div class="text-danger small mt-1">
                   {% for error in form.name.errors %}{{ error }}{% endfor %}
                 </div>
               {% endif %}
@@ -58,15 +57,15 @@
             
             <!-- Description -->
             <div class="mb-3">
-              <label for="{{ form.description.id_for_label }}" class="form-label fw-semibold">
+              <label for="{{ form.description.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.description.label }}
               </label>
               {{ form.description }}
               {% if form.description.help_text %}
-                <div class="form-text text-muted">{{ form.description.help_text }}</div>
+                <div class="form-text text-white-50 small">{{ form.description.help_text }}</div>
               {% endif %}
               {% if form.description.errors %}
-                <div class="invalid-feedback d-block">
+                <div class="text-danger small mt-1">
                   {% for error in form.description.errors %}{{ error }}{% endfor %}
                 </div>
               {% endif %}
@@ -74,15 +73,15 @@
             
             <!-- Occasion -->
             <div class="mb-3">
-              <label for="{{ form.occasion.id_for_label }}" class="form-label fw-semibold">
+              <label for="{{ form.occasion.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.occasion.label }}
               </label>
               {{ form.occasion }}
               {% if form.occasion.help_text %}
-                <div class="form-text text-muted">{{ form.occasion.help_text }}</div>
+                <div class="form-text text-white-50 small">{{ form.occasion.help_text }}</div>
               {% endif %}
               {% if form.occasion.errors %}
-                <div class="invalid-feedback d-block">
+                <div class="text-danger small mt-1">
                   {% for error in form.occasion.errors %}{{ error }}{% endfor %}
                 </div>
               {% endif %}
@@ -90,15 +89,15 @@
             
             <!-- Season -->
             <div class="mb-3">
-              <label for="{{ form.season.id_for_label }}" class="form-label fw-semibold">
+              <label for="{{ form.season.id_for_label }}" class="form-label text-white-50 small">
                 {{ form.season.label }}
               </label>
               {{ form.season }}
               {% if form.season.help_text %}
-                <div class="form-text text-muted">{{ form.season.help_text }}</div>
+                <div class="form-text text-white-50 small">{{ form.season.help_text }}</div>
               {% endif %}
               {% if form.season.errors %}
-                <div class="invalid-feedback d-block">
+                <div class="text-danger small mt-1">
                   {% for error in form.season.errors %}{{ error }}{% endfor %}
                 </div>
               {% endif %}
@@ -106,60 +105,55 @@
             
             <!-- Favorite Checkbox -->
             <div class="mb-3">
-              <div class="form-check">
+              <div class="glass-checkbox-wrapper">
                 {{ form.is_favorite }}
-                <label class="form-check-label" for="{{ form.is_favorite.id_for_label }}">
+                <label class="glass-checkbox-label" for="{{ form.is_favorite.id_for_label }}">
                   {{ form.is_favorite.label }}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gold" class="bi bi-star-fill" viewBox="0 0 16 16">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gold" class="bi bi-star-fill ms-1" viewBox="0 0 16 16">
                     <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
                   </svg>
                 </label>
               </div>
               {% if form.is_favorite.help_text %}
-                <div class="form-text text-muted">{{ form.is_favorite.help_text }}</div>
+                <div class="form-text text-white-50 small">{{ form.is_favorite.help_text }}</div>
               {% endif %}
             </div>
           </div>
         </div>
-      </div>
-      
-      <!-- Right Column: Item Selection -->
-      <div class="col-lg-7">
-        <div class="card border-0 shadow-sm">
-          <div class="card-body p-4">
-            <h5 class="card-title mb-3">Select Items for This Outfit</h5>
-            <p class="text-muted small mb-4">Check the items you want to include. Currently selected: <span id="item-count">{{ outfit.items.count }}</span></p>
+        
+        <!-- Right Column: Item Selection -->
+        <div class="col-lg-7">
+          <div class="glass-card-simple p-4">
+            <h5 class="text-white mb-3">Select Items for This Outfit</h5>
+            <p class="text-white-50 small mb-4">Check the items you want to include. Currently selected: <span id="item-count" class="text-white fw-bold">{{ outfit.items.count }}</span></p>
             
             {% if wardrobe_items %}
               <div class="row row-cols-2 row-cols-md-3 g-3">
                 {% for item in wardrobe_items %}
                 <div class="col">
-                  <div class="wardrobe-item-card position-relative">
-                    <!-- Hidden checkbox styled as card selection -->
+                  <div class="item-selection-card">
                     <input 
                       type="checkbox" 
                       name="items" 
                       value="{{ item.pk }}" 
                       id="item-{{ item.pk }}"
-                      class="wardrobe-checkbox"
+                      class="item-checkbox"
                       {% if item in outfit.items.all %}checked{% endif %}
                       onchange="updateItemCount()">
                     
-                    <label for="item-{{ item.pk }}" class="wardrobe-item-label">
-                      <div class="card h-100 border-2">
-                        <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" 
-                             style="height: 120px; object-fit: cover;">
-                        <div class="card-body p-2">
-                          <p class="small mb-0 fw-semibold text-truncate">{{ item.title }}</p>
-                          <p class="small text-muted mb-0">{{ item.get_category_display }}</p>
-                        </div>
-                        
-                        <!-- Checkmark overlay -->
-                        <div class="checkmark-overlay">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="white" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
-                            <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-                          </svg>
-                        </div>
+                    <label for="item-{{ item.pk }}" class="item-label">
+                      <img src="{{ item.image_url }}" alt="{{ item.title }}">
+                      
+                      <!-- Checkmark overlay -->
+                      <div class="checkmark-overlay">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="white" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                        </svg>
+                      </div>
+                      
+                      <div class="item-info">
+                        <p class="item-title">{{ item.title }}</p>
+                        <p class="item-category">{{ item.get_category_display }}</p>
                       </div>
                     </label>
                   </div>
@@ -167,88 +161,180 @@
                 {% endfor %}
               </div>
             {% else %}
-              <div class="alert alert-info">
+              <div class="alert-glass alert-info">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-info-circle me-2" viewBox="0 0 16 16">
                   <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                   <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533z"/>
                   <path d="M9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                 </svg>
-                Your wardrobe is empty. <a href="{% url 'my_wardrobe' %}">Add items</a> to your wardrobe first!
+                Your wardrobe is empty. <a href="{% url 'my_wardrobe' %}" class="text-white">Add items</a> to your wardrobe first!
               </div>
             {% endif %}
             
             <!-- Form Errors for Items Field -->
             {% if form.items.errors %}
-              <div class="alert alert-danger mt-3">
+              <div class="alert-glass alert-danger mt-3">
                 {% for error in form.items.errors %}{{ error }}{% endfor %}
               </div>
             {% endif %}
           </div>
         </div>
       </div>
-    </div>
-    
-    <!-- Submit Buttons -->
-    <div class="mt-4 d-flex gap-2">
-      <button type="submit" class="btn btn-primary btn-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
-          <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
-        </svg>
-        Save Changes
-      </button>
-      <a href="{% url 'outfit_detail' outfit_pk=outfit.pk %}" class="btn btn-outline-secondary btn-lg">Cancel</a>
-      <a href="{% url 'delete_outfit' outfit_pk=outfit.pk %}" class="btn btn-outline-danger btn-lg ms-auto">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash me-1" viewBox="0 0 16 16">
-          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-        </svg>
-        Delete Outfit
-      </a>
-    </div>
-  </form>
+      
+      <!-- Submit Buttons -->
+      <div class="mt-4 d-flex gap-2 flex-wrap">
+        <button type="submit" class="btn-clean-glass">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
+            <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+          </svg>
+          Save Changes
+        </button>
+        <a href="{% url 'outfit_detail' outfit_pk=outfit.pk %}" class="btn-clean-glass-secondary">Cancel</a>
+        <a href="{% url 'delete_outfit' outfit_pk=outfit.pk %}" class="btn-danger-glass ms-auto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash me-1" viewBox="0 0 16 16">
+            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+          </svg>
+          Delete Outfit
+        </a>
+      </div>
+    </form>
+  </div>
 </div>
 
-<!-- JavaScript for item count and visual feedback -->
 <script>
-  // Update the count of selected items dynamically
   function updateItemCount() {
-    // querySelectorAll gets all checkboxes with name="items"
-    // :checked filters to only checked ones
     const checkedBoxes = document.querySelectorAll('input[name="items"]:checked');
     document.getElementById('item-count').textContent = checkedBoxes.length;
   }
   
-  // Initialize count on page load
   updateItemCount();
 </script>
 
 <style>
-  /* Hide the default checkbox, we'll style the card instead */
-  .wardrobe-checkbox {
+  /* Base */
+  .clean-glass-edit-outfit {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Glass Cards */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+  }
+
+  /* Alerts */
+  .alert-glass {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .alert-glass.alert-info {
+    border-color: rgba(13, 202, 240, 0.3);
+    background: rgba(13, 202, 240, 0.1);
+  }
+
+  .alert-glass.alert-danger {
+    border-color: rgba(220, 53, 69, 0.3);
+    background: rgba(220, 53, 69, 0.1);
+  }
+
+  /* Form Inputs */
+  .glass-card-simple input[type="text"],
+  .glass-card-simple textarea,
+  .glass-card-simple select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    color: #fff;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-simple input[type="text"]:focus,
+  .glass-card-simple textarea:focus,
+  .glass-card-simple select:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(205, 180, 255, 0.4);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(205, 180, 255, 0.1);
+  }
+
+  .glass-card-simple select option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+
+  .glass-checkbox-wrapper {
+    display: flex;
+    align-items: center;
+  }
+
+  .glass-checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #6D11E3;
+  }
+
+  .glass-checkbox-label {
+    margin-left: 0.5rem;
+    color: rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    font-size: 0.875rem;
+  }
+
+  /* Item Selection Cards */
+  .item-selection-card {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .item-checkbox {
     position: absolute;
     opacity: 0;
     pointer-events: none;
   }
-  
-  /* Make the label (card) clickable */
-  .wardrobe-item-label {
-    cursor: pointer;
+
+  .item-label {
     display: block;
-    margin: 0;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
   }
-  
-  .wardrobe-item-card .card {
-    transition: all 0.2s ease;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-  }
-  
-  /* Hover effect */
-  .wardrobe-item-label:hover .card {
+
+  .item-label:hover {
     transform: translateY(-2px);
-    border-color: #CDB4FF !important;
+    border-color: rgba(205, 180, 255, 0.3);
   }
-  
-  /* Checkmark overlay (hidden by default) */
+
+  .item-label img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+  }
+
   .checkmark-overlay {
     position: absolute;
     top: 8px;
@@ -259,16 +345,99 @@
     opacity: 0;
     transition: opacity 0.2s ease;
   }
-  
-  /* When checkbox is checked, show checkmark and highlight card */
-  .wardrobe-checkbox:checked ~ label .checkmark-overlay {
+
+  .item-checkbox:checked ~ .item-label .checkmark-overlay {
     opacity: 1;
   }
-  
-  .wardrobe-checkbox:checked ~ label .card {
-    border-color: #6D11E3 !important;
-    border-width: 3px !important;
+
+  .item-checkbox:checked ~ .item-label {
+    border-color: #6D11E3;
+    border-width: 3px;
     box-shadow: 0 0 12px rgba(109, 17, 227, 0.4);
+  }
+
+  .item-info {
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .item-title {
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .item-category {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.7rem;
+    margin: 0;
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .btn-danger-glass {
+    background: rgba(220, 53, 69, 0.1);
+    border: 1px solid rgba(220, 53, 69, 0.3);
+    color: #ff6b7a;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-danger-glass:hover {
+    background: rgba(220, 53, 69, 0.2);
+    border-color: rgba(220, 53, 69, 0.5);
+    color: #ff6b7a;
+    transform: translateY(-2px);
   }
 </style>
 {% endblock %}
