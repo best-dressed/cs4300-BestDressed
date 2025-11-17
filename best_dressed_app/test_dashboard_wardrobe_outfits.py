@@ -2,10 +2,15 @@
 Comprehensive test suite for Dashboard, Wardrobe, Account Settings, and Outfit features.
 
 This test file covers:
-- Dashboard view and functionality
+- Dashboard view and functionality (with enhanced stats)
 - Account Settings/User Profile management
-- Wardrobe management (add, edit, delete, save from catalog)
-- Outfit creation and management
+- Wardrobe management (add, edit, delete, save from catalog, search, sort)
+- Outfit creation and management (create, edit, delete, detail)
+- Quick Actions (toggle favorite, duplicate, quick add to outfit)
+- Smart Collections (favorites, seasons, occasions, recent, incomplete)
+- Search and Filtering (outfit search, sort, combined filters)
+- Model constraints and behavior
+- Integration workflows
 """
 
 from django.test import TestCase, Client
@@ -14,7 +19,12 @@ from django.contrib.auth import get_user_model
 from best_dressed_app.models import Item, UserProfile, WardrobeItem, Outfit
 from django.contrib import messages
 from django.db import IntegrityError, transaction
+from django.utils import timezone
+from datetime import timedelta
+import json
 
+
+# ==================== DASHBOARD TESTS ====================
 
 class DashboardTests(TestCase):
     """Tests for the user dashboard view"""
@@ -32,7 +42,6 @@ class DashboardTests(TestCase):
     def test_dashboard_requires_authentication(self):
         """Test that unauthenticated users are redirected to login"""
         response = self.client.get(reverse('dashboard'))
-        # Should redirect to login page
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -48,13 +57,10 @@ class DashboardTests(TestCase):
         """Test that dashboard creates UserProfile if it doesn't exist"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Verify no profile exists yet
         self.assertFalse(UserProfile.objects.filter(user=self.user).exists())
         
-        # Access dashboard
         response = self.client.get(reverse('dashboard'))
         
-        # Profile should now exist
         self.assertTrue(UserProfile.objects.filter(user=self.user).exists())
         self.assertEqual(response.status_code, 200)
     
@@ -62,20 +68,16 @@ class DashboardTests(TestCase):
         """Test that dashboard uses existing profile instead of creating duplicate"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Create a profile manually
         profile = UserProfile.objects.create(
             user=self.user,
             bio="Test bio",
             style_preferences="casual"
         )
         
-        # Access dashboard
         self.client.get(reverse('dashboard'))
         
-        # Should still be only one profile
         self.assertEqual(UserProfile.objects.filter(user=self.user).count(), 1)
         
-        # Profile should be unchanged
         profile.refresh_from_db()
         self.assertEqual(profile.bio, "Test bio")
     
@@ -83,7 +85,6 @@ class DashboardTests(TestCase):
         """Test that dashboard shows accurate count of wardrobe items"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Create some wardrobe items
         WardrobeItem.objects.create(
             user=self.user,
             title="Test Shirt",
@@ -97,13 +98,11 @@ class DashboardTests(TestCase):
         
         response = self.client.get(reverse('dashboard'))
         
-        # Check that context has correct count
         self.assertEqual(response.context['wardrobe_count'], 2)
-        self.assertContains(response, '2')  # Should display the count
+        self.assertContains(response, '2')
     
     def test_dashboard_only_counts_user_items(self):
         """Test that dashboard only counts items belonging to the logged-in user"""
-        # Create another user with items
         User = get_user_model()
         other_user = User.objects.create_user(
             username='otheruser',
@@ -115,7 +114,6 @@ class DashboardTests(TestCase):
             category="top"
         )
         
-        # Login as test user and create one item
         self.client.login(username='testuser', password='testpass123')
         WardrobeItem.objects.create(
             user=self.user,
@@ -125,7 +123,6 @@ class DashboardTests(TestCase):
         
         response = self.client.get(reverse('dashboard'))
         
-        # Should only count the logged-in user's items
         self.assertEqual(response.context['wardrobe_count'], 1)
     
     def test_dashboard_displays_username(self):
@@ -141,12 +138,100 @@ class DashboardTests(TestCase):
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(reverse('dashboard'))
         
-        # Check for important links using actual URLs from template
-        self.assertContains(response, '/account/')  # Account Settings
-        self.assertContains(response, '/wardrobe/')  # My Wardrobe
-        self.assertContains(response, '/outfits/')  # My Outfits
-        self.assertContains(response, '/item_listing/')  # Browse Catalog
+        self.assertContains(response, '/account/')
+        self.assertContains(response, '/wardrobe/')
+        self.assertContains(response, '/outfits/')
+        self.assertContains(response, '/item_listing/')
+    
+    def test_dashboard_displays_correct_counts(self):
+        """Test that dashboard shows accurate counts for all metrics"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        WardrobeItem.objects.create(user=self.user, title="Shirt", category="top")
+        WardrobeItem.objects.create(user=self.user, title="Pants", category="bottom")
+        
+        outfit = Outfit.objects.create(user=self.user, name="Outfit 1")
+        Outfit.objects.create(user=self.user, name="Outfit 2", is_favorite=True)
+        
+        response = self.client.get(reverse('dashboard'))
+        
+        self.assertEqual(response.context['wardrobe_count'], 2)
+        self.assertEqual(response.context['outfit_count'], 2)
+        self.assertEqual(response.context['favorites_count'], 1)
+    
+    def test_dashboard_season_stats(self):
+        """Test that dashboard displays outfit breakdown by season"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        Outfit.objects.create(user=self.user, name="Summer 1", season="summer")
+        Outfit.objects.create(user=self.user, name="Summer 2", season="summer")
+        Outfit.objects.create(user=self.user, name="Winter 1", season="winter")
+        
+        response = self.client.get(reverse('dashboard'))
+        
+        season_stats = list(response.context['season_stats'])
+        
+        summer_stat = next((s for s in season_stats if s['season'] == 'summer'), None)
+        winter_stat = next((s for s in season_stats if s['season'] == 'winter'), None)
+        
+        self.assertIsNotNone(summer_stat)
+        self.assertIsNotNone(winter_stat)
+        self.assertEqual(summer_stat['count'], 2)
+        self.assertEqual(winter_stat['count'], 1)
+    
+    def test_dashboard_occasion_stats(self):
+        """Test that dashboard displays outfit breakdown by occasion"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        Outfit.objects.create(user=self.user, name="Casual 1", occasion="casual")
+        Outfit.objects.create(user=self.user, name="Casual 2", occasion="casual")
+        Outfit.objects.create(user=self.user, name="Formal 1", occasion="formal")
+        
+        response = self.client.get(reverse('dashboard'))
+        
+        occasion_stats = list(response.context['occasion_stats'])
+        
+        casual_stat = next((s for s in occasion_stats if s['occasion'] == 'casual'), None)
+        formal_stat = next((s for s in occasion_stats if s['occasion'] == 'formal'), None)
+        
+        self.assertIsNotNone(casual_stat)
+        self.assertIsNotNone(formal_stat)
+        self.assertEqual(casual_stat['count'], 2)
+        self.assertEqual(formal_stat['count'], 1)
+    
+    def test_dashboard_recent_outfits(self):
+        """Test that dashboard shows recent outfits (last 4)"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        for i in range(5):
+            Outfit.objects.create(user=self.user, name=f"Outfit {i}")
+        
+        response = self.client.get(reverse('dashboard'))
+        
+        recent_outfits = response.context['recent_outfits']
+        self.assertEqual(len(recent_outfits), 4)
+    
+    def test_dashboard_random_outfit(self):
+        """Test that dashboard shows a random outfit suggestion"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        outfit = Outfit.objects.create(user=self.user, name="Test Outfit")
+        
+        response = self.client.get(reverse('dashboard'))
+        
+        self.assertIsNotNone(response.context['random_outfit'])
+        self.assertEqual(response.context['random_outfit'], outfit)
+    
+    def test_dashboard_no_random_outfit_when_none_exist(self):
+        """Test dashboard handles case with no outfits"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('dashboard'))
+        
+        self.assertIsNone(response.context['random_outfit'])
 
+
+# ==================== ACCOUNT SETTINGS TESTS ====================
 
 class AccountSettingsTests(TestCase):
     """Tests for account settings and user profile management"""
@@ -165,7 +250,6 @@ class AccountSettingsTests(TestCase):
         """Test that unauthenticated users cannot access account settings"""
         response = self.client.get(reverse('account_settings'))
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -181,13 +265,10 @@ class AccountSettingsTests(TestCase):
         """Test that accessing settings creates profile if it doesn't exist"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Verify no profile exists
         self.assertFalse(UserProfile.objects.filter(user=self.user).exists())
         
-        # Access account settings
         response = self.client.get(reverse('account_settings'))
         
-        # Profile should now exist
         self.assertTrue(UserProfile.objects.filter(user=self.user).exists())
         self.assertEqual(response.status_code, 200)
     
@@ -195,7 +276,6 @@ class AccountSettingsTests(TestCase):
         """Test that form is pre-filled with existing profile data"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Create profile with specific data
         profile = UserProfile.objects.create(
             user=self.user,
             bio="I love fashion",
@@ -205,10 +285,8 @@ class AccountSettingsTests(TestCase):
         
         response = self.client.get(reverse('account_settings'))
         
-        # Check context has the profile
         self.assertEqual(response.context['profile'], profile)
         
-        # Check that the page contains the profile data
         self.assertContains(response, "I love fashion")
         self.assertContains(response, "casual, streetwear")
     
@@ -216,25 +294,21 @@ class AccountSettingsTests(TestCase):
         """Test that POST request updates profile successfully"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Create initial profile
         profile = UserProfile.objects.create(
             user=self.user,
             bio="Old bio",
             style_preferences="old style"
         )
         
-        # Update profile via POST
         response = self.client.post(reverse('account_settings'), {
             'bio': 'Updated bio',
             'style_preferences': 'new style, modern',
             'favorite_colors': 'red, green'
         })
         
-        # Should redirect after successful update
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('account_settings'))
         
-        # Verify database was updated
         profile.refresh_from_db()
         self.assertEqual(profile.bio, 'Updated bio')
         self.assertEqual(profile.style_preferences, 'new style, modern')
@@ -244,38 +318,32 @@ class AccountSettingsTests(TestCase):
         """Test that success message is displayed after profile update"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Create profile
         UserProfile.objects.create(user=self.user)
         
-        # Update profile
         response = self.client.post(reverse('account_settings'), {
             'bio': 'New bio',
             'style_preferences': 'casual',
             'favorite_colors': 'blue'
-        }, follow=True)  # follow=True to see messages after redirect
+        }, follow=True)
         
-        # Check for success message
         messages_list = list(response.context['messages'])
         self.assertEqual(len(messages_list), 1)
         self.assertIn('updated successfully', str(messages_list[0]))
     
     def test_account_settings_profile_unique_to_user(self):
         """Test that each user has their own profile"""
-        # Create two users
         User = get_user_model()
         user2 = User.objects.create_user(
             username='testuser2',
             password='testpass123'
         )
         
-        # Login as first user and create profile
         self.client.login(username='testuser', password='testpass123')
         response = self.client.post(reverse('account_settings'), {
             'bio': 'User 1 bio',
             'style_preferences': 'user1 style'
         })
         
-        # Login as second user
         self.client.logout()
         self.client.login(username='testuser2', password='testpass123')
         response = self.client.post(reverse('account_settings'), {
@@ -283,7 +351,6 @@ class AccountSettingsTests(TestCase):
             'style_preferences': 'user2 style'
         })
         
-        # Verify both profiles exist with correct data
         profile1 = UserProfile.objects.get(user=self.user)
         profile2 = UserProfile.objects.get(user=user2)
         
@@ -291,6 +358,8 @@ class AccountSettingsTests(TestCase):
         self.assertEqual(profile2.bio, 'User 2 bio')
         self.assertNotEqual(profile1.bio, profile2.bio)
 
+
+# ==================== WARDROBE TESTS ====================
 
 class SaveToWardrobeTests(TestCase):
     """Tests for saving catalog items to user's wardrobe"""
@@ -304,7 +373,6 @@ class SaveToWardrobeTests(TestCase):
         )
         self.client = Client()
         
-        # Create a catalog item
         self.catalog_item = Item.objects.create(
             title="Cool Jacket",
             description="A very cool jacket",
@@ -317,7 +385,6 @@ class SaveToWardrobeTests(TestCase):
             reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
         )
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -325,45 +392,34 @@ class SaveToWardrobeTests(TestCase):
         """Test that POST request creates a wardrobe item"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Save item to wardrobe
         response = self.client.post(
             reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
         )
         
-        # Should redirect back to item detail
         self.assertRedirects(response, reverse('item_detail', kwargs={'pk': self.catalog_item.pk}))
         
-        # Verify wardrobe item was created
         wardrobe_item = WardrobeItem.objects.get(user=self.user, catalog_item=self.catalog_item)
         self.assertEqual(wardrobe_item.title, "Cool Jacket")
         self.assertEqual(wardrobe_item.description, "A very cool jacket")
     
     def test_save_to_wardrobe_prevents_duplicates(self):
         """Test that saving the same item twice doesn't create duplicates"""
-        from django.db import transaction
-        
         self.client.login(username='testuser', password='testpass123')
         
-        # Save item first time
         response1 = self.client.post(
             reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
         )
         
-        # Verify it was created
         self.assertEqual(WardrobeItem.objects.filter(user=self.user, catalog_item=self.catalog_item).count(), 1)
         
-        # Try to save again - wrap in atomic to handle the IntegrityError gracefully
         with transaction.atomic():
             response2 = self.client.post(
                 reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
             )
         
-        # Should redirect
         self.assertEqual(response2.status_code, 302)
         
-        # Should still be only one
         self.assertEqual(WardrobeItem.objects.filter(user=self.user, catalog_item=self.catalog_item).count(), 1)
-
     
     def test_save_to_wardrobe_shows_success_message(self):
         """Test that success message is displayed when item is saved"""
@@ -374,7 +430,6 @@ class SaveToWardrobeTests(TestCase):
             follow=True
         )
         
-        # Check for success message
         messages_list = list(response.context['messages'])
         self.assertTrue(any('added to your wardrobe' in str(msg) for msg in messages_list))
     
@@ -382,13 +437,11 @@ class SaveToWardrobeTests(TestCase):
         """Test that GET requests are not allowed"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Try GET request
         response = self.client.get(
             reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk}),
             follow=True
         )
         
-        # Should show error message and not create item
         self.assertEqual(WardrobeItem.objects.filter(user=self.user).count(), 0)
         messages_list = list(response.context['messages'])
         self.assertTrue(any('Invalid request method' in str(msg) for msg in messages_list))
@@ -397,12 +450,10 @@ class SaveToWardrobeTests(TestCase):
         """Test that 404 is returned for non-existent catalog items"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Try to save item that doesn't exist
         response = self.client.post(
             reverse('save_to_wardrobe', kwargs={'item_pk': 99999})
         )
         
-        # Should return 404
         self.assertEqual(response.status_code, 404)
 
 
@@ -418,7 +469,6 @@ class MyWardrobeTests(TestCase):
         )
         self.client = Client()
         
-        # Create some wardrobe items
         self.item1 = WardrobeItem.objects.create(
             user=self.user,
             title="Blue Shirt",
@@ -440,7 +490,6 @@ class MyWardrobeTests(TestCase):
         """Test that unauthenticated users cannot access wardrobe"""
         response = self.client.get(reverse('my_wardrobe'))
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -452,7 +501,6 @@ class MyWardrobeTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'my_wardrobe.html')
         
-        # Check that both items are in the context
         wardrobe_items = response.context['wardrobe_items']
         self.assertEqual(len(wardrobe_items), 2)
         self.assertIn(self.item1, wardrobe_items)
@@ -460,7 +508,6 @@ class MyWardrobeTests(TestCase):
     
     def test_my_wardrobe_only_shows_user_items(self):
         """Test that users only see their own items, not other users' items"""
-        # Create another user with items
         User = get_user_model()
         other_user = User.objects.create_user(
             username='otheruser',
@@ -472,11 +519,9 @@ class MyWardrobeTests(TestCase):
             category="top"
         )
         
-        # Login as test user
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(reverse('my_wardrobe'))
         
-        # Should only see own items
         wardrobe_items = response.context['wardrobe_items']
         self.assertEqual(len(wardrobe_items), 2)
         self.assertNotIn(other_item, wardrobe_items)
@@ -485,7 +530,6 @@ class MyWardrobeTests(TestCase):
         """Test filtering wardrobe items by category"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Filter by 'top' category
         response = self.client.get(reverse('my_wardrobe'), {'category': 'top'})
         
         wardrobe_items = response.context['wardrobe_items']
@@ -496,7 +540,6 @@ class MyWardrobeTests(TestCase):
         """Test searching wardrobe items"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Search for "blue"
         response = self.client.get(reverse('my_wardrobe'), {'search': 'blue'})
         
         wardrobe_items = response.context['wardrobe_items']
@@ -507,12 +550,10 @@ class MyWardrobeTests(TestCase):
         """Test that search works across multiple fields"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Search by brand
         response = self.client.get(reverse('my_wardrobe'), {'search': 'Nike'})
         wardrobe_items = response.context['wardrobe_items']
         self.assertEqual(len(wardrobe_items), 1)
         
-        # Search by color
         response = self.client.get(reverse('my_wardrobe'), {'search': 'black'})
         wardrobe_items = response.context['wardrobe_items']
         self.assertEqual(len(wardrobe_items), 1)
@@ -522,13 +563,11 @@ class MyWardrobeTests(TestCase):
         """Test sorting wardrobe items"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Sort A-Z by title
         response = self.client.get(reverse('my_wardrobe'), {'sort': 'title'})
         wardrobe_items = list(response.context['wardrobe_items'])
-        self.assertEqual(wardrobe_items[0].title, "Black Pants")  # B comes before Bl
+        self.assertEqual(wardrobe_items[0].title, "Black Pants")
         self.assertEqual(wardrobe_items[1].title, "Blue Shirt")
         
-        # Sort Z-A by title
         response = self.client.get(reverse('my_wardrobe'), {'sort': '-title'})
         wardrobe_items = list(response.context['wardrobe_items'])
         self.assertEqual(wardrobe_items[0].title, "Blue Shirt")
@@ -538,7 +577,6 @@ class MyWardrobeTests(TestCase):
         """Test using multiple filters together"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Add more items for testing
         WardrobeItem.objects.create(
             user=self.user,
             title="Blue Jeans",
@@ -546,7 +584,6 @@ class MyWardrobeTests(TestCase):
             color="blue"
         )
         
-        # Filter by category and search
         response = self.client.get(reverse('my_wardrobe'), {
             'category': 'bottom',
             'search': 'blue'
@@ -573,7 +610,6 @@ class AddWardrobeItemTests(TestCase):
         """Test that unauthenticated users cannot add items"""
         response = self.client.get(reverse('add_wardrobe_item'))
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -600,14 +636,12 @@ class AddWardrobeItemTests(TestCase):
             'image_url': 'https://example.com/shirt.jpg'
         })
         
-        # Should redirect to my_wardrobe
         self.assertRedirects(response, reverse('my_wardrobe'))
         
-        # Verify item was created
         item = WardrobeItem.objects.get(title='My New Shirt')
         self.assertEqual(item.user, self.user)
         self.assertEqual(item.category, 'top')
-        self.assertIsNone(item.catalog_item)  # Manual items have no catalog_item
+        self.assertIsNone(item.catalog_item)
     
     def test_add_wardrobe_item_sets_correct_user(self):
         """Test that the item is assigned to the logged-in user"""
@@ -635,7 +669,6 @@ class EditWardrobeItemTests(TestCase):
         )
         self.client = Client()
         
-        # Create a wardrobe item
         self.item = WardrobeItem.objects.create(
             user=self.user,
             title="Original Title",
@@ -649,7 +682,6 @@ class EditWardrobeItemTests(TestCase):
             reverse('edit_wardrobe_item', kwargs={'item_pk': self.item.pk})
         )
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -680,10 +712,8 @@ class EditWardrobeItemTests(TestCase):
             }
         )
         
-        # Should redirect to my_wardrobe
         self.assertRedirects(response, reverse('my_wardrobe'))
         
-        # Verify item was updated
         self.item.refresh_from_db()
         self.assertEqual(self.item.title, 'Updated Title')
         self.assertEqual(self.item.description, 'Updated description')
@@ -691,27 +721,23 @@ class EditWardrobeItemTests(TestCase):
     
     def test_edit_wardrobe_item_user_can_only_edit_own_items(self):
         """Test that users can only edit their own items"""
-        # Create another user
         User = get_user_model()
         other_user = User.objects.create_user(
             username='otheruser',
             password='otherpass123'
         )
         
-        # Create item for other user
         other_item = WardrobeItem.objects.create(
             user=other_user,
             title="Other User's Item",
             category="top"
         )
         
-        # Login as test user and try to edit other user's item
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(
             reverse('edit_wardrobe_item', kwargs={'item_pk': other_item.pk})
         )
         
-        # Should return 404 (item not found for this user)
         self.assertEqual(response.status_code, 404)
     
     def test_edit_wardrobe_item_shows_success_message(self):
@@ -728,7 +754,6 @@ class EditWardrobeItemTests(TestCase):
             follow=True
         )
         
-        # Check for success message
         messages_list = list(response.context['messages'])
         self.assertTrue(any('updated' in str(msg).lower() for msg in messages_list))
 
@@ -745,7 +770,6 @@ class DeleteWardrobeItemTests(TestCase):
         )
         self.client = Client()
         
-        # Create a wardrobe item
         self.item = WardrobeItem.objects.create(
             user=self.user,
             title="Item to Delete",
@@ -758,7 +782,6 @@ class DeleteWardrobeItemTests(TestCase):
             reverse('delete_wardrobe_item', kwargs={'item_pk': self.item.pk})
         )
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -777,23 +800,18 @@ class DeleteWardrobeItemTests(TestCase):
         """Test that POST request deletes the item"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Verify item exists
         self.assertTrue(WardrobeItem.objects.filter(pk=self.item.pk).exists())
         
-        # Delete the item
         response = self.client.post(
             reverse('delete_wardrobe_item', kwargs={'item_pk': self.item.pk})
         )
         
-        # Should redirect to my_wardrobe
         self.assertRedirects(response, reverse('my_wardrobe'))
         
-        # Verify item was deleted
         self.assertFalse(WardrobeItem.objects.filter(pk=self.item.pk).exists())
     
     def test_delete_wardrobe_item_user_can_only_delete_own_items(self):
         """Test that users can only delete their own items"""
-        # Create another user with an item
         User = get_user_model()
         other_user = User.objects.create_user(
             username='otheruser',
@@ -805,16 +823,13 @@ class DeleteWardrobeItemTests(TestCase):
             category="top"
         )
         
-        # Login as test user and try to delete other user's item
         self.client.login(username='testuser', password='testpass123')
         response = self.client.post(
             reverse('delete_wardrobe_item', kwargs={'item_pk': other_item.pk})
         )
         
-        # Should return 404
         self.assertEqual(response.status_code, 404)
         
-        # Verify item was NOT deleted
         self.assertTrue(WardrobeItem.objects.filter(pk=other_item.pk).exists())
     
     def test_delete_wardrobe_item_shows_success_message(self):
@@ -827,11 +842,12 @@ class DeleteWardrobeItemTests(TestCase):
             follow=True
         )
         
-        # Check for success message
         messages_list = list(response.context['messages'])
         self.assertTrue(any('removed from your wardrobe' in str(msg) for msg in messages_list))
         self.assertTrue(any(item_title in str(msg) for msg in messages_list))
 
+
+# ==================== OUTFIT TESTS ====================
 
 class CreateOutfitTests(TestCase):
     """Tests for creating outfits"""
@@ -845,7 +861,6 @@ class CreateOutfitTests(TestCase):
         )
         self.client = Client()
         
-        # Create some wardrobe items to use in outfits
         self.item1 = WardrobeItem.objects.create(
             user=self.user,
             title="Shirt",
@@ -861,7 +876,6 @@ class CreateOutfitTests(TestCase):
         """Test that unauthenticated users cannot create outfits"""
         response = self.client.get(reverse('create_outfit'))
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -897,10 +911,8 @@ class CreateOutfitTests(TestCase):
             'season': 'all'
         })
         
-        # Should redirect to my_outfits
         self.assertRedirects(response, reverse('my_outfits'))
         
-        # Verify outfit was created
         outfit = Outfit.objects.get(name='Casual Friday')
         self.assertEqual(outfit.user, self.user)
         self.assertEqual(outfit.items.count(), 2)
@@ -930,13 +942,12 @@ class CreateOutfitTests(TestCase):
             'items': [self.item1.pk]
         }, follow=True)
         
-        # Check for success message
         messages_list = list(response.context['messages'])
         self.assertTrue(any('created successfully' in str(msg) for msg in messages_list))
 
 
 class MyOutfitsTests(TestCase):
-    """Tests for viewing user's outfits"""
+    """Tests for viewing user's outfits with search and filtering"""
     
     def setUp(self):
         """Set up test fixtures"""
@@ -947,18 +958,18 @@ class MyOutfitsTests(TestCase):
         )
         self.client = Client()
         
-        # Create wardrobe items
         self.item1 = WardrobeItem.objects.create(
             user=self.user,
             title="Shirt",
             category="top"
         )
         
-        # Create outfits
         self.outfit1 = Outfit.objects.create(
             user=self.user,
             name="Casual Look",
-            description="For everyday wear"
+            description="For everyday wear",
+            occasion="casual",
+            season="summer"
         )
         self.outfit1.items.add(self.item1)
         
@@ -966,6 +977,8 @@ class MyOutfitsTests(TestCase):
             user=self.user,
             name="Formal Look",
             description="For special occasions",
+            occasion="formal",
+            season="winter",
             is_favorite=True
         )
     
@@ -973,7 +986,6 @@ class MyOutfitsTests(TestCase):
         """Test that unauthenticated users cannot view outfits"""
         response = self.client.get(reverse('my_outfits'))
         
-        # Should redirect to login
         self.assertEqual(response.status_code, 302)
         self.assertIn('login', response.url)
     
@@ -992,7 +1004,6 @@ class MyOutfitsTests(TestCase):
     
     def test_my_outfits_only_shows_user_outfits(self):
         """Test that users only see their own outfits"""
-        # Create another user with an outfit
         User = get_user_model()
         other_user = User.objects.create_user(
             username='otheruser',
@@ -1003,7 +1014,6 @@ class MyOutfitsTests(TestCase):
             name="Other User's Outfit"
         )
         
-        # Login as test user
         self.client.login(username='testuser', password='testpass123')
         response = self.client.get(reverse('my_outfits'))
         
@@ -1011,20 +1021,53 @@ class MyOutfitsTests(TestCase):
         self.assertEqual(len(outfits), 2)
         self.assertNotIn(other_outfit, outfits)
     
-    def test_my_outfits_ordering(self):
-        """Test that outfits are ordered correctly (favorites first, then newest)"""
+    def test_my_outfits_search_functionality(self):
+        """Test searching outfits by name or description"""
         self.client.login(username='testuser', password='testpass123')
-        response = self.client.get(reverse('my_outfits'))
         
+        response = self.client.get(reverse('my_outfits'), {'search': 'Casual'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Casual Look")
+    
+    def test_my_outfits_search_in_description(self):
+        """Test that search works in description field"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'search': 'everyday'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Casual Look")
+    
+    def test_my_outfits_sort_by_name(self):
+        """Test sorting outfits by name"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'sort': 'name'})
         outfits = list(response.context['outfits'])
+        self.assertEqual(outfits[0].name, "Casual Look")
+        self.assertEqual(outfits[1].name, "Formal Look")
         
-        # Favorite outfit should come first
-        self.assertEqual(outfits[0], self.outfit2)
+        response = self.client.get(reverse('my_outfits'), {'sort': '-name'})
+        outfits = list(response.context['outfits'])
+        self.assertEqual(outfits[0].name, "Formal Look")
+        self.assertEqual(outfits[1].name, "Casual Look")
+    
+    def test_my_outfits_favorites_filter(self):
+        """Test filtering to show only favorites"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'favorites': 'true'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
         self.assertTrue(outfits[0].is_favorite)
 
 
-class ItemDetailWithWardrobeTests(TestCase):
-    """Tests for item detail view with wardrobe integration"""
+class SmartCollectionsTests(TestCase):
+    """Tests for smart collection filtering"""
     
     def setUp(self):
         """Set up test fixtures"""
@@ -1035,49 +1078,555 @@ class ItemDetailWithWardrobeTests(TestCase):
         )
         self.client = Client()
         
-        # Create catalog items
-        self.item = Item.objects.create(
-            title="Test Item",
-            description="Test description",
-            image_url="https://example.com/item.jpg"
-        )
+        Outfit.objects.create(user=self.user, name="Summer Casual", season="summer", occasion="casual")
+        Outfit.objects.create(user=self.user, name="Winter Formal", season="winter", occasion="formal")
+        Outfit.objects.create(user=self.user, name="Work Outfit", occasion="business")
+        Outfit.objects.create(user=self.user, name="Date Night", occasion="date", is_favorite=True)
+        
+        self.recent_outfit = Outfit.objects.create(user=self.user, name="Recent Outfit")
+        
+        old_outfit = Outfit.objects.create(user=self.user, name="Old Outfit")
+        old_outfit.created_at = timezone.now() - timedelta(days=31)
+        old_outfit.save()
+        
+        item = WardrobeItem.objects.create(user=self.user, title="Shirt", category="top")
+        incomplete = Outfit.objects.create(user=self.user, name="Incomplete")
+        incomplete.items.add(item)
     
-    def test_item_detail_shows_already_saved_status(self):
-        """Test that item detail shows if item is already in wardrobe"""
+    def test_favorites_collection(self):
+        """Test favorites collection filter"""
         self.client.login(username='testuser', password='testpass123')
         
-        # Save item to wardrobe
-        WardrobeItem.objects.create(
-            user=self.user,
-            title=self.item.title,
-            catalog_item=self.item,
-            category='other'
-        )
+        response = self.client.get(reverse('my_outfits'), {'collection': 'favorites'})
         
-        # View item detail
-        response = self.client.get(reverse('item_detail', kwargs={'pk': self.item.pk}))
-        
-        # Should indicate item is already saved
-        self.assertTrue(response.context['already_saved'])
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Date Night")
     
-    def test_item_detail_shows_not_saved_status(self):
-        """Test that item detail shows if item is not yet in wardrobe"""
+    def test_summer_collection(self):
+        """Test summer season collection filter"""
         self.client.login(username='testuser', password='testpass123')
         
-        # View item detail without saving
-        response = self.client.get(reverse('item_detail', kwargs={'pk': self.item.pk}))
+        response = self.client.get(reverse('my_outfits'), {'collection': 'summer'})
         
-        # Should indicate item is not saved
-        self.assertFalse(response.context['already_saved'])
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Summer Casual")
     
-    def test_item_detail_unauthenticated_no_save_status(self):
-        """Test that unauthenticated users see appropriate state"""
-        # Don't login
-        response = self.client.get(reverse('item_detail', kwargs={'pk': self.item.pk}))
+    def test_winter_collection(self):
+        """Test winter season collection filter"""
+        self.client.login(username='testuser', password='testpass123')
         
-        # Should not show as saved for anonymous users
-        self.assertFalse(response.context['already_saved'])
+        response = self.client.get(reverse('my_outfits'), {'collection': 'winter'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Winter Formal")
+    
+    def test_casual_collection(self):
+        """Test casual occasion collection filter"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'collection': 'casual'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Summer Casual")
+    
+    def test_work_collection(self):
+        """Test work/business occasion collection filter"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'collection': 'work'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Work Outfit")
+    
+    def test_date_collection(self):
+        """Test date night occasion collection filter"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'collection': 'date'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Date Night")
+    
+    def test_formal_collection(self):
+        """Test formal occasion collection filter"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'collection': 'formal'})
+        
+        outfits = response.context['outfits']
+        self.assertEqual(len(outfits), 1)
+        self.assertEqual(outfits[0].name, "Winter Formal")
+    
+    def test_recent_collection(self):
+        """Test recent collection (last 30 days)"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'collection': 'recent'})
+        
+        outfits = response.context['outfits']
+        self.assertGreaterEqual(len(outfits), 6)
+        self.assertIn(self.recent_outfit, outfits)
+    
+    def test_incomplete_collection(self):
+        """Test incomplete collection (less than 3 items)"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'), {'collection': 'incomplete'})
+        
+        outfits = response.context['outfits']
+        self.assertGreaterEqual(len(outfits), 1)
+        self.assertTrue(any(o.name == "Incomplete" for o in outfits))
+    
+    def test_collection_counts_in_context(self):
+        """Test that collection counts are provided in context"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('my_outfits'))
+        
+        collection_counts = response.context['collection_counts']
+        
+        self.assertIn('favorites', collection_counts)
+        self.assertIn('summer', collection_counts)
+        self.assertIn('winter', collection_counts)
+        self.assertIn('casual', collection_counts)
+        self.assertIn('work', collection_counts)
+        self.assertIn('date', collection_counts)
+        self.assertIn('formal', collection_counts)
+        self.assertIn('recent', collection_counts)
+        self.assertIn('incomplete', collection_counts)
+        
+        self.assertEqual(collection_counts['favorites'], 1)
+        self.assertEqual(collection_counts['summer'], 1)
+        self.assertEqual(collection_counts['winter'], 1)
 
+
+class OutfitDetailTests(TestCase):
+    """Tests for outfit detail view"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.item1 = WardrobeItem.objects.create(
+            user=self.user,
+            title="Shirt",
+            category="top"
+        )
+        
+        self.outfit = Outfit.objects.create(
+            user=self.user,
+            name="Test Outfit",
+            description="Test description",
+            occasion="casual",
+            season="summer"
+        )
+        self.outfit.items.add(self.item1)
+    
+    def test_outfit_detail_requires_authentication(self):
+        """Test that unauthenticated users cannot view outfit details"""
+        response = self.client.get(
+            reverse('outfit_detail', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+    
+    def test_outfit_detail_displays_outfit(self):
+        """Test that outfit detail page displays correct information"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(
+            reverse('outfit_detail', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'outfit_detail.html')
+        self.assertEqual(response.context['outfit'], self.outfit)
+        self.assertContains(response, "Test Outfit")
+        self.assertContains(response, "Test description")
+    
+    def test_outfit_detail_user_can_only_view_own_outfits(self):
+        """Test that users can only view their own outfits"""
+        User = get_user_model()
+        other_user = User.objects.create_user(
+            username='otheruser',
+            password='otherpass123'
+        )
+        
+        other_outfit = Outfit.objects.create(
+            user=other_user,
+            name="Other User's Outfit"
+        )
+        
+        self.client.login(username='testuser', password='testpass123')
+        response = self.client.get(
+            reverse('outfit_detail', kwargs={'outfit_pk': other_outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 404)
+
+
+class EditOutfitTests(TestCase):
+    """Tests for editing outfits"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.item1 = WardrobeItem.objects.create(
+            user=self.user,
+            title="Shirt",
+            category="top"
+        )
+        self.item2 = WardrobeItem.objects.create(
+            user=self.user,
+            title="Pants",
+            category="bottom"
+        )
+        
+        self.outfit = Outfit.objects.create(
+            user=self.user,
+            name="Original Name",
+            description="Original description"
+        )
+        self.outfit.items.add(self.item1)
+    
+    def test_edit_outfit_requires_authentication(self):
+        """Test that unauthenticated users cannot edit outfits"""
+        response = self.client.get(
+            reverse('edit_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+    
+    def test_edit_outfit_get_displays_form(self):
+        """Test that GET request displays edit form with existing data"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(
+            reverse('edit_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'edit_outfit.html')
+        self.assertEqual(response.context['outfit'], self.outfit)
+        self.assertEqual(response.context['mode'], 'edit')
+    
+    def test_edit_outfit_post_updates_outfit(self):
+        """Test that POST request updates the outfit"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.post(
+            reverse('edit_outfit', kwargs={'outfit_pk': self.outfit.pk}),
+            {
+                'name': 'Updated Name',
+                'description': 'Updated description',
+                'items': [self.item1.pk, self.item2.pk],
+                'occasion': 'formal',
+                'season': 'winter'
+            }
+        )
+        
+        self.assertRedirects(
+            response,
+            reverse('outfit_detail', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.outfit.refresh_from_db()
+        self.assertEqual(self.outfit.name, 'Updated Name')
+        self.assertEqual(self.outfit.description, 'Updated description')
+        self.assertEqual(self.outfit.items.count(), 2)
+
+
+class DeleteOutfitTests(TestCase):
+    """Tests for deleting outfits"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.outfit = Outfit.objects.create(
+            user=self.user,
+            name="Outfit to Delete"
+        )
+    
+    def test_delete_outfit_requires_authentication(self):
+        """Test that unauthenticated users cannot delete outfits"""
+        response = self.client.post(
+            reverse('delete_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+    
+    def test_delete_outfit_get_shows_confirmation(self):
+        """Test that GET request shows confirmation page"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(
+            reverse('delete_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'confirm_delete_outfit.html')
+        self.assertEqual(response.context['outfit'], self.outfit)
+    
+    def test_delete_outfit_post_deletes_outfit(self):
+        """Test that POST request deletes the outfit"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        self.assertTrue(Outfit.objects.filter(pk=self.outfit.pk).exists())
+        
+        response = self.client.post(
+            reverse('delete_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertRedirects(response, reverse('my_outfits'))
+        self.assertFalse(Outfit.objects.filter(pk=self.outfit.pk).exists())
+
+
+# ==================== QUICK ACTIONS TESTS ====================
+
+class ToggleFavoriteTests(TestCase):
+    """Tests for toggling outfit favorite status (AJAX)"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.outfit = Outfit.objects.create(
+            user=self.user,
+            name="Test Outfit",
+            is_favorite=False
+        )
+    
+    def test_toggle_favorite_requires_authentication(self):
+        """Test that unauthenticated users cannot toggle favorites"""
+        response = self.client.post(
+            reverse('toggle_outfit_favorite', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+    
+    def test_toggle_favorite_only_accepts_post(self):
+        """Test that only POST requests are accepted"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(
+            reverse('toggle_outfit_favorite', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 405)
+    
+    def test_toggle_favorite_makes_favorite(self):
+        """Test toggling from not favorite to favorite"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.post(
+            reverse('toggle_outfit_favorite', kwargs={'outfit_pk': self.outfit.pk}),
+            content_type='application/json'
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue(data['is_favorite'])
+        
+        self.outfit.refresh_from_db()
+        self.assertTrue(self.outfit.is_favorite)
+    
+    def test_toggle_favorite_removes_favorite(self):
+        """Test toggling from favorite to not favorite"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        self.outfit.is_favorite = True
+        self.outfit.save()
+        
+        response = self.client.post(
+            reverse('toggle_outfit_favorite', kwargs={'outfit_pk': self.outfit.pk}),
+            content_type='application/json'
+        )
+        
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertFalse(data['is_favorite'])
+        
+        self.outfit.refresh_from_db()
+        self.assertFalse(self.outfit.is_favorite)
+
+
+class DuplicateOutfitTests(TestCase):
+    """Tests for duplicating outfits"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.item1 = WardrobeItem.objects.create(
+            user=self.user,
+            title="Shirt",
+            category="top"
+        )
+        
+        self.outfit = Outfit.objects.create(
+            user=self.user,
+            name="Original Outfit",
+            description="Original description",
+            is_favorite=True
+        )
+        self.outfit.items.add(self.item1)
+    
+    def test_duplicate_outfit_requires_authentication(self):
+        """Test that unauthenticated users cannot duplicate outfits"""
+        response = self.client.post(
+            reverse('duplicate_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+    
+    def test_duplicate_outfit_creates_copy(self):
+        """Test that duplicating creates a new outfit with (Copy) suffix"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.post(
+            reverse('duplicate_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        self.assertEqual(Outfit.objects.filter(user=self.user).count(), 2)
+        
+        duplicate = Outfit.objects.get(name="Original Outfit (Copy)")
+        self.assertEqual(duplicate.description, "Original description")
+        self.assertEqual(duplicate.items.count(), 1)
+        self.assertIn(self.item1, duplicate.items.all())
+        
+        self.assertFalse(duplicate.is_favorite)
+    
+    def test_duplicate_outfit_redirects_to_detail(self):
+        """Test that after duplication, user is redirected to new outfit detail"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.post(
+            reverse('duplicate_outfit', kwargs={'outfit_pk': self.outfit.pk})
+        )
+        
+        duplicate = Outfit.objects.get(name="Original Outfit (Copy)")
+        self.assertRedirects(
+            response,
+            reverse('outfit_detail', kwargs={'outfit_pk': duplicate.pk})
+        )
+
+
+class QuickAddToOutfitTests(TestCase):
+    """Tests for quick add wardrobe item to outfit"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.item = WardrobeItem.objects.create(
+            user=self.user,
+            title="Shirt",
+            category="top"
+        )
+        
+        self.outfit = Outfit.objects.create(
+            user=self.user,
+            name="Test Outfit"
+        )
+    
+    def test_quick_add_requires_authentication(self):
+        """Test that unauthenticated users cannot quick add"""
+        response = self.client.get(
+            reverse('quick_add_to_outfit', kwargs={'item_pk': self.item.pk})
+        )
+        
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response.url)
+    
+    def test_quick_add_get_displays_outfit_list(self):
+        """Test that GET request displays list of outfits"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(
+            reverse('quick_add_to_outfit', kwargs={'item_pk': self.item.pk})
+        )
+        
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'quick_add_to_outfit.html')
+        self.assertEqual(response.context['wardrobe_item'], self.item)
+        self.assertIn(self.outfit, response.context['outfits'])
+    
+    def test_quick_add_post_adds_item_to_outfit(self):
+        """Test that POST request adds item to selected outfit"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.post(
+            reverse('quick_add_to_outfit', kwargs={'item_pk': self.item.pk}),
+            {'outfit_id': self.outfit.pk}
+        )
+        
+        self.assertRedirects(response, reverse('my_wardrobe'))
+        
+        self.outfit.refresh_from_db()
+        self.assertIn(self.item, self.outfit.items.all())
+    
+    def test_quick_add_prevents_duplicate_additions(self):
+        """Test that adding same item twice shows info message"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        self.outfit.items.add(self.item)
+        
+        response = self.client.post(
+            reverse('quick_add_to_outfit', kwargs={'item_pk': self.item.pk}),
+            {'outfit_id': self.outfit.pk},
+            follow=True
+        )
+        
+        messages_list = list(response.context['messages'])
+        self.assertTrue(any('already in' in str(msg) for msg in messages_list))
+
+
+# ==================== MODEL TESTS ====================
 
 class WardrobeModelTests(TestCase):
     """Tests for WardrobeItem model constraints and behavior"""
@@ -1107,7 +1656,6 @@ class WardrobeModelTests(TestCase):
     
     def test_wardrobe_item_unique_together_constraint(self):
         """Test that unique_together constraint prevents duplicate saves"""
-        # Create first wardrobe item
         WardrobeItem.objects.create(
             user=self.user,
             title="First Save",
@@ -1115,7 +1663,6 @@ class WardrobeModelTests(TestCase):
             category="top"
         )
         
-        # Try to create duplicate
         with self.assertRaises(IntegrityError):
             WardrobeItem.objects.create(
                 user=self.user,
@@ -1132,7 +1679,6 @@ class WardrobeModelTests(TestCase):
             password='testpass123'
         )
         
-        # Both users save the same catalog item
         item1 = WardrobeItem.objects.create(
             user=self.user,
             title="User 1 Save",
@@ -1147,7 +1693,6 @@ class WardrobeModelTests(TestCase):
             category="top"
         )
         
-        # Both should exist
         self.assertIsNotNone(item1.pk)
         self.assertIsNotNone(item2.pk)
     
@@ -1157,7 +1702,7 @@ class WardrobeModelTests(TestCase):
             user=self.user,
             title="Manual Item",
             category="top",
-            catalog_item=None  # No associated catalog item
+            catalog_item=None
         )
         
         self.assertIsNone(item.catalog_item)
@@ -1207,7 +1752,6 @@ class OutfitModelTests(TestCase):
             name="Casual Look"
         )
         
-        # Try to create another outfit with same name
         with self.assertRaises(IntegrityError):
             Outfit.objects.create(
                 user=self.user,
@@ -1232,7 +1776,6 @@ class OutfitModelTests(TestCase):
             name="Casual Look"
         )
         
-        # Both should exist
         self.assertIsNotNone(outfit1.pk)
         self.assertIsNotNone(outfit2.pk)
     
@@ -1255,7 +1798,56 @@ class OutfitModelTests(TestCase):
         self.assertIn(item2, outfit.items.all())
 
 
-# Integration tests that test multiple components working together
+# ==================== INTEGRATION TESTS ====================
+
+class ItemDetailWithWardrobeTests(TestCase):
+    """Tests for item detail view with wardrobe integration"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.item = Item.objects.create(
+            title="Test Item",
+            description="Test description",
+            image_url="https://example.com/item.jpg"
+        )
+    
+    def test_item_detail_shows_already_saved_status(self):
+        """Test that item detail shows if item is already in wardrobe"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        WardrobeItem.objects.create(
+            user=self.user,
+            title=self.item.title,
+            catalog_item=self.item,
+            category='other'
+        )
+        
+        response = self.client.get(reverse('item_detail', kwargs={'pk': self.item.pk}))
+        
+        self.assertTrue(response.context['already_saved'])
+    
+    def test_item_detail_shows_not_saved_status(self):
+        """Test that item detail shows if item is not yet in wardrobe"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        response = self.client.get(reverse('item_detail', kwargs={'pk': self.item.pk}))
+        
+        self.assertFalse(response.context['already_saved'])
+    
+    def test_item_detail_unauthenticated_no_save_status(self):
+        """Test that unauthenticated users see appropriate state"""
+        response = self.client.get(reverse('item_detail', kwargs={'pk': self.item.pk}))
+        
+        self.assertFalse(response.context['already_saved'])
+
+
 class WardrobeIntegrationTests(TestCase):
     """Integration tests for wardrobe workflow"""
     
@@ -1268,7 +1860,6 @@ class WardrobeIntegrationTests(TestCase):
         )
         self.client = Client()
         
-        # Create catalog item
         self.catalog_item = Item.objects.create(
             title="Catalog Shirt",
             description="A nice shirt from the catalog",
@@ -1365,3 +1956,56 @@ class OutfitIntegrationTests(TestCase):
         outfit = response.context['outfits'][0]
         self.assertEqual(outfit.name, 'Work Outfit')
         self.assertEqual(outfit.items.count(), 2)
+
+
+class CompleteWorkflowTests(TestCase):
+    """Integration tests for complete user workflows"""
+    
+    def setUp(self):
+        """Set up test fixtures"""
+        User = get_user_model()
+        self.user = User.objects.create_user(
+            username='testuser',
+            password='testpass123'
+        )
+        self.client = Client()
+        
+        self.catalog_item = Item.objects.create(
+            title="Catalog Shirt",
+            description="A nice shirt",
+            image_url="https://example.com/shirt.jpg"
+        )
+    
+    def test_complete_outfit_creation_workflow(self):
+        """Test complete workflow from browsing catalog to creating outfit"""
+        self.client.login(username='testuser', password='testpass123')
+        
+        # 1. Save catalog item to wardrobe
+        self.client.post(
+            reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
+        )
+        
+        # 2. Verify item in wardrobe
+        response = self.client.get(reverse('my_wardrobe'))
+        self.assertEqual(len(response.context['wardrobe_items']), 1)
+        
+        # 3. Create outfit with wardrobe item
+        item = WardrobeItem.objects.get(user=self.user)
+        response = self.client.post(reverse('create_outfit'), {
+            'name': 'New Outfit',
+            'description': 'Test outfit',
+            'items': [item.pk],
+            'occasion': 'casual'
+        })
+        
+        # 4. Verify outfit was created
+        outfit = Outfit.objects.get(user=self.user)
+        self.assertEqual(outfit.name, 'New Outfit')
+        self.assertIn(item, outfit.items.all())
+        
+        # 5. View outfit detail
+        response = self.client.get(
+            reverse('outfit_detail', kwargs={'outfit_pk': outfit.pk})
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'New Outfit')
