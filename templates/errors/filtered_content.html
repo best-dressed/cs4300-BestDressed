@@ -1,0 +1,14 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block title %}Filtered Content · Best Dressed{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="display-6 fw-bold text-danger mb-4">Content Filtered</h1>
+  <p class="text-muted mb-4">No post was made because the content was filtered by our filtering algorithm.</p>
+  <button onclick="window.history.back()" class="btn btn-outline-secondary">
+    Go Back
+  </button>
+</div>
+{% endblock %}
