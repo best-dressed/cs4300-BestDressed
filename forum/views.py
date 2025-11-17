@@ -107,7 +107,7 @@ def thread_detail(request, thread_id):
 @login_required
 def post_edit(request, post_id):
     post = get_object_or_404(Post, id=post_id)
-    # only author or staff can delete
+    # only author or staff can edit
     if not (request.user == post.user or request.user.is_staff):
         return redirect('thread_detail', thread_id=post.thread.id)
 
