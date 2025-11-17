@@ -19,8 +19,15 @@ class Item(models.Model):
 
     # for main item listing so everything is more clean with user-added data
     short_description = models.CharField(max_length=75, default="")
-    image_url = models.URLField(max_length=2000, default="")
+    # 5000 is kind of insane but for some reason a lot of google image urls are >2000 length so goin with it
+    image_url = models.URLField(max_length=5000, default="")
     tag = models.CharField(max_length=20, choices=ITEM_TAG_CHOICES, default="")
+
+    # ebay ID For market delete and duplicate checking
+    item_id = models.CharField(max_length=200, unique=True, null=True, blank=True)
+    # blank = true allows these to be blank in forms, as we support non ebay items too.
+    item_ebay_url = models.URLField(blank=True, null=True)
+    seller_id = models.CharField(max_length=200, null=True, blank=True)
 
     # make it so short description created automatically from description
     def save(self, *args, **kwargs):
@@ -202,3 +209,54 @@ class Outfit(models.Model):
     def item_count(self):
         """Helper method to get the number of items in this outfit"""
         return self.items.count()
+
+
+class SavedRecommendation(models.Model):
+    """
+    Represents a saved AI recommendation for a user.
+    
+    Users receive AI-generated fashion recommendations based on their prompts.
+    This model stores the history of these recommendations for later reference.
+    """
+    
+    # Foreign Key: links this recommendation to a specific user
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_recommendations')
+    
+    # The user's prompt/request that generated this recommendation
+    prompt = models.TextField(max_length=1000, help_text="User's request for recommendations")
+    
+    # The AI-generated recommendation text
+    ai_response = models.TextField(help_text="AI-generated fashion recommendations")
+    
+    # ManyToMany relationship: track which catalog items were recommended
+    recommended_items = models.ManyToManyField(
+        Item,
+        related_name='recommendations',
+        blank=True,
+        help_text="Catalog items that were recommended to the user"
+    )
+    
+    # Automatic timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        # Default ordering: newest recommendations first
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.prompt[:50]}... ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def item_count(self):
+        """Helper method to get the number of recommended items"""
+        return self.recommended_items.count()
+
+# For hiding items from user's particular view in item listing
+class HiddenItem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hidden_items")
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="hidden_by_users")
+
+    class Meta:
+        unique_together = [["user", "item"]]  # prevent duplicates
+
+    def __str__(self):
+        return f"{self.user.username} hid {self.item.title}"
