@@ -39,12 +39,12 @@ class ForumTests(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, self.thread.title)
 
-    # def test_thread_detail_shows_thread_content_and_post(self):
-    #    url = reverse('thread_detail', kwargs={'thread_id': self.thread.id})
-    #    resp = self.client.get(url)
-    #    self.assertEqual(resp.status_code, 302)
-    #    self.assertContains(resp, "Thread body")
-    #    self.assertContains(resp, "Original reply")
+    def test_thread_detail_shows_thread_content_and_post(self):
+        url = reverse('thread_detail', kwargs={'thread_id': self.thread.id})
+        resp = self.client.get(url)
+        self.assertEqual(resp.status_code, 302)
+        self.assertContains(resp, "Thread body")
+        self.assertContains(resp, "Original reply")
 
     # ---- Reply creation ----
     def test_post_reply_requires_login(self):
