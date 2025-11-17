@@ -1,13 +1,16 @@
 {% extends "main.html" %}
 
 {% block content %}
+{% extends "main.html" %}
+
+{% block content %}
 <div class="container mt-4">
   <div class="alert alert-danger" role="alert">
     <h4 class="alert-heading">Invalid Post</h4>
     <p>The post you tried to submit is not allowed or contains invalid content.</p>
     <hr>
     <p class="mb-0">
-      <a href="{% url 'forum:index' %}" class="btn btn-primary">Return to Forum</a>
+      <button class="btn btn-secondary" onclick="window.history.back()">Go Back</button>
     </p>
   </div>
 </div>

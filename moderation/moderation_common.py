@@ -73,7 +73,6 @@ def not_ip_banned_generator(*, check=lambda request: True):
             user_ip = get_client_ip(request)
             bans = BannedIP.objects.filter(ip_address=user_ip)
 
-            print(user_ip)
             # If the request is relevant and user has active bans
             if check(request) and any(ban.is_active() for ban in bans):
                 # Redirect to your IP ban page

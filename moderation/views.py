@@ -28,4 +28,4 @@ def invalid_post(request):
     """
     Display an error page when a post is invalid.
     """
-    return render(request, "invalid_post.html")
+    return render(request, "errors/invalid_post.html")
