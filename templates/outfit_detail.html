@@ -4,67 +4,225 @@
 {% block title %}{{ outfit.name }} · Best Dressed{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="display-6 fw-bold">
-        {{ outfit.name }}
-        {% if outfit.is_favorite %}
-        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="gold" class="bi bi-star-fill" viewBox="0 0 16 16">
-          <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
-        </svg>
-        {% endif %}
-      </h1>
-      
-      <!-- Badges -->
-      <div class="mb-2">
-        {% if outfit.occasion %}
-          <span class="badge bg-primary">{{ outfit.get_occasion_display }}</span>
-        {% endif %}
-        {% if outfit.season %}
-          <span class="badge bg-info">{{ outfit.get_season_display }}</span>
-        {% endif %}
-      </div>
-      
-      {% if outfit.description %}
-        <p class="text-muted">{{ outfit.description }}</p>
-      {% endif %}
-      
-      <p class="text-muted small">Created {{ outfit.created_at|date:"F d, Y" }}</p>
-    </div>
-    
-    <div class="d-flex gap-2">
-      <a href="{% url 'edit_outfit' outfit_pk=outfit.pk %}" class="btn btn-outline-primary">Edit</a>
-      <a href="{% url 'my_outfits' %}" class="btn btn-outline-secondary">Back to Outfits</a>
-    </div>
-  </div>
-
-  <!-- Items Display -->
-  <h3 class="mb-3">Items in This Outfit ({{ outfit.item_count }})</h3>
-  
-  {% if outfit.items.all %}
-    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-      {% for item in outfit.items.all %}
-      <div class="col">
-        <div class="card h-100 border-0 shadow-sm">
-          <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" 
-               style="height: 200px; object-fit: cover;">
-          <div class="card-body">
-            <span class="badge bg-secondary mb-2">{{ item.get_category_display }}</span>
-            <h6 class="card-title">{{ item.title }}</h6>
-            {% if item.brand %}
-              <p class="small text-muted mb-0">{{ item.brand }}</p>
+<div class="clean-glass-outfit-detail">
+  <div class="container py-5">
+    {% include 'includes/messages.html' %}
+    <!-- Header -->
+    <div class="glass-card-simple p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="flex-grow-1">
+          <h1 class="display-6 fw-bold text-white mb-2">
+            {{ outfit.name }}
+            {% if outfit.is_favorite %}
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="gold" class="bi bi-star-fill ms-2" viewBox="0 0 16 16">
+              <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
+            </svg>
+            {% endif %}
+          </h1>
+          
+          <!-- Badges -->
+          <div class="mb-3">
+            {% if outfit.occasion %}
+              <span class="simple-badge">{{ outfit.get_occasion_display }}</span>
+            {% endif %}
+            {% if outfit.season %}
+              <span class="simple-badge ms-2">{{ outfit.get_season_display }}</span>
             {% endif %}
           </div>
+          
+          {% if outfit.description %}
+            <p class="text-white-50 mb-2">{{ outfit.description }}</p>
+          {% endif %}
+          
+          <p class="text-white-50 small mb-0">Created {{ outfit.created_at|date:"F d, Y" }}</p>
         </div>
       </div>
-      {% endfor %}
+      
+      <!-- Action Buttons -->
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'edit_outfit' outfit_pk=outfit.pk %}" class="btn-clean-glass btn-fixed">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil me-1" viewBox="0 0 16 16">
+            <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
+          </svg>
+          Edit
+        </a>
+        
+        <form method="post" action="{% url 'duplicate_outfit' outfit_pk=outfit.pk %}" class="d-inline-block">
+          {% csrf_token %}
+          <button type="submit" class="btn-clean-glass btn-fixed">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-files me-1" viewBox="0 0 16 16">
+              <path d="M13 0H6a2 2 0 0 0-2 2 2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2 2 2 0 0 0 2-2V2a2 2 0 0 0-2-2m0 13V4a2 2 0 0 0-2-2H5a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1M3 4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/>
+            </svg>
+            Duplicate
+          </button>
+        </form>
+        
+        <a href="{% url 'my_outfits' %}" class="btn-clean-glass-secondary btn-fixed ms-auto">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+          </svg>
+          Back to Outfits
+        </a>
+      </div>
     </div>
-  {% else %}
-    <div class="alert alert-info">
-      This outfit doesn't have any items yet. <a href="{% url 'edit_outfit' outfit_pk=outfit.pk %}">Add items</a> to complete it!
+
+    <!-- Items Display -->
+    <div class="glass-card-simple p-4">
+      <h3 class="text-white mb-4">Items in This Outfit ({{ outfit.item_count }})</h3>
+      
+      {% if outfit.items.all %}
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
+          {% for item in outfit.items.all %}
+          <div class="col">
+            <a href="{% url 'edit_wardrobe_item' item_pk=item.pk %}" class="text-decoration-none">
+              <div class="outfit-item-card">
+                <img src="{{ item.image_url }}" alt="{{ item.title }}">
+                <div class="outfit-item-body">
+                  <span class="simple-badge mb-2">{{ item.get_category_display }}</span>
+                  <h6 class="text-white mb-1">{{ item.title }}</h6>
+                  {% if item.brand %}
+                    <p class="text-white-50 small mb-0">{{ item.brand }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            </a>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-5">
+          <p class="text-white-50 mb-3">This outfit doesn't have any items yet.</p>
+          <a href="{% url 'edit_outfit' outfit_pk=outfit.pk %}" class="btn-clean-glass">Add Items</a>
+        </div>
+      {% endif %}
     </div>
-  {% endif %}
+  </div>
 </div>
+
+<style>
+  /* Base */
+  .clean-glass-outfit-detail {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Glass Cards */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+  }
+
+  /* Outfit Item Cards */
+  .outfit-item-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .outfit-item-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(205, 180, 255, 0.3);
+    box-shadow: 0 8px 24px rgba(109, 17, 227, 0.2);
+  }
+
+  .outfit-item-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+  }
+
+  .outfit-item-card:hover img {
+    transform: scale(1.05);
+  }
+
+  .outfit-item-body {
+    padding: 1rem;
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .btn-clean-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  /* Fixed width buttons for consistent sizing */
+  .btn-fixed {
+    min-width: 160px;
+    height: 42px;
+  }
+
+  /* Badges */
+  .simple-badge {
+    background: rgba(205, 180, 255, 0.2);
+    border: 1px solid rgba(205, 180, 255, 0.3);
+    color: #CDB4FF;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  /* Responsive adjustments */
+  @media (max-width: 576px) {
+    .btn-fixed {
+      min-width: 120px;
+      font-size: 0.8125rem;
+    }
+  }
+</style>
 {% endblock %}

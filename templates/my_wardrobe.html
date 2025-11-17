@@ -5,205 +5,217 @@
 {% block title %}My Wardrobe · Best Dressed{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-  <!-- Header -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="display-6 fw-bold">My Wardrobe</h1>
-      <p class="text-muted">Organize and manage your clothing items</p>
-    </div>
-    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-      </svg>
-      Back to Dashboard
-    </a>
-  </div>
-
-<!-- Search Bar -->
-<div class="mb-4">
-  <form method="get" action="{% url 'my_wardrobe' %}" class="row g-3 align-items-end">
-    <!-- Search Input Column -->
-    <div class="col-md-6">
-      <label for="searchInput" class="form-label small text-muted">Search</label>
-      <div class="input-group">
-        <span class="input-group-text">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
-            <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-          </svg>
-        </span>
-        <input 
-          type="text" 
-          name="search"
-          id="searchInput"
-          class="form-control" 
-          placeholder="Search by title, brand, color..." 
-          value="{{ search_query }}"
-          aria-label="Search wardrobe items">
+<div class="clean-glass-wardrobe">
+  <div class="container py-5">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="display-6 fw-bold text-white">My Wardrobe</h1>
+        <p class="text-white-50 mb-0">Organize and manage your clothing items</p>
       </div>
-    </div>
-    
-    <!-- Sort Dropdown Column -->
-    <div class="col-md-4">
-      <label for="sortSelect" class="form-label small text-muted">Sort by</label>
-      <select name="sort" id="sortSelect" class="form-select" onchange="this.form.submit()">
-        {% for sort_value, sort_label in sort_options %}
-        <option value="{{ sort_value }}" {% if current_sort == sort_value %}selected{% endif %}>
-          {{ sort_label }}
-        </option>
-        {% endfor %}
-      </select>
-    </div>
-    
-    <!-- Action Buttons Column -->
-    <div class="col-md-2">
-      <div class="d-grid gap-2">
-        <button class="btn btn-primary" type="submit">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
-            <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
-            <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
-          </svg>
-          Apply
-        </button>
-        
-        <!-- Clear button -->
-        {% if search_query or current_filter != 'all' or current_sort != '-created_at' %}
-        <a href="{% url 'my_wardrobe' %}" class="btn btn-outline-secondary">
-          Clear All
-        </a>
-        {% endif %}
-      </div>
-    </div>
-    
-    <!-- Hidden field to preserve category filter -->
-    {% if current_filter != 'all' %}
-    <input type="hidden" name="category" value="{{ current_filter }}">
-    {% endif %}
-  </form>
-  
-  <!-- Search/Filter results info -->
-  <div class="mt-3">
-    {% if search_query or current_filter != 'all' %}
-    <small class="text-muted">
-      Showing {{ wardrobe_items.count }} result{{ wardrobe_items.count|pluralize }}
-      {% if search_query %} for "<strong>{{ search_query }}</strong>"{% endif %}
-      {% if current_filter != 'all' %} in <strong>{{ current_filter }}s</strong>{% endif %}
-    </small>
-    {% else %}
-    <small class="text-muted">
-      Showing all {{ wardrobe_items.count }} item{{ wardrobe_items.count|pluralize }}
-    </small>
-    {% endif %}
-  </div>
-</div>
-
-  <!-- Category Filter Buttons -->
-  <!-- Category Filter Buttons -->
-  <div class="mb-4">
-    <div class="btn-group flex-wrap" role="group" aria-label="Category filter">
-      <!-- All Items Button -->
-      <a href="{% url 'my_wardrobe' %}?sort={{ current_sort }}{% if search_query %}&search={{ search_query }}{% endif %}" 
-        class="btn {% if current_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
-        All Items ({{ wardrobe_items.count }})
+      <a href="{% url 'dashboard' %}" class="btn-clean-glass">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+        </svg>
+        Back to Dashboard
       </a>
-      
-      <!-- Category Buttons -->
-      {% for category_value, category_label in categories %}
-        <a href="{% url 'my_wardrobe' %}?category={{ category_value }}&sort={{ current_sort }}{% if search_query %}&search={{ search_query }}{% endif %}" 
-          class="btn {% if current_filter == category_value %}btn-primary{% else %}btn-outline-primary{% endif %}">
-          {{ category_label }} ({{ category_counts|get_item:category_value|default:0 }})
-        </a>
-      {% endfor %}
     </div>
-  </div>
 
-  <!-- Action Buttons -->
-  <div class="mb-4">
-    <a href="{% url 'add_wardrobe_item' %}" class="btn btn-purple-dark">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg me-1" viewBox="0 0 16 16">
-        <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
-      </svg>
-      Add New Item
-    </a>
-    <a href="{% url 'item_listing' %}" class="btn btn-outline-primary">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-1" viewBox="0 0 16 16">
-        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
-      </svg>
-      Browse Catalog
-    </a>
-  </div>
-
-  <!-- Wardrobe Items Grid -->
-  {% if wardrobe_items %}
-  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
-    {% for item in wardrobe_items %}
-    <div class="col">
-      <div class="card h-100 border-0 shadow-sm">
-        <!-- Item Image -->
-        {% if item.catalog_item %}
-          <a href="{% url 'item_detail' pk=item.catalog_item.pk %}?from=wardrobe">
-            <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" 
-                 style="height: 250px; object-fit: cover;">
-          </a>
-        {% else %}
-          <img src="{{ item.image_url }}" class="card-img-top" alt="{{ item.title }}" 
-               style="height: 250px; object-fit: cover;">
-        {% endif %}
-        
-        <!-- Item Details -->
-        <div class="card-body">
-          <!-- Category Badge -->
-          <span class="badge bg-secondary mb-2">{{ item.get_category_display }}</span>
-          
-          <!-- Title -->
-          <h5 class="card-title">{{ item.title }}</h5>
-          
-          <!-- Description -->
-          <p class="card-text text-muted small">{{ item.description|truncatewords:15 }}</p>
-          
-          <!-- Additional Info -->
-          {% if item.color %}
-          <p class="small mb-1">
-            <strong>Color:</strong> {{ item.color }}
-          </p>
-          {% endif %}
-          
-          {% if item.brand %}
-          <p class="small mb-1">
-            <strong>Brand:</strong> {{ item.brand }}
-          </p>
-          {% endif %}
-          
-          {% if item.season %}
-          <p class="small mb-1">
-            <strong>Season:</strong> {{ item.season }}
-          </p>
-          {% endif %}
-          
-          <!-- Timestamp -->
-          <p class="small text-muted mt-2">
-            Added {{ item.created_at|date:"M d, Y" }}
-          </p>
+    <!-- Search Bar -->
+    <div class="glass-card-simple p-4 mb-4">
+      <form method="get" action="{% url 'my_wardrobe' %}" class="row g-3 align-items-end">
+        <!-- Search Input Column -->
+        <div class="col-md-6">
+          <label for="searchInput" class="form-label small text-white-50">Search</label>
+          <div class="glass-input-group">
+            <span class="glass-input-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+              </svg>
+            </span>
+            <input 
+              type="text" 
+              name="search"
+              id="searchInput"
+              class="glass-input" 
+              placeholder="Search by title, brand, color..." 
+              value="{{ search_query }}"
+              aria-label="Search wardrobe items">
+          </div>
         </div>
         
-        <!-- Action Buttons -->
-        <div class="card-footer bg-transparent border-0 pb-3">
+        <!-- Sort Dropdown Column -->
+        <div class="col-md-4">
+          <label for="sortSelect" class="form-label small text-white-50">Sort by</label>
+          <select name="sort" id="sortSelect" class="glass-select" onchange="this.form.submit()">
+            {% for sort_value, sort_label in sort_options %}
+            <option value="{{ sort_value }}" {% if current_sort == sort_value %}selected{% endif %}>
+              {{ sort_label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        
+        <!-- Action Buttons Column -->
+        <div class="col-md-2">
           <div class="d-grid gap-2">
+            <button class="btn-clean-glass" type="submit">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-clockwise" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+              </svg>
+              Apply
+            </button>
+            
+            <!-- Clear button -->
+            {% if search_query or current_filter != 'all' or current_sort != '-created_at' %}
+            <a href="{% url 'my_wardrobe' %}" class="btn-clean-glass-secondary">
+              Clear All
+            </a>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- Hidden field to preserve category filter -->
+        {% if current_filter != 'all' %}
+        <input type="hidden" name="category" value="{{ current_filter }}">
+        {% endif %}
+      </form>
+      
+      <!-- Search/Filter results info -->
+      <div class="mt-3">
+        {% if search_query or current_filter != 'all' %}
+        <small class="text-white-50">
+          Showing {{ wardrobe_items.count }} result{{ wardrobe_items.count|pluralize }}
+          {% if search_query %} for "<strong class="text-white">{{ search_query }}</strong>"{% endif %}
+          {% if current_filter != 'all' %} in <strong class="text-white">{{ current_filter }}s</strong>{% endif %}
+        </small>
+        {% else %}
+        <small class="text-white-50">
+          Showing all {{ wardrobe_items.count }} item{{ wardrobe_items.count|pluralize }}
+        </small>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Category Filter Buttons -->
+    <div class="mb-4">
+      <div class="category-filter-group">
+        <!-- All Items Button -->
+        <a href="{% url 'my_wardrobe' %}?sort={{ current_sort }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+          class="category-filter-btn {% if current_filter == 'all' %}active{% endif %}">
+          All Items ({{ wardrobe_items.count }})
+        </a>
+        
+        <!-- Category Buttons -->
+        {% for category_value, category_label in categories %}
+          <a href="{% url 'my_wardrobe' %}?category={{ category_value }}&sort={{ current_sort }}{% if search_query %}&search={{ search_query }}{% endif %}" 
+            class="category-filter-btn {% if current_filter == category_value %}active{% endif %}">
+            {{ category_label }} ({{ category_counts|get_item:category_value|default:0 }})
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mb-4">
+      <a href="{% url 'add_wardrobe_item' %}" class="btn-clean-glass me-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg me-1" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+        </svg>
+        Add New Item
+      </a>
+      <a href="{% url 'item_listing' %}" class="btn-clean-glass-secondary">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-1" viewBox="0 0 16 16">
+          <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+        </svg>
+        Browse Catalog
+      </a>
+    </div>
+
+    <!-- Wardrobe Items Grid -->
+    {% if wardrobe_items %}
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+      {% for item in wardrobe_items %}
+      <div class="col">
+        <div class="wardrobe-item-card">
+          <!-- Item Image -->
+          <div class="wardrobe-item-image">
+            {% if item.catalog_item %}
+              <a href="{% url 'item_detail' pk=item.catalog_item.pk %}?from=wardrobe">
+                <img src="{{ item.image_url }}" alt="{{ item.title }}">
+              </a>
+            {% else %}
+              <img src="{{ item.image_url }}" alt="{{ item.title }}">
+            {% endif %}
+          </div>
+          
+          <!-- Item Details -->
+          <div class="wardrobe-item-body">
+            <!-- Category Badge -->
+            <span class="simple-badge mb-2">{{ item.get_category_display }}</span>
+            
+            <!-- Title -->
+            <h5 class="text-white mb-2">{{ item.title }}</h5>
+            
+            <!-- Description -->
+            <p class="text-white-50 small mb-3">{{ item.description|truncatewords:15 }}</p>
+            
+            <!-- Additional Info -->
+            <div class="wardrobe-item-details mb-3">
+              {% if item.color %}
+              <div class="detail-row">
+                <span class="text-white-50 small">Color:</span>
+                <span class="text-white small">{{ item.color }}</span>
+              </div>
+              {% endif %}
+              
+              {% if item.brand %}
+              <div class="detail-row">
+                <span class="text-white-50 small">Brand:</span>
+                <span class="text-white small">{{ item.brand }}</span>
+              </div>
+              {% endif %}
+              
+              {% if item.season %}
+              <div class="detail-row">
+                <span class="text-white-50 small">Season:</span>
+                <span class="text-white small">{{ item.season }}</span>
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Timestamp -->
+            <p class="text-white-50 small">
+              Added {{ item.created_at|date:"M d, Y" }}
+            </p>
+          </div>
+          
+          <!-- Action Buttons -->
+          <div class="wardrobe-item-actions">
             {% if item.catalog_item %}
             <a href="{% url 'item_detail' pk=item.catalog_item.pk %}?from=wardrobe" 
-              class="btn btn-sm btn-outline-primary">
+              class="wardrobe-action-btn">
               View in Catalog
             </a>
             {% endif %}
+            <a href="{% url 'quick_add_to_outfit' item_pk=item.pk %}" 
+              class="wardrobe-action-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+              </svg>
+              Add to Outfit
+            </a>
             <a href="{% url 'edit_wardrobe_item' item_pk=item.pk %}" 
-              class="btn btn-sm btn-outline-secondary">
+              class="wardrobe-action-btn">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-pencil" viewBox="0 0 16 16">
                 <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325"/>
               </svg>
               Edit
             </a>
             <a href="{% url 'delete_wardrobe_item' item_pk=item.pk %}" 
-              class="btn btn-sm btn-outline-danger">
+              class="wardrobe-action-btn danger">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
               <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
               <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
@@ -213,25 +225,335 @@
           </div>
         </div>
       </div>
+      {% endfor %}
     </div>
-    {% endfor %}
+    {% else %}
+    <!-- Empty State -->
+    <div class="glass-card-simple p-5 text-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-inbox text-white-50 mb-3 opacity-50" viewBox="0 0 16 16">
+        <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
+      </svg>
+      <h4 class="text-white mb-2">
+        {% if current_filter != 'all' %}
+          No {{ current_filter }}s in your wardrobe yet
+        {% else %}
+          Your wardrobe is empty
+        {% endif %}
+      </h4>
+      <p class="text-white-50 mb-4">Start adding items from the catalog or upload your own!</p>
+      <a href="{% url 'item_listing' %}" class="btn-clean-glass">Browse Catalog</a>
+    </div>
+    {% endif %}
   </div>
-  {% else %}
-  <!-- Empty State -->
-  <div class="text-center py-5">
-    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-inbox text-muted mb-3" viewBox="0 0 16 16">
-      <path d="M4.98 4a.5.5 0 0 0-.39.188L1.54 8H6a.5.5 0 0 1 .5.5 1.5 1.5 0 1 0 3 0A.5.5 0 0 1 10 8h4.46l-3.05-3.812A.5.5 0 0 0 11.02 4zm9.954 5H10.45a2.5 2.5 0 0 1-4.9 0H1.066l.32 2.562a.5.5 0 0 0 .497.438h12.234a.5.5 0 0 0 .496-.438zM3.809 3.563A1.5 1.5 0 0 1 4.981 3h6.038a1.5 1.5 0 0 1 1.172.563l3.7 4.625a.5.5 0 0 1 .105.374l-.39 3.124A1.5 1.5 0 0 1 14.117 13H1.883a1.5 1.5 0 0 1-1.489-1.314l-.39-3.124a.5.5 0 0 1 .106-.374z"/>
-    </svg>
-    <h4 class="text-muted">
-      {% if current_filter != 'all' %}
-        No {{ current_filter }}s in your wardrobe yet
-      {% else %}
-        Your wardrobe is empty
-      {% endif %}
-    </h4>
-    <p class="text-muted">Start adding items from the catalog or upload your own!</p>
-    <a href="{% url 'item_listing' %}" class="btn btn-primary mt-3">Browse Catalog</a>
-  </div>
-  {% endif %}
 </div>
+
+<style>
+  /* ==================== */
+  /* CLEAN GLASS BASE     */
+  /* ==================== */
+  .clean-glass-wardrobe {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* ==================== */
+  /* GLASS CARD           */
+  /* ==================== */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-simple:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* ==================== */
+  /* GLASS INPUTS         */
+  /* ==================== */
+  .glass-input-group {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .glass-input-icon {
+    position: absolute;
+    left: 1rem;
+    color: rgba(255, 255, 255, 0.5);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .glass-input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.65rem 1rem 0.65rem 2.75rem;
+    color: #fff;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.3);
+  }
+
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(205, 180, 255, 0.4);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(205, 180, 255, 0.1);
+  }
+
+  .glass-select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    color: #fff;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .glass-select:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(205, 180, 255, 0.4);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(205, 180, 255, 0.1);
+  }
+
+  .glass-select option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+
+  /* ==================== */
+  /* CATEGORY FILTERS     */
+  /* ==================== */
+  .category-filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .category-filter-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.5rem 1rem;
+    border-radius: 10px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: inline-block;
+  }
+
+  .category-filter-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(205, 180, 255, 0.3);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .category-filter-btn.active {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #CDB4FF;
+  }
+
+  /* ==================== */
+  /* BUTTONS              */
+  /* ==================== */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  /* ==================== */
+  /* WARDROBE ITEM CARDS  */
+  /* ==================== */
+  .wardrobe-item-card {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .wardrobe-item-card:hover {
+    border-color: rgba(205, 180, 255, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(109, 17, 227, 0.2);
+  }
+
+  .wardrobe-item-image {
+    position: relative;
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+  }
+
+  .wardrobe-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .wardrobe-item-card:hover .wardrobe-item-image img {
+    transform: scale(1.05);
+  }
+
+  .wardrobe-item-image a {
+    display: block;
+    height: 100%;
+  }
+
+  .wardrobe-item-body {
+    padding: 1.25rem;
+    flex-grow: 1;
+  }
+
+  .wardrobe-item-details {
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 0.75rem 0;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.25rem 0;
+  }
+
+  .wardrobe-item-actions {
+    padding: 1rem 1.25rem;
+    background: rgba(0, 0, 0, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .wardrobe-action-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+  }
+
+  .wardrobe-action-btn:hover {
+    background: rgba(205, 180, 255, 0.15);
+    border-color: rgba(205, 180, 255, 0.3);
+    color: #fff;
+  }
+
+  .wardrobe-action-btn.danger:hover {
+    background: rgba(220, 53, 69, 0.15);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #ff6b7a;
+  }
+
+  /* ==================== */
+  /* BADGES               */
+  /* ==================== */
+  .simple-badge {
+    background: rgba(205, 180, 255, 0.2);
+    border: 1px solid rgba(205, 180, 255, 0.3);
+    color: #CDB4FF;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  /* ==================== */
+  /* RESPONSIVE           */
+  /* ==================== */
+  @media (max-width: 768px) {
+    .category-filter-group {
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 0.5rem;
+    }
+    
+    .category-filter-btn {
+      white-space: nowrap;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .wardrobe-item-image {
+      height: 200px;
+    }
+  }
+</style>
 {% endblock %}
