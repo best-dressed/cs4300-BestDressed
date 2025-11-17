@@ -12,4 +12,6 @@ urlpatterns = [
     path('posts/<int:post_id>/edit/', views.post_edit, name='post_edit'),
     path('thread/<int:thread_id>/like/', views.toggle_thread_like, name='toggle_thread_like'),
     path('post/<int:post_id>/like/', views.toggle_post_like, name='toggle_post_like'),
+    path('thread/<int:thread_id>/save/', views.toggle_thread_save, name='toggle_thread_save'),
+    path('saved/', views.my_saved_threads, name='my_saved_threads'),
 ]

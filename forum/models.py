@@ -21,6 +21,14 @@ class Thread(models.Model):
             return self.thread_likes.filter(user=user).exists()
         return False
 
+    def is_saved_by(self, user):  # ADD THIS HERE
+        if user.is_authenticated:
+            return self.saved_by.filter(user=user).exists()
+        return False
+
+    def save_count(self):
+        return self.saved_by.count()
+
 class Post(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='posts')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
@@ -60,3 +68,14 @@ class PostLike(models.Model):
 
     def __str__(self):
         return f"{self.user.username} likes post {self.post.id}"
+
+class SavedThread(models.Model):
+    thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='saved_by')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_threads')
+    saved_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('thread', 'user')  # User can only save once
+
+    def __str__(self):
+        return f"{self.user.username} saved {self.thread.title}"

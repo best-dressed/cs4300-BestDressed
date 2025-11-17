@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.db.models import Count, Max
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
-from .models import Thread, Post, ThreadLike, PostLike
+from .models import Thread, Post, ThreadLike, PostLike, SavedThread
 from .forms import ThreadForm, PostForm
 
 # Create your views here.
@@ -26,9 +26,17 @@ def post_delete(request, post_id):
     return redirect('thread_detail', thread_id=post.thread.id)
 
 def threads(request):
-    all_threads = Thread.objects.all().order_by('-created_at')  # newest first
+    # Annotate with reply count
+    all_threads = Thread.objects.annotate(
+        reply_count=Count('posts')
+    ).order_by('-created_at')
+    
+    # Add is_saved_by info for each thread
+    if request.user.is_authenticated:
+        for thread in all_threads:
+            thread.is_saved_by = thread.is_saved_by(request.user)
+    
     return render(request, 'forum/threads.html', {'threads': all_threads})
-
 
 
 @login_required
@@ -159,3 +167,40 @@ def toggle_post_like(request, post_id):
         'liked': liked,
         'like_count': post.like_count()
     })
+
+
+def threads(request):
+    # Annotate with reply count
+    all_threads = Thread.objects.annotate(
+        reply_count=Count('posts')
+    ).order_by('-created_at')
+    return render(request, 'forum/threads.html', {'threads': all_threads})
+
+@login_required
+@require_POST
+def toggle_thread_save(request, thread_id):
+    thread = get_object_or_404(Thread, id=thread_id)
+    saved, created = SavedThread.objects.get_or_create(thread=thread, user=request.user)
+    
+    if not created:
+        # Unsave if already saved
+        saved.delete()
+        is_saved = False
+    else:
+        is_saved = True
+    
+    return JsonResponse({
+        'saved': is_saved
+    })
+
+@login_required
+def my_saved_threads(request):
+    saved = SavedThread.objects.filter(user=request.user).select_related('thread', 'thread__user').order_by('-saved_at')
+    threads = [s.thread for s in saved]
+    
+    # Add reply count and like count for each thread
+    for thread in threads:
+        thread.reply_count = thread.posts.count()
+        thread.is_saved_by = True  # Already saved since we're on saved page
+    
+    return render(request, 'forum/saved_threads.html', {'threads': threads})

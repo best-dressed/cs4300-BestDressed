@@ -425,3 +425,11 @@ a.btn-outline-primary {
   padding-top: 2rem;
   margin-top: -1px; /* This will hide the border line */
 }
+
+/* Force left alignment for thread and post content */
+.thread-content,
+.thread-content p,
+.post-content,
+.post-content p {
+  text-align: left !important;
+}
