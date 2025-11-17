@@ -6,43 +6,45 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'css/about.css' %}">
 
-<section class="about-hero container text-center py-5">
-  <span class="sprinkle">✦</span>
-  <h1 class="display-5 fw-bold">We’re changing the way people think about style.</h1>
-  <p class="lead text-muted mx-auto mt-3" style="max-width: 760px;">
-    Best Dressed is your smart wardrobe — a place to plan, organize, and share outfits
-    with AI-assisted suggestions and a supportive fashion community.
-  </p>
-</section>
+<div class="landing-hero-bg">
+  <section class="about-hero container text-center py-5">
+    <span class="sprinkle">✦</span>
+    <h1 class="display-5 fw-bold">We're changing the way people think about style.</h1>
+    <p class="lead text-muted mx-auto mt-3" style="max-width: 760px;">
+      Best Dressed is your smart wardrobe – a place to plan, organize, and share outfits
+      with AI-assisted suggestions and a supportive fashion community.
+    </p>
+  </section>
 
-<section class="container py-4">
-  <div class="row g-4 about-grid">
-    <div class="col-md-4">
-      <div class="card h-100 p-4">
-        <h3 class="h5 mb-2">Why we built it</h3>
-        <p class="text-muted mb-0">
-          Getting dressed should be fun, not stressful. We built a simple, aesthetic space that makes outfit planning easy.
-        </p>
+  <section class="container py-4">
+    <div class="row g-4 about-grid">
+      <div class="col-md-4">
+        <div class="card h-100 p-4">
+          <h3 class="h5 mb-2">Why we built it</h3>
+          <p class="text-muted mb-0">
+            Getting dressed should be fun, not stressful. We built a simple, aesthetic space that makes outfit planning easy.
+          </p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 p-4">
+          <h3 class="h5 mb-2">What you can do</h3>
+          <ul class="text-muted mb-0 ps-3">
+            <li>Upload and tag your clothes</li>
+            <li>Build outfits and see recommendations</li>
+            <li>Share or keep your wardrobe private</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 p-4">
+          <h3 class="h5 mb-2">Our vibe</h3>
+          <p class="text-muted mb-0">
+            Minimal, inclusive, and empowering – fashion that feels like *you*.
+          </p>
+        </div>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card h-100 p-4">
-        <h3 class="h5 mb-2">What you can do</h3>
-        <ul class="text-muted mb-0 ps-3">
-          <li>Upload and tag your clothes</li>
-          <li>Build outfits and see recommendations</li>
-          <li>Share or keep your wardrobe private</li>
-        </ul>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card h-100 p-4">
-        <h3 class="h5 mb-2">Our vibe</h3>
-        <p class="text-muted mb-0">
-          Minimal, inclusive, and empowering — fashion that feels like *you*.
-        </p>
-      </div>
-    </div>
-  </div>
-</section>
+  </section>
+</div>
 {% endblock %}

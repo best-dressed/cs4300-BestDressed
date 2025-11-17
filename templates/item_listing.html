@@ -6,69 +6,62 @@
 <!-- Load main pastel theme -->
 <link rel="stylesheet" href="{% static 'css/main.css' %}" type="text/css">
 
-<!-- Pastel hero section -->
-<div class="hero-purple">
-    <header class="py-4">
-        <div class="sparkle-accent text-center mt-1 mb-2">
-            <span class="sparkle-icon">✦</span>
-        </div>
-        <div class="container text-center">
-            <h1 class="mb-3">Find Your Style</h1>
-        </div>
+<div class="landing-hero-bg">
+  <!-- Pastel hero section -->
+  <div class="hero-purple">
+    <header class="py-4"> <!-- smaller padding on top -->
+      <div class="sparkle-accent text-center mt-1 mb-2">
+        <span class="sparkle-icon">✦</span>
+      </div>
+      <div class="container text-center">
+        <h1 class="mb-3">Find Your Style</h1>
+      </div>
     </header>
+  </div>
+
+  <div style="margin:30px; font-size:50px;">
+
+      <div class ="container">
+
+          <div class="container">
+              <div class="row justify-content-left">
+                  <div class="col-md-6">
+                      <div class="search-container">
+                          <input type="text" class="form-control search-input" placeholder="Search for an Item...">
+                      </div>
+
+                      <!-- Dropdown Add Button -->
+                      <div class="dropdown" style="margin-top:20px;">
+                          <button class="btn btn-primary dropdown-toggle" type="button" id="addItemDropdown"
+                                  data-bs-toggle="dropdown" aria-expanded="false" style="font-size:20px;">
+                              Add Item
+                          </button>
+                          <ul class="dropdown-menu" aria-labelledby="addItemDropdown">
+                              <li><a class="dropdown-item" href="{% url 'add_item' %}">Add item manually</a></li>
+                              <li><a class="dropdown-item" href="{% url 'ebay_get_items' %}">Add items via eBay</a></li>
+                          </ul>
+                      </div>
+                      <!-- End Dropdown -->
+
+                  </div>
+              </div>
+          </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Meat and potatoes of the item listing -->
+  <section class="py-5">
+      <div class="container px-4 px-lg-5 mt-5">
+          <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+              <!--List items from db-->
+              {% for item in items %}
+              {% include "item_card.html" with item=item %}
+              {% endfor %}
+          </div>
+      </div>
+  </section>
 </div>
 
-<div style="margin:30px; font-size:50px;">
-    <div class="container">
-        <div class="row justify-content-left">
-            <div class="col-md-6">
-
-                <!-- Search Form -->
-                <form method="get" action="{% url 'item_listing' %}" class="search-container d-flex mb-3" role="search">
-                    <input
-                            type="text"
-                            class="form-control search-input me-2"
-                            name="q"
-                            placeholder="Search for an Item..."
-                            value="{{ query|default:'' }}"
-                            style="font-size:20px;"
-                    >
-                    <button class="btn btn-primary" type="submit" style="font-size:20px;">Search</button>
-                </form>
-                <!-- End Search Form -->
-
-                <!-- Dropdown Add Button -->
-                <div class="dropdown" style="margin-top:20px;">
-                    <button class="btn btn-primary dropdown-toggle" type="button" id="addItemDropdown"
-                            data-bs-toggle="dropdown" aria-expanded="false" style="font-size:20px;">
-                        Add Item
-                    </button>
-                    <ul class="dropdown-menu" aria-labelledby="addItemDropdown">
-                        <li><a class="dropdown-item" href="{% url 'add_item' %}">Add item manually</a></li>
-                        <li><a class="dropdown-item" href="{% url 'ebay_get_items' %}">Add items via eBay</a></li>
-                    </ul>
-                </div>
-                <!-- End Dropdown -->
-
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Item Listing -->
-<section class="py-5">
-    <div class="container px-4 px-lg-5 mt-5">
-        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-            {% for item in items %}
-            {% include "item_card.html" with item=item %}
-            {% empty %}
-            <div class="text-center mt-4">
-                <p style="font-size: 24px; color: #888;">No items found.</p>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% include "item_card_logic.html" %}
 {% endblock content %}
-
