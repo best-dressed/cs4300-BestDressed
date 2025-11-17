@@ -3,7 +3,7 @@ Django views for the Best Dressed application.
 """
 
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Item, UserProfile, WardrobeItem, Outfit
+from .models import Item, UserProfile, WardrobeItem, Outfit, SavedRecommendation, HiddenItem
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
@@ -39,10 +39,41 @@ def signup(request):
     """
     return render(request, 'signup.html')
 
+# primary item listing view for main page
 def item_listing(request):
-    items = Item.objects.all()
-    return render(request, "item_listing.html", {'items': items})
+    query = request.GET.get("q")
+    if query:
+        from django.db.models import Q
+        items = Item.objects.filter(Q(title__icontains=query) | Q(description__icontains=query))
+    else:
+        items = Item.objects.all()
 
+    # Filter out items hidden by current user
+    if request.user.is_authenticated:
+        hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
+        items = items.exclude(pk__in=hidden_ids)
+
+    return render(request, "item_listing.html", {'items': items, 'query': query})
+
+# handle ajax post from item_card.html when the user hides items from item listing w the little icon
+@login_required
+def ajax_hide_item(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "POST required"}, status=400)
+
+    item_id = request.POST.get("item_id")
+    if not item_id:
+        return JsonResponse({"error": "Missing item_id"}, status=400)
+
+    item = get_object_or_404(Item, pk=item_id)
+
+    # Create or get
+    obj, created = HiddenItem.objects.get_or_create(
+        user=request.user,
+        item=item
+    )
+
+    return JsonResponse({"success": True, "hidden": created})
 # # for a particular item view
 # def item_detail(request, pk):
 #     item = get_object_or_404(Item, pk=pk)
@@ -76,6 +107,11 @@ def item_detail(request, pk):
     # related items list, exclude the item we are primarily viewing
     items = Item.objects.exclude(pk=pk)
 
+    # block hidden items here too
+    if request.user.is_authenticated:
+        hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
+        items = items.exclude(pk__in=hidden_ids)
+
     context = {
         "item": item,
         "items": items,
@@ -86,6 +122,7 @@ def item_detail(request, pk):
 
 # view for adding an item manually
 # per chatGPT
+@login_required
 def add_item(request):
     context = {}
 
@@ -107,6 +144,64 @@ def add_item_success(request, pk):
 @login_required
 def dashboard(request):
     """
+    Enhanced user dashboard - central hub with statistics and quick actions.
+    
+    Displays:
+    - Wardrobe and outfit counts
+    - Outfit statistics (by season, occasion, favorites)
+    - Recent outfits
+    - Random outfit suggestion
+    """
+    user = request.user
+    
+    # get or create user profile, retrieves database record; if it doesnt exist, create it
+    # profile: UserProfile object
+    # created: boolean for if object was just created (True) or if it already exists (False)
+    profile, created = UserProfile.objects.get_or_create(user=user)
+    
+    # get actual counts (of number of items in Wardrobe and number of Outfits) from the database for the logged in user
+    wardrobe_count = WardrobeItem.objects.filter(user=user).count()
+    outfit_count = Outfit.objects.filter(user=user).count()
+    # implement later
+    recommendation_count = 0  
+    
+    # Outfit statistics by category
+    favorites_count = Outfit.objects.filter(user=user, is_favorite=True).count()
+    
+    # Count outfits by season
+    # values('season') groups the results by season
+    # annotate(count=Count('id')) counts how many in each group
+    season_stats = Outfit.objects.filter(user=user).values('season').annotate(count=Count('id'))
+    
+    # Count outfits by occasion
+    occasion_stats = Outfit.objects.filter(user=user).values('occasion').annotate(count=Count('id'))
+    
+    # Recent outfits (last 4)
+    # prefetch_related loads all items for these outfits efficiently
+    recent_outfits = Outfit.objects.filter(user=user).prefetch_related('items').order_by('-created_at')[:4]
+    
+    # Random outfit suggestion ("Outfit of the Day")
+    # order_by('?') randomizes the order, [:1] gets just one
+    random_outfit = Outfit.objects.filter(user=user).order_by('?').first()
+
+    # python dictionary that passes data from Python (Django view) to the HTML template   
+    context = {
+        'wardrobe_count': wardrobe_count,
+        'outfit_count': outfit_count,
+        'recommendation_count': recommendation_count,
+        'favorites_count': favorites_count,
+        'season_stats': season_stats,
+        'occasion_stats': occasion_stats,
+        'recent_outfits': recent_outfits,
+        'random_outfit': random_outfit,
+    }
+    
+    return render(request, 'dashboard.html', context)
+
+
+@login_required
+def dashboard(request):
+    """
     User dashboard - central hub for accessing all user features
     """
     user = request.user
@@ -118,8 +213,7 @@ def dashboard(request):
     
     # get actual counts (of number of items in Wardrobe) from the database for the logged in user
     wardrobe_count = WardrobeItem.objects.filter(user=user).count()
-    # implement this later when we build Outfits
-    outfit_count = 0  
+    outfit_count = Outfit.objects.filter(user=user).count()
     # implement this later with AI recommendations
     recommendation_count = 0  
 
@@ -190,48 +284,47 @@ def save_to_wardrobe(request, item_pk):
         request: The HTTP request object
         item_pk: Primary key of the Item to save
     """
-    
+
     # Get the catalog item or return 404 if it doesn't exist
-    # This is safer than Item.objects.get() which would raise an exception
     catalog_item = get_object_or_404(Item, pk=item_pk)
-    
+
     # Only allow POST requests (security best practice)
-    # Prevents accidental saves from just visiting a URL
     if request.method != 'POST':
         messages.error(request, 'Invalid request method.')
         return redirect('item_detail', pk=item_pk)
-    
-    # using try/except:
-    # - guarantees no dupes (or race conditions)
-    # - allows for less code and fewer db queries
+
+    # Try to create the item, catch if it already exists
     try:
-        # Try to create a new wardrobe item
-        # If it already exists (violates unique_together), this will raise IntegrityError
-        wardrobe_item = WardrobeItem.objects.create(
+        WardrobeItem.objects.create(
             user=request.user,
             title=catalog_item.title,
             description=catalog_item.description,
             image_url=catalog_item.image_url,
-            category='other',  # Default category, user can change later
+            category='other',
             catalog_item=catalog_item
         )
-        
-        # show a success message
-        messages.success(
-            request, 
-            f'"{catalog_item.title}" has been added to your wardrobe!'
-        )
-        
+        success_message = 'Item added to wardrobe!'
+        status = 'added'
+
     except IntegrityError:
-        # Item already exists in wardrobe (unique_together constraint violated)
-        # This is not really an error, just inform the user
-        messages.info(
-            request,
-            f'"{catalog_item.title}" is already in your wardrobe.'
-        )
-    
-    # Redirect back to the item detail page
-    # Using redirect prevents form resubmission if user refreshes the page
+        # Item already exists in wardrobe
+        success_message = 'Already in wardrobe'
+        status = 'exists'
+
+    # AJAX response
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        return JsonResponse({
+            'success': True,
+            'message': success_message,
+            'status': status
+        })
+
+    # Normal redirect
+    if status == 'exists':
+        messages.info(request, f'"{catalog_item.title}" is already in your wardrobe.')
+    else:
+        messages.success(request, f'"{catalog_item.title}" has been added to your wardrobe!')
+
     return redirect('item_detail', pk=item_pk)
 
 @login_required
@@ -393,11 +486,17 @@ def edit_wardrobe_item(request, item_pk):
 def recommendations(request):
     """
     View to display the recommendations page.
-    The page loads immediately with a loading indicator,
-    then JavaScript fetches the actual recommendations via AJAX.
+    The page shows a prompt input form where users can specify
+    what kind of recommendations they want before generating them.
+    Also displays past AI recommendations with their prompts.
     """
+    user = request.user
+    
+    # Fetch past recommendations for this user (newest first)
+    past_recommendations = SavedRecommendation.objects.filter(user=user).prefetch_related('recommended_items')
+    
     context = {
-        'loading': True,
+        'past_recommendations': past_recommendations,
     }
     return render(request, 'recommendations.html', context)
 
@@ -407,23 +506,91 @@ def generate_recommendations_ajax(request):
     AJAX endpoint to generate AI-based clothing recommendations.
     
     Process:
-    1. Fetch user profile and available items
-    2. Generate AI recommendations
-    3. Return JSON response with recommendations
+    1. Get user's custom prompt from POST request
+    2. Fetch user profile and available items
+    3. Generate AI recommendations using the custom prompt
+    4. Parse recommended item IDs from AI response
+    5. Return JSON response with recommendations and item details
     """
     user = request.user
     
+    # Only accept POST requests with a user prompt
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request method. Use POST.'
+        }, status=405)
+    
     try:
+        # Get the user's custom prompt from the request
+        import json
+        import re
+        data = json.loads(request.body)
+        user_prompt = data.get('prompt', '').strip()
+        
+        if not user_prompt:
+            return JsonResponse({
+                'success': False,
+                'error': 'Please provide a prompt describing what you\'re looking for.'
+            }, status=400)
+        
         # Get user profile and available items
         available_items = Item.objects.all()
         user_profile = UserProfile.objects.get(user=user)
         
-        # Generate AI recommendations
-        ai_recommendations = generate_recommendations(available_items, user_profile)
+        # Generate AI recommendations with the user's custom prompt
+        ai_recommendations = generate_recommendations(available_items, user_profile, user_prompt)
+        
+        # Parse the recommended item IDs from the AI response
+        # Look for pattern: RECOMMENDED_ITEMS: [id1, id2, id3, ...]
+        recommended_item_ids = []
+        match = re.search(r'RECOMMENDED_ITEMS:\s*\[([\d,\s]+)\]', ai_recommendations)
+        if match:
+            # Extract the IDs and convert to integers
+            ids_str = match.group(1)
+            recommended_item_ids = [int(id.strip()) for id in ids_str.split(',') if id.strip().isdigit()]
+            
+            # Remove the RECOMMENDED_ITEMS line from the text
+            ai_recommendations = re.sub(r'\n*RECOMMENDED_ITEMS:\s*\[[\d,\s]+\]\n*', '', ai_recommendations).strip()
+        
+        # Fetch the actual Item objects
+        recommended_items = []
+        item_objects = []
+        if recommended_item_ids:
+            items = Item.objects.filter(id__in=recommended_item_ids)
+            # Create a dictionary to maintain order
+            items_dict = {item.id: item for item in items}
+            
+            # Build the list in the order specified by the AI
+            for item_id in recommended_item_ids:
+                if item_id in items_dict:
+                    item = items_dict[item_id]
+                    item_objects.append(item)
+                    recommended_items.append({
+                        'id': item.id,
+                        'title': item.title,
+                        'description': item.description,
+                        'short_description': item.short_description,
+                        'image_url': item.image_url,
+                        'tag': item.tag,
+                        'detail_url': item.get_absolute_url(),
+                    })
+        
+        # Save the recommendation to the database
+        saved_rec = SavedRecommendation.objects.create(
+            user=user,
+            prompt=user_prompt,
+            ai_response=ai_recommendations
+        )
+        
+        # Associate the recommended items with the saved recommendation
+        if item_objects:
+            saved_rec.recommended_items.set(item_objects)
         
         return JsonResponse({
             'success': True,
-            'recommendations': ai_recommendations
+            'recommendations': ai_recommendations,
+            'items': recommended_items
         })
     
     except UserProfile.DoesNotExist:
@@ -431,6 +598,12 @@ def generate_recommendations_ajax(request):
             'success': False,
             'error': 'User profile not found. Please complete your profile first.'
         }, status=404)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request data.'
+        }, status=400)
     
     except Exception as e:
         print(f"Error generating recommendations: {e}")
@@ -487,14 +660,147 @@ def create_outfit(request):
 @login_required
 def my_outfits(request):
     """
-    Display all outfits created by the user.
-    (Full implementation coming in Phase 6C)
+    Display all outfits created by the user with filtering options.
     """
     user = request.user
+    
+    # Get filter parameters from URL
+    occasion_filter = request.GET.get('occasion', None)
+    season_filter = request.GET.get('season', None)
+    favorites_only = request.GET.get('favorites', None)
+    
+    # Start with all user's outfits
     outfits = Outfit.objects.filter(user=user)
+    
+    # Apply occasion filter if specified
+    if occasion_filter and occasion_filter != 'all':
+        outfits = outfits.filter(occasion=occasion_filter)
+    
+    # Apply season filter if specified
+    if season_filter and season_filter != 'all':
+        outfits = outfits.filter(season=season_filter)
+    
+    # Apply favorites filter if specified
+    if favorites_only == 'true':
+        outfits = outfits.filter(is_favorite=True)
+    
+    # Prefetch related items for efficiency
+    # This loads all items for all outfits in one database query
+    # instead of making a separate query for each outfit (N+1 problem)
+    outfits = outfits.prefetch_related('items')
+    
+    # Get available filter options from the model choices
+    occasion_choices = Outfit._meta.get_field('occasion').choices
+    season_choices = Outfit._meta.get_field('season').choices
     
     context = {
         'outfits': outfits,
+        'occasion_filter': occasion_filter or 'all',
+        'season_filter': season_filter or 'all',
+        'favorites_only': favorites_only == 'true',
+        'occasion_choices': occasion_choices,
+        'season_choices': season_choices,
     }
     
     return render(request, 'my_outfits.html', context)
+
+@login_required
+def outfit_detail(request, outfit_pk):
+    """
+    View detailed information about a specific outfit.
+    """
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    context = {
+        'outfit': outfit,
+    }
+    
+    return render(request, 'outfit_detail.html', context)
+
+@login_required
+def edit_outfit(request, outfit_pk):
+    """
+    Edit an existing outfit.
+    """
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    # Redirect to create page for now
+    messages.info(request, 'Edit functionality coming soon!')
+    return redirect('my_outfits')
+
+@login_required
+def delete_outfit(request, outfit_pk):
+    """
+    Delete an outfit with confirmation.
+    
+    GET: Show confirmation page
+    POST: Actually delete the outfit
+    
+    Security: Only the owner can delete their outfits
+    """
+    # Get the outfit, ensuring it belongs to current user (security)
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    if request.method == 'POST':
+        # User confirmed deletion
+        outfit_name = outfit.name  # Save name for success message
+        outfit.delete()  # Delete from database
+        
+        messages.success(request, f'Outfit "{outfit_name}" has been deleted.')
+        return redirect('my_outfits')
+    
+    # GET request: show confirmation page
+    context = {
+        'outfit': outfit,
+    }
+    return render(request, 'confirm_delete_outfit.html', context)
+
+@login_required
+def edit_outfit(request, outfit_pk):
+    """
+    Edit an existing outfit.
+    
+    Allows user to:
+    - Change name, description, occasion, season, favorite status
+    - Add or remove items from the outfit
+    
+    GET: Display pre-filled form
+    POST: Save changes
+    """
+    # Get the outfit, ensuring it belongs to current user (security)
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    
+    if request.method == 'POST':
+        # User submitted the form with changes
+        # instance=outfit tells the form to update the existing outfit, not create a new one
+        form = OutfitForm(request.user, request.POST, instance=outfit)
+        
+        if form.is_valid():
+            # Save changes to the outfit
+            # commit=False means "create the object but don't save to DB yet"
+            outfit = form.save(commit=False)
+            outfit.user = request.user  # Ensure user doesn't change (security)
+            outfit.save()
+            
+            # Save the many-to-many relationships (the items)
+            # This must happen after the outfit is saved
+            form.save_m2m()
+            
+            messages.success(request, f'Outfit "{outfit.name}" has been updated!')
+            return redirect('outfit_detail', outfit_pk=outfit.pk)
+    else:
+        # GET request: show form pre-filled with current outfit data
+        # instance=outfit pre-fills the form with existing values
+        form = OutfitForm(request.user, instance=outfit)
+    
+    # Get user's wardrobe items to display with images
+    wardrobe_items = WardrobeItem.objects.filter(user=request.user)
+    
+    context = {
+        'form': form,
+        'wardrobe_items': wardrobe_items,
+        'outfit': outfit,
+        'mode': 'edit',  # Tell template this is edit mode (not create)
+    }
+    
+    return render(request, 'edit_outfit.html', context)

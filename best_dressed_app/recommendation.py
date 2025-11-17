@@ -34,14 +34,21 @@ def prompt_ai(prompt: str, client: openai.OpenAI, model: str) -> str:
     )
     return response.choices[0].message.content.strip()
 
-def generate_recommendations(available_items, user_profile) -> str:
+def generate_recommendations(available_items, user_profile, user_prompt: str = None) -> str:
     openai_api_key = os.getenv("OPENAI_API_KEY")
     client = create_openai_client(openai_api_key)
     model = "gpt-4"
-    prompt = f"""
+    
+    # Format items with ID, title, description, and tag for the AI
+    items_list = []
+    for item in available_items:
+        items_list.append(f"ID: {item.id} | Title: {item.title} | Description: {item.description} | Category: {item.tag}")
+    items_formatted = "\n".join(items_list)
+    
+    # Build the base prompt with user profile information
+    base_prompt = f"""
             You are a fashion recommendation engine talking directly to the end user. Do not use the user's name or username, only use "you" instead. 
             
-            Given the following user profile and available clothing items, generate a list of personalized clothing recommendations.
             User Bio: 
             {user_profile.bio}
             Style Preferences: 
@@ -49,11 +56,35 @@ def generate_recommendations(available_items, user_profile) -> str:
             Favorite Colors: 
             {user_profile.favorite_colors}
 
-            Available Items: 
-            {available_items}
-
-            Generate personalized clothing recommendations based on the user's profile and preferences.
+            Available Items (with IDs): 
+            {items_formatted}
         """
+    
+    # Add the user's custom prompt if provided
+    if user_prompt:
+        prompt = base_prompt + f"""
+            
+            User Request:
+            {user_prompt}
+            
+            Generate personalized clothing recommendations based on the user's profile, preferences, and their specific request above.
+            
+            IMPORTANT: At the end of your response, list the IDs of recommended items in the following format:
+            RECOMMENDED_ITEMS: [id1, id2, id3, ...]
+            
+            Include 3-6 item IDs that best match the user's request.
+        """
+    else:
+        prompt = base_prompt + """
+            
+            Generate personalized clothing recommendations based on the user's profile and preferences.
+            
+            IMPORTANT: At the end of your response, list the IDs of recommended items in the following format:
+            RECOMMENDED_ITEMS: [id1, id2, id3, ...]
+            
+            Include 3-6 item IDs that best match the user's profile.
+        """
+    
     try:
         recommendations = prompt_ai(prompt, client, model)
         return recommendations
