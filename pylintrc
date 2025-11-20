@@ -1,5 +1,5 @@
 [MAIN]
 [Message Control]
-disable=C0303, # disable trailing whitespace
-        C0301  # disable line too long
+# disable=C0303, # disable trailing whitespace
+#        C0301  # disable line too long
 
