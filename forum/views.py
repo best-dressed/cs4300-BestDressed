@@ -12,13 +12,13 @@ from moderation.moderation_common import content_filter_decorator, not_ip_banned
 from moderation.moderation_common import unbanned_ip_and_login, poster_unbanned_ip_and_login
 
 def create_validator(Form) :
-    """Create a validator that only checks for field errors, but not any 
+    """Create a validator that only checks for field errors, but not any
     other errors"""
     def validator (request):
         form = Form(request.POST)
         if form.is_valid() :
-            return True 
-        else : 
+            return True
+        else :
             # Act normal if they aren't field errors
             return not any(name not in request.POST for name in form.fields)
     return validator

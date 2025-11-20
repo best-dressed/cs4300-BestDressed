@@ -47,16 +47,16 @@ def generate_recommendations(available_items, user_profile, user_prompt: str = N
     
     # Build the base prompt with user profile information
     base_prompt = f"""
-            You are a fashion recommendation engine talking directly to the end user. Do not use the user's name or username, only use "you" instead. 
+            You are a fashion recommendation engine talking directly to the end user. Do not use the user's name or username, only use "you" instead.
             
-            User Bio: 
+            User Bio:
             {user_profile.bio}
-            Style Preferences: 
+            Style Preferences:
             {user_profile.style_preferences}
-            Favorite Colors: 
+            Favorite Colors:
             {user_profile.favorite_colors}
 
-            Available Items (with IDs): 
+            Available Items (with IDs):
             {items_formatted}
         """
     

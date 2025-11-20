@@ -190,4 +190,4 @@ SECURE_SSL_REDIRECT = not DEBUG
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Registration Settings
-ACCOUNT_ACTIVATION_DAYS = 7 
+ACCOUNT_ACTIVATION_DAYS = 7

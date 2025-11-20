@@ -106,10 +106,10 @@ class WardrobeItem(models.Model):
     # on_delete=models.SET_NULL means: if catalog item is deleted, keep wardrobe item but remove the link
     # null=True, blank=True makes this field optional
     catalog_item = models.ForeignKey(
-        Item, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        blank=True, 
+        Item,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='saved_by_users'
     )
     
@@ -162,7 +162,7 @@ class Outfit(models.Model):
     
     # Optional fields for organization
     occasion = models.CharField(
-        max_length=50, 
+        max_length=50,
         blank=True,
         choices=[
             ('casual', 'Casual'),
@@ -177,7 +177,7 @@ class Outfit(models.Model):
     )
     
     season = models.CharField(
-        max_length=50, 
+        max_length=50,
         blank=True,
         choices=[
             ('spring', 'Spring'),

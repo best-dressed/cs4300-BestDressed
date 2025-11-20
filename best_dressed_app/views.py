@@ -188,7 +188,7 @@ def dashboard(request):
     # order_by('?') randomizes the order, [:1] gets just one
     random_outfit = Outfit.objects.filter(user=user).order_by('?').first()
 
-    # python dictionary that passes data from Python (Django view) to the HTML template   
+    # python dictionary that passes data from Python (Django view) to the HTML template
     context = {
         'wardrobe_count': wardrobe_count,
         'outfit_count': outfit_count,
@@ -215,7 +215,7 @@ def account_settings(request):
     
     # get or create user profile, retrieves database record; if it doesnt exist, create it
     # profile: UserProfile object
-    # created: boolean for if object was just created (True) or if it already exists (False)    
+    # created: boolean for if object was just created (True) or if it already exists (False)
     profile, created = UserProfile.objects.get_or_create(user=user)
     
     # check if this is a form submission (POST) or just viewing the page (GET)
