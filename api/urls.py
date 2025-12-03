@@ -4,7 +4,7 @@ URL configuration for users app.
 """
 
 from django.urls import path
-from .views import *
+from .views import ebay_get_items, ebay_marketplace_deletion_notification, ajax_add_item
 
 urlpatterns = [
     path("auth/ebay_market_delete/", ebay_marketplace_deletion_notification, name="ebay_market_delete"),
