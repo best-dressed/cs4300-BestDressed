@@ -1,26 +1,32 @@
-from django.shortcuts import render
-from django.contrib import messages
+"""Views for handling eBay marketplace notifications and item retrieval."""
+
 import hashlib
 import json
+import os
+import base64
+import logging
+
+from django.shortcuts import render
+from django.contrib import messages
 from django.http import (
     HttpResponse,
     JsonResponse,
-    HttpResponseBadRequest
+    HttpResponseBadRequest,
 )
-import os
-import requests
-import base64
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
-import logging
+from django.views.decorators.http import require_POST
+
+import requests
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.exceptions import InvalidSignature, InvalidKey
+
 from best_dressed_app.models import Item
-from .forms import *
+from .forms import EbaySearchForm
 from safetext import SafeText
+
 # for a better interactive item adding
-from django.views.decorators.http import require_POST
 
 logger = logging.getLogger(__name__)
 
@@ -30,53 +36,56 @@ logger = logging.getLogger(__name__)
 
 EBAY_VERIFICATION_TOKEN = os.environ.get('EBAY_VERIFICATION_TOKEN')
 EBAY_BASE64_AUTHORIZATION_TOKEN = os.environ.get("EBAY_BASE64_AUTHORIZATION_TOKEN")
-# need to have this to support accepting requests to delete data from Ebay users who delete accounts.
+
+
 @csrf_exempt
 def ebay_marketplace_deletion_notification(request):
-    challengeCode = request.GET.get('challenge_code')
-    X_EBAY_SIGNATURE = 'X-Ebay-Signature'
+    """Handle eBay marketplace deletion verification and deletion notifications.
 
+    Responds to challenge_code GET verification, and to POST deletion events.
+    """
+    challenge_code = request.GET.get('challenge_code')
 
     # reply to challengecode basically just saying "yeah we got it"
-    if challengeCode is not None:
-        verificationToken = EBAY_VERIFICATION_TOKEN # random 32-80 char string
+    if challenge_code is not None:
+        verification_token = EBAY_VERIFICATION_TOKEN  # random 32-80 char string
         endpoint_url = "https://best-dressed.net/auth/ebay_market_delete/"
-        m = hashlib.sha256((challengeCode + verificationToken + endpoint_url).encode('utf-8'))
+        m = hashlib.sha256((challenge_code + verification_token + endpoint_url).encode('utf-8'))
         return JsonResponse({"challengeResponse": m.hexdigest()}, status=200)
 
     # when ebay sends their delete request verify it with public key then delete
-    elif request.method == 'POST':
+    if request.method == 'POST':
         # the ebay signature is a json body encoded so once we decode we access its elements
-        x_ebay_signature = request.headers["X-Ebay-Signature"]
+        x_ebay_signature = request.headers.get("X-Ebay-Signature")
         x_ebay_signature_decoded = json.loads(base64.b64decode(x_ebay_signature).decode('utf-8'))
         kid = x_ebay_signature_decoded['kid']
         signature = x_ebay_signature_decoded['signature']
-        #logger.warning(f"SIGNATURE: {signature}")
-        #logger.warning(f"kid: {kid}")
+        # logger.warning("SIGNATURE: %s", signature)
+        # logger.warning("kid: %s", kid)
 
         # So maybe this works, but I really have no idea how to verify it from eBay themselves.
         # https://developer.ebay.com/api-docs/commerce/notification/resources/public_key/methods/getPublicKey
         public_key = None
         try:
-
             oauth_access_token = get_oath_token()
 
             # send out a call to get public key
             ebay_verification_url = f'https://api.ebay.com/commerce/notification/v1/public_key/{kid}'
-            pkRequest = requests.get(url=ebay_verification_url,
-                                            headers = {
-                                                'Authorization': f'Bearer {oauth_access_token}'
-                                            },
-                                            data = {})
-            #logger.warning(f"PKRESPONSE: {pkRequest.json()}")
-            if pkRequest.status_code == 200:
-                pkResponse = pkRequest.json()
-                public_key = pkResponse['key']
+            pk_request = requests.get(
+                url=ebay_verification_url,
+                headers={'Authorization': f'Bearer {oauth_access_token}'},
+                data={},
+                timeout=10,
+            )
+            # logger.warning("PKRESPONSE: %s", pk_request.json())
+            if pk_request.status_code == 200:
+                pk_response = pk_request.json()
+                public_key = pk_response['key']
 
         # catch errors
         except Exception as e:
-            message_title = f"Ebay Marketplace Account Deletion: Error performing validation"
-            logger.error(f"{message_title} Error: {e}")
+            message_title = "Ebay Marketplace Account Deletion: Error performing validation"
+            logger.error("%s Error: %s", message_title, e)
             return JsonResponse({}, status=500)
 
         # if we get here we have the public key and everything from ebay,
@@ -89,7 +98,7 @@ def ebay_marketplace_deletion_notification(request):
         try:
             pk = serialization.load_pem_public_key(public_key_pem)
         except (ValueError, InvalidKey):
-            logging.error("Invalid public key received.")
+            logger.error("Invalid public key received.")
             return JsonResponse({'error': 'Invalid public key or Signature'}, status=412)
 
         try:
@@ -101,16 +110,20 @@ def ebay_marketplace_deletion_notification(request):
 
                 # Ebay sends "username" for marketplace data deletion
                 ebay_username = deletion_payload.get("username")
-                logger.warning(f"EBAY MARKETPLACE DELETE REQUEST FOR USER: {ebay_username}")
+                logger.warning("EBAY MARKETPLACE DELETE REQUEST FOR USER: %s", ebay_username)
 
                 if ebay_username:
                     # Delete all items where seller_id matches this username
                     deleted_count, _ = Item.objects.filter(seller_id=ebay_username).delete()
-                    logger.warning(f"Deleted {deleted_count} Item(s) belonging to deleted eBay user: {ebay_username}")
+                    logger.warning(
+                        "Deleted %s Item(s) belonging to deleted eBay user: %s",
+                        deleted_count,
+                        ebay_username,
+                    )
                 else:
                     logger.error("Deletion payload missing 'username' field")
             except Exception as e:
-                logger.error(f"Error processing marketplace deletion payload: {e}")
+                logger.error("Error processing marketplace deletion payload: %s", e)
                 return JsonResponse({"error": "Invalid deletion payload"}, status=400)
 
         except InvalidSignature:
@@ -121,13 +134,13 @@ def ebay_marketplace_deletion_notification(request):
         return HttpResponse(status=200)
 
     # if it fails make it known
-    else:
-        return HttpResponseBadRequest()
+    return HttpResponseBadRequest()
+
 
 @csrf_exempt
 @login_required
 def ebay_get_items(request):
-
+    """Handle form-based eBay search and display parsed items to the user."""
     context = {}
     # for blocking inappropriate searches
     flagged_any_item = False
@@ -135,7 +148,7 @@ def ebay_get_items(request):
     # when POSTing send our query info to ebay
     if request.method == "POST":
 
-        logger.warning(f"Running Ebay Get items search")
+        logger.warning("Running Ebay Get items search")
         form = EbaySearchForm(request.POST)
         if form.is_valid():
 
@@ -145,7 +158,10 @@ def ebay_get_items(request):
 
             # Check if search term itself is inappropriate before making API call
             if is_inappropriate(search_term):
-                messages.warning(request, "Search term contains inappropriate content and will likely result in filtered items. Please try a different search term.")
+                messages.warning(
+                    request,
+                    "Search term contains inappropriate content and will likely result in filtered items. Please try a different search term.",
+                )
                 form = EbaySearchForm()  # reset form to empty
                 context['form'] = form
                 return render(request, "ebay_add_item.html", context)
@@ -154,14 +170,15 @@ def ebay_get_items(request):
             try:
                 oauth_access_token = get_oath_token()
                 # send call to get some item data
-                itemRequest = requests.get(url=ebay_items_url,
-                                           headers = {
-                                               'Authorization': f'Bearer {oauth_access_token}'
-                                           },
-                                           data = {})
-                itemResponse = itemRequest.json()
+                item_request = requests.get(
+                    url=ebay_items_url,
+                    headers={'Authorization': f'Bearer {oauth_access_token}'},
+                    data={},
+                    timeout=10,
+                )
+                item_response = item_request.json()
 
-                items = itemResponse.get("itemSummaries", [])
+                items = item_response.get("itemSummaries", [])
 
                 # this is all per chatGPT to parse the json and get more item details
                 parsed_items = []
@@ -171,17 +188,18 @@ def ebay_get_items(request):
                     detail_url = f"https://api.ebay.com/buy/browse/v1/item/{item_id}"
                     detail_response = requests.get(
                         url=detail_url,
-                        headers={'Authorization': f'Bearer {oauth_access_token}'}
+                        headers={'Authorization': f'Bearer {oauth_access_token}'},
+                        timeout=10,
                     )
 
                     detail_data = detail_response.json()
                     description = detail_data.get("shortDescription")
-                    seller_id = detail_data.get("seller", {}).get("sellerId")
+                    # seller_id local var removed because it was unused
                     # get image url from details because we already pulled it and it is better than img url from search.
                     image_url = detail_data.get("image", {}).get("imageUrl")
 
                     # sometimes there is no desc so account for that
-                    if (description == None):
+                    if description is None:
                         description = "Ebay Seller did not Provide Description for this item"
 
                     # when inappropriate items are found flag so we send an error message and dont add that item
@@ -206,7 +224,7 @@ def ebay_get_items(request):
 
             # per chatGPT
             except Exception as e:
-                logger.error(f"Error while calling eBay API: {e}")
+                logger.error("Error while calling eBay API: %s", e)
                 messages.error(request, "Unable to retrieve eBay items. Please try again later.")   # 🟩 new user-facing message
                 form = EbaySearchForm()  # 🟩 reset form to empty
                 context['form'] = form
@@ -219,43 +237,44 @@ def ebay_get_items(request):
 
     return render(request, "ebay_add_item.html", context)
 
+
 # get an ebay token from API
 def get_oath_token():
-
-    # build and send request with our secret variables in OS
-    # get token response from API
+    """Request and return an OAuth token from eBay identity endpoint."""
     try:
         token_url = "https://api.ebay.com/identity/v1/oauth2/token"
         token_headers = {
             "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": f"Basic {EBAY_BASE64_AUTHORIZATION_TOKEN}"
+            "Authorization": f"Basic {EBAY_BASE64_AUTHORIZATION_TOKEN}",
         }
         token_scopes = "https://api.ebay.com/oauth/api_scope"
         token_data = {
             "grant_type": "client_credentials",
-            "scope": token_scopes
+            "scope": token_scopes,
         }
-        tokenRequest = requests.post(
-            url = token_url,
-            headers = token_headers,
-            data= token_data
+        token_request = requests.post(
+            url=token_url,
+            headers=token_headers,
+            data=token_data,
+            timeout=10,
         )
-        logger.warning(f"--- ATTEMPTING TO GET OAUTH TOKEN ---:")
+        logger.warning("--- ATTEMPTING TO GET OAUTH TOKEN ---:")
         # TESTING --- DO NOT UNCOMMENT IN MAIN CODE EVEN THO PROD TERMINAL IS PRIVATE ---
-        #logger.warning(f"DEBUG: {tokenRequest.json}")
-        #logger.warning(f"DEBUG: {EBAY_BASE64_AUTHORIZATION_TOKEN}")
-        oauth_access_token = tokenRequest.json()['access_token']
-        logger.warning(f"--- OAUTH ACCESS TOKEN SUCCESS ---:")
+        # logger.warning("DEBUG: %s", token_request.json)
+        # logger.warning("DEBUG: %s", EBAY_BASE64_AUTHORIZATION_TOKEN)
+        oauth_access_token = token_request.json()['access_token']
+        logger.warning("--- OAUTH ACCESS TOKEN SUCCESS ---:")
         return oauth_access_token
 
     # if it fails make it known
     except requests.RequestException as e:
-        logger.error(f"OAuth token request failed: {e}")
+        logger.error("OAuth token request failed: %s", e)
         return None
 
     except KeyError:
         logger.error("OAuth token not found in response")
         return None
+
 
 # ebay interactive item adding per chatGPT w ajax
 @csrf_exempt
@@ -269,7 +288,7 @@ def ajax_add_item(request):
     try:
         # so this json is sent in the ajax JS script in ebay_add_item.html
         data = json.loads(request.body)
-        #logger.warning(f"DATA:::  {data}")
+        # logger.warning("DATA:::  %s", data)
         title = data.get("title")
         description = data.get("description")
         image_url = data.get("image_url")
@@ -292,24 +311,26 @@ def ajax_add_item(request):
             image_url=image_url,
             tag="Accessory",
             item_id=item_id,  # ✅ new
-            item_ebay_url = item_url,
-            seller_id = seller_id
+            item_ebay_url=item_url,
+            seller_id=seller_id,
         )
         return JsonResponse({"message": "Item added successfully", "id": item.id})
 
     except Exception as e:
-        logger.error(f"Error adding item: {e}")
+        logger.error("Error adding item: %s", e)
         return JsonResponse({"error": str(e)}, status=500)
+
 
 # filter so nsfw stuff won't be added from ebay if a user searches for it, and block searches too
 def is_inappropriate(text):
+    """Return True if the provided text matches configured inappropriate words."""
     if not text:
         return False
     else:
         # using adult.txt file as the word blacklist basically
         content_filter = SafeText(
             language='en',
-            custom_words_dir='/content_filters'
+            custom_words_dir='/content_filters',
         )
         # also checks some basic profanity
         matches = content_filter.check_profanity(text)
