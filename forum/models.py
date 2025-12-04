@@ -2,6 +2,7 @@
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
+from best_dressed_app.models import Outfit
 
 
 class Thread(models.Model):
@@ -9,6 +10,17 @@ class Thread(models.Model):
     content = models.TextField(default='')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='threads')
     created_at = models.DateTimeField(auto_now_add=True)
+
+    #NEWNEWNEWNEW
+    attached_outfit = models.ForeignKey(
+        Outfit,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='forum_threads',
+        help_text="Optional outfit to attach to this thread"
+    )
+    #NEWNEWNEW
 
     def __str__(self):
         return f"Thread: {self.title} by {self.user.username}"

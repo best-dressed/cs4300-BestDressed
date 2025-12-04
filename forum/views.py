@@ -69,22 +69,24 @@ def threads(request):
 
 @unbanned_ip_and_login
 @thread_content_filter_decorator
+@login_required
 def thread_create(request):
     """Create a new thread without creating an initial post."""
     if request.method == 'POST':
-        form = ThreadForm(request.POST)
+        form = ThreadForm(request.POST, user=request.user)  # Pass user here
         if form.is_valid():
             thread = form.save(commit=False)
             thread.user = request.user
             thread.save()
             return redirect('thread_detail', thread_id=thread.id)
     else:
-        form = ThreadForm()
+        form = ThreadForm(user=request.user)  # Pass user here
     return render(request, 'forum/thread_form.html', {'form': form, 'creating': True})
 
 
 @unbanned_ip_and_login
 @thread_content_filter_decorator
+@login_required
 def thread_edit(request, thread_id):
     """Edit a thread. Only the thread author may edit (adjust permission as needed)."""
     thread = get_object_or_404(Thread, id=thread_id)
@@ -94,13 +96,13 @@ def thread_edit(request, thread_id):
         return redirect('thread_detail', thread_id=thread.id)
 
     if request.method == 'POST':
-        form = ThreadForm(request.POST, instance=thread)
+        form = ThreadForm(request.POST, instance=thread, user=request.user)  # Pass user here
         if form.is_valid():
             form.save()
             messages.success(request, "Thread updated.")
             return redirect('thread_detail', thread_id=thread.id)
     else:
-        form = ThreadForm(instance=thread)
+        form = ThreadForm(instance=thread, user=request.user)  # Pass user here
 
     return render(request, 'forum/thread_form.html', {
         'form': form,

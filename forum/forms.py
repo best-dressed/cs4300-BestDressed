@@ -1,5 +1,6 @@
 from django import forms
 from .models import Post, Thread
+from best_dressed_app.models import Outfit
 
 def general_clean_content(self):
     content = self.cleaned_data.get("content", "").strip()
@@ -34,13 +35,32 @@ class PostForm(forms.ModelForm):
 
 
 class ThreadForm(forms.ModelForm):
+  
+    #NEWNEWNEW
+    attached_outfit = forms.ModelChoiceField(
+        queryset=Outfit.objects.none(), 
+        required=False,
+        empty_label="None (no outfit attached)",
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Attach an Outfit (Optional)"
+    )
+    #NEWNEWNEW
+   
     class Meta:
         model = Thread
-        fields = ['title', 'content']
+        fields = ['title', 'content', 'attached_outfit']  # ADD 'attached_outfit' HERE
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter thread title'}),
             'content': text_area_widget(),
         }
 
-    def clean_content(self) :
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)  # Extract user from kwargs
+        super().__init__(*args, **kwargs)
+        
+        # Only show the current user's outfits
+        if user:
+            self.fields['attached_outfit'].queryset = Outfit.objects.filter(user=user).order_by('-created_at')
+
+    def clean_content(self):
         return general_clean_content(self)
