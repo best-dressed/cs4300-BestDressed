@@ -277,7 +277,7 @@ def save_to_wardrobe(request, item_pk):
             title=catalog_item.title,
             description=catalog_item.description,
             image_url=catalog_item.image_url,
-            category='other',
+            category=catalog_item.tag,  # FIX: Copy the tag from catalog item
             catalog_item=catalog_item
         )
         success_message = 'Item added to wardrobe!'
@@ -997,10 +997,11 @@ def closet_view(request):
     # This list determines both the order categories appear AND how items are layered in preview
     category_order = [
         'outerwear',
+        'dress',
         'top',
         'bottom', 
         'shoes',
-        'accessories'
+        'accessory'
     ]
     
     # Fetch all user's wardrobe items
@@ -1019,10 +1020,11 @@ def closet_view(request):
     # This creates a readable mapping like 'top' -> 'Tops'
     category_labels = {
         'outerwear': 'Outerwear',
+        'dress': 'Dresses',
         'top': 'Tops',
         'bottom': 'Bottoms',
         'shoes': 'Shoes',
-        'accessories': 'Accessories'
+        'accessory': 'Accessories'
     }
     
     context = {

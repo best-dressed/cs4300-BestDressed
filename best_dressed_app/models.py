@@ -6,13 +6,15 @@ from django.contrib.auth.models import User
 # article of clothing item in the catalog
 class Item(models.Model):
 
-    ITEM_TAG_CHOICES = {
-        "Accessory": "accessory",
-        "Torso": "torso",
-        "Head": "head",
-        "Legs": "legs",
-        "Shoes": "shoes"
-    }
+    ITEM_TAG_CHOICES = [
+        ('top', 'Top'),
+        ('bottom', 'Bottom'),
+        ('dress', 'Dress'),
+        ('outerwear', 'Outerwear'),
+        ('shoes', 'Shoes'),
+        ('accessory', 'Accessory'),
+        ('other', 'Other'),
+    ]
 
     title = models.CharField(max_length=200)
     description = models.CharField(max_length=2000)
@@ -21,7 +23,8 @@ class Item(models.Model):
     short_description = models.CharField(max_length=75, default="")
     # 5000 is kind of insane but for some reason a lot of google image urls are >2000 length so goin with it
     image_url = models.URLField(max_length=5000, default="")
-    tag = models.CharField(max_length=20, choices=ITEM_TAG_CHOICES, default="")
+
+    tag = models.CharField(max_length=20, choices=ITEM_TAG_CHOICES, default="other")
 
     # ebay ID For market delete and duplicate checking
     item_id = models.CharField(max_length=200, unique=True, null=True, blank=True)
