@@ -535,22 +535,75 @@
     // Clear selection button
     clearButton.addEventListener('click', clearAllSelections);
     
-    // Create outfit button (will add functionality in Phase 7E)
-    createOutfitButton.addEventListener('click', function() {
-      if (getTotalSelectedCount() > 0) {
-        // Placeholder for now - we'll implement this in Phase 7E
-        alert('Create outfit functionality coming in Phase 7E!');
-      }
-    });
+  // ==========================================
+  // CREATE OUTFIT FUNCTIONALITY
+  // ==========================================
 
-    // Create outfit button (top) - same functionality
-    createOutfitButtonTop.addEventListener('click', function() {
-      if (getTotalSelectedCount() > 0) {
-        // Placeholder for now - we'll implement this in Phase 7E
-        alert('Create outfit functionality coming in Phase 7E!');
-      }
+  /**
+   * handleCreateOutfit - Submits form to create outfit from selected items
+   * 
+   * This function:
+   * 1. Gets all selected item IDs from our selectedItems state
+   * 2. Creates a hidden form dynamically with CSRF token
+   * 3. Adds selected IDs as comma-separated string
+   * 4. Submits the form to the backend
+   * 
+   * Why a form instead of AJAX?
+   * - We want to navigate to the outfit detail page anyway
+   * - Django's form handling is simple and secure
+   * - CSRF protection is built-in
+   * - Less JavaScript complexity
+   */
+  function handleCreateOutfit() {
+    const selectedIds = getSelectedItemIds();
+    
+    // Safety check - button should be disabled if nothing selected, but double-check
+    if (selectedIds.length === 0) {
+      alert('Please select at least one item for your outfit.');
+      return;
+    }
+    
+    // Create a form element dynamically
+    // We use JavaScript to create it rather than having a static form in HTML
+    // This keeps the HTML cleaner and only creates the form when needed
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "closet_view" %}';  // Submit to the same URL (closet_view)
+    
+    // Add CSRF token (required by Django for POST requests)
+    // CSRF = Cross-Site Request Forgery protection
+    // This token proves the request came from our site, not a malicious site
+    // {{ csrf_token }} is a Django template tag that generates a unique token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    // Add selected item IDs as a comma-separated string
+    // Example: [1, 5, 8, 12] becomes "1,5,8,12"
+    // Backend will split this back into a list
+    const itemsInput = document.createElement('input');
+    itemsInput.type = 'hidden';
+    itemsInput.name = 'selected_items';
+    itemsInput.value = selectedIds.join(',');
+    form.appendChild(itemsInput);
+    
+    // Add form to page (required before submitting)
+    document.body.appendChild(form);
+    
+    // Submit the form
+    // This will trigger a page navigation to the outfit detail page
+    form.submit();
+    
+    // Note: No need to remove form - page will navigate away before it matters
+  }
+
+  // Attach the handler to both Create Outfit buttons
+  // Both buttons do the same thing - create outfit from selected items
+  createOutfitButton.addEventListener('click', handleCreateOutfit);
+  createOutfitButtonTop.addEventListener('click', handleCreateOutfit);
     });
-  });
   
   // ==========================================
   // SELECTION LOGIC

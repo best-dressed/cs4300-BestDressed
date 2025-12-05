@@ -985,13 +985,81 @@ def closet_view(request):
     Items are organized in horizontal "rails" by category, similar to the iconic
     computerized wardrobe system from the movie Clueless.
     
+    GET: Display all wardrobe items organized by category for selection
+    POST: Create a new outfit from selected items
+    
     The category order is intentional - it mirrors how clothes are naturally layered:
     1. Outerwear (jackets, coats) - outermost layer
-    2. Tops (shirts, blouses) - middle layer
-    3. Bottoms (pants, skirts) - lower layer
-    4. Shoes - foundation
-    5. Accessories - finishing touches
+    2. Dresses - full body coverage
+    3. Tops (shirts, blouses) - middle layer
+    4. Bottoms (pants, skirts) - lower layer
+    5. Shoes - foundation
+    6. Accessories - finishing touches
     """
+    
+    # ==========================================
+    # POST REQUEST - Create Outfit from Selection
+    # ==========================================
+    if request.method == 'POST':
+        # Get the selected item IDs from the form
+        # JavaScript sends them as a comma-separated string: "1,5,8,12"
+        selected_ids = request.POST.get('selected_items', '')
+        
+        # Validation: Ensure at least one item is selected
+        if not selected_ids:
+            messages.error(request, 'Please select at least one item for your outfit.')
+            return redirect('closet_view')
+        
+        # Convert comma-separated string to list of integers
+        # Example: "1,5,8" → [1, 5, 8]
+        # The try/except catches if someone sends invalid data (like letters)
+        try:
+            item_ids = [int(id.strip()) for id in selected_ids.split(',') if id.strip()]
+        except ValueError:
+            # If conversion fails, someone sent malformed data
+            messages.error(request, 'Invalid item selection.')
+            return redirect('closet_view')
+        
+        # Security Check: Verify all items belong to the user's wardrobe
+        # This prevents users from adding other people's items by manipulating POST data
+        items = WardrobeItem.objects.filter(
+            id__in=item_ids,
+            user=request.user
+        )
+        
+        # Double-check: Verify we found ALL the items they claimed to select
+        # If item_ids=[1,5,8] but we only found 2 items, something's wrong
+        if items.count() != len(item_ids):
+            messages.error(request, 'Some selected items were not found in your wardrobe.')
+            return redirect('closet_view')
+        
+        # Create the outfit with an auto-generated name
+        # We count existing outfits to generate "Outfit 1", "Outfit 2", etc.
+        # Later we can add a modal for custom naming
+        outfit_count = Outfit.objects.filter(user=request.user).count()
+        outfit = Outfit.objects.create(
+            user=request.user,
+            name=f'Outfit {outfit_count + 1}',
+            description='Created from closet'
+        )
+        
+        # Link the selected items to this outfit
+        # .set() handles the many-to-many relationship
+        # This creates entries in the outfit_items junction table
+        outfit.items.set(items)
+        
+        # Success message with outfit details
+        messages.success(
+            request, 
+            f'Outfit "{outfit.name}" created successfully with {outfit.items.count()} items!'
+        )
+        
+        # Redirect to the outfit detail page to show the newly created outfit
+        return redirect('outfit_detail', outfit_pk=outfit.pk)
+    
+    # ==========================================
+    # GET REQUEST - Display Closet Interface
+    # ==========================================
     
     # Define the category order for logical layering
     # This list determines both the order categories appear AND how items are layered in preview
@@ -1005,6 +1073,7 @@ def closet_view(request):
     ]
     
     # Fetch all user's wardrobe items
+    # select_related('catalog_item') optimizes database queries by pre-loading related items
     wardrobe_items = WardrobeItem.objects.filter(user=request.user).select_related('catalog_item')
     
     # Organize items by category
@@ -1012,7 +1081,7 @@ def closet_view(request):
     items_by_category = {}
     for category in category_order:
         # Filter items for this specific category
-        # Using .all() creates a fresh queryset for each category to avoid evaluation issues
+        # order_by('-created_at') shows newest items first in each rail
         items = wardrobe_items.filter(category=category).order_by('-created_at')
         items_by_category[category] = items
     
