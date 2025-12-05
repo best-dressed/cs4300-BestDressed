@@ -78,17 +78,23 @@
       <!-- Outfit Preview (Right Side - 4 columns on desktop) -->
       <div class="col-lg-4">
         <div class="glass-card-simple p-4 sticky-preview">
-          <h5 class="text-white mb-4">Your Outfit</h5>
-          
-          <!-- Preview Area -->
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="text-white mb-0">Your Outfit</h5>
+            <button id="create-outfit-btn-top" class="btn-primary-glass btn-sm" disabled>
+              Create
+            </button>
+          </div>
+
           <div class="outfit-preview-area">
             <div id="outfit-preview" class="outfit-layers">
-              <!-- Selected items will be displayed here, layered -->
+              <!-- Empty state shown by default -->
               <div class="empty-preview">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="rgba(255,255,255,0.3)" class="bi bi-person-standing" viewBox="0 0 16 16">
-                  <path d="M8 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M6 6.5v5.5a.5.5 0 0 0 1 0V8.5h2V12a.5.5 0 0 0 1 0V6.5a1.5 1.5 0 1 0-3 0z"/>
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="rgba(255,255,255,0.3)" viewBox="0 0 16 16">
+                  <path d="M7 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1 1a.5.5 0 1 1-.708-.708l1-1a.5.5 0 0 1 .708 0zm3.992 0a.5.5 0 0 1 .708 0l1 1a.5.5 0 0 1-.708.708l-1-1a.5.5 0 0 1 0-.708z"/>
+                  <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5z"/>
                 </svg>
-                <p class="text-white-50 small mt-3">Select items to build your outfit</p>
+                <p class="text-white-50 small mt-3 mb-1">Select items from each category</p>
+                <p class="text-white-50" style="font-size: 0.7rem; opacity: 0.6;">Click items to add to your outfit</p>
               </div>
             </div>
           </div>
@@ -230,14 +236,10 @@
   }
 
   .outfit-preview-area {
-    min-height: 400px;
-    background: rgba(255, 255, 255, 0.02);
-    border: 2px dashed rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 800px; /* Increased from 650px */
+    position: relative;
   }
+
 
   .empty-preview {
     text-align: center;
@@ -245,13 +247,8 @@
   }
 
   .outfit-layers {
-    width: 100%;
-    height: 100%;
+    min-height: 800px; /* Increased from 650px */
     position: relative;
-    min-height: 400px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   /* Buttons */
@@ -320,10 +317,497 @@
       top: 0;
     }
   }
+
+  /* ==================== */
+  /* PREVIEW LAYERS       */
+  /* ==================== */
+
+  /**
+  * Preview item layers - positioned vertically to show complete outfit
+  * Each item is absolutely positioned at a different top value
+  */
+  .preview-item-layer {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally only */
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: visible; /* Changed from hidden to show labels */
+    border: 2px solid rgba(205, 180, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    animation: slideIn 0.4s ease;
+    transition: all 0.3s ease;
+    cursor: pointer; /* Indicate it's clickable */
+  }
+
+  /**
+  * Slide-in animation for when items are added
+  * Creates smooth entrance effect
+  */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  /**
+  * Image container - ensure image fills the space properly
+  */
+  .preview-item-layer img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  /**
+  * Hover effect - slight scale and enhanced border
+  * Also increases z-index to bring item to front
+  */
+  .preview-item-layer:hover {
+    transform: translateX(-50%) scale(1.08);
+    border-color: rgba(205, 180, 255, 0.8);
+    box-shadow: 0 8px 24px rgba(109, 17, 227, 0.4);
+    z-index: 999 !important; /* Bring to front on hover */
+  }
+
+  /**
+  * Category label - appears above the item
+  * Shows what type of clothing this is
+  */
+  .preview-item-label {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(109, 17, 227, 0.4);
+    border: 1px solid rgba(109, 17, 227, 0.6);
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    pointer-events: none; /* Don't interfere with clicking */
+  }
+
+  /**
+  * Item title - appears below the item
+  * Shows the specific item name
+  */
+  .preview-item-title {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    backdrop-filter: blur(10px);
+    pointer-events: none; /* Don't interfere with clicking */
+  }
+
+  /**
+  * Hover effect for labels - show on hover
+  * Makes them more visible when user hovers
+  */
+  .preview-item-layer:hover .preview-item-label,
+  .preview-item-layer:hover .preview-item-title {
+    opacity: 1;
+    border-color: rgba(205, 180, 255, 0.6);
+  }
+
+  /**
+  * Badge transition for count updates
+  */
+  .simple-badge {
+    transition: transform 0.2s ease;
+  }
+
+  /**
+  * Ensure preview area has enough height for vertical stacking
+  */
+  .outfit-preview-area {
+    min-height: 800px; /* Increased from 800px - gives more room */
+    position: relative;
+  }
+
+  .outfit-layers {
+    min-height: 800px; /* Increased from 800px */
+    position: relative;
+  }
+
+  .btn-primary-glass.btn-sm {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+  }
 </style>
 
 <script>
-// We'll add JavaScript for interactivity in the next phase
-console.log('Closet View loaded');
+  /**
+   * CLOSET VIEW - INTERACTIVE ITEM SELECTION
+   * 
+   * This script handles the interactive selection of wardrobe items in the closet view.
+   * It manages:
+   * - Selecting/deselecting items by clicking
+   * - Visual feedback for selected state
+   * - Real-time outfit preview with proper layering
+   * - Selected item count tracking
+   * - Button state management
+   */
+  
+  // ==========================================
+  // STATE MANAGEMENT
+  // ==========================================
+  
+  /**
+   * selectedItems: Object storing selected items organized by category
+   * Structure: {
+   *   'outerwear': [{id: 1, imageUrl: '...', title: '...'}],
+   *   'top': [{id: 2, imageUrl: '...', title: '...'}],
+   *   ...
+   * }
+   * 
+   * We organize by category because:
+   * 1. Easy to check if item already selected
+   * 2. Maintains category grouping for layered display
+   * 3. Can enforce limits per category if needed later
+   */
+  let selectedItems = {
+    'outerwear': [],
+    'dress': [],
+    'top': [],
+    'bottom': [],
+    'shoes': [],
+    'accessory': []
+  };
+  
+  /**
+   * categoryOrder: Array defining the visual layering order
+   * First item = top layer (outerwear), last item = bottom layer (shoes)
+   * This matches the order defined in the Django view
+   */
+  const categoryOrder = ['outerwear', 'dress', 'top', 'bottom', 'shoes', 'accessory'];
+  
+  // ==========================================
+  // DOM ELEMENTS
+  // ==========================================
+  
+  const outfitPreview = document.getElementById('outfit-preview');
+  const selectedCountBadge = document.getElementById('selected-count');
+  const clearButton = document.getElementById('clear-selection');
+  const createOutfitButton = document.getElementById('create-outfit-btn');
+  const createOutfitButtonTop = document.getElementById('create-outfit-btn-top'); // NEW
+  
+  // ==========================================
+  // EVENT LISTENERS
+  // ==========================================
+  
+  /**
+   * Add click handlers to all closet items
+   * Using event delegation on each rail for better performance
+   */
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get all closet item elements
+    const closetItems = document.querySelectorAll('.closet-item');
+    
+    closetItems.forEach(item => {
+      item.addEventListener('click', function() {
+        toggleItemSelection(this);
+      });
+    });
+    
+    // Clear selection button
+    clearButton.addEventListener('click', clearAllSelections);
+    
+    // Create outfit button (will add functionality in Phase 7E)
+    createOutfitButton.addEventListener('click', function() {
+      if (getTotalSelectedCount() > 0) {
+        // Placeholder for now - we'll implement this in Phase 7E
+        alert('Create outfit functionality coming in Phase 7E!');
+      }
+    });
+
+    // Create outfit button (top) - same functionality
+    createOutfitButtonTop.addEventListener('click', function() {
+      if (getTotalSelectedCount() > 0) {
+        // Placeholder for now - we'll implement this in Phase 7E
+        alert('Create outfit functionality coming in Phase 7E!');
+      }
+    });
+  });
+  
+  // ==========================================
+  // SELECTION LOGIC
+  // ==========================================
+  
+  /**
+   * toggleItemSelection - Handles clicking an item to select/deselect it
+   * @param {HTMLElement} itemElement - The clicked closet-item div
+   */
+  function toggleItemSelection(itemElement) {
+    const itemId = itemElement.dataset.itemId;
+    const category = itemElement.dataset.category;
+    const imageUrl = itemElement.querySelector('img').src;
+    const title = itemElement.querySelector('.item-title').textContent;
+    
+    // Check if this item is already selected
+    const categoryItems = selectedItems[category];
+    const existingIndex = categoryItems.findIndex(item => item.id === itemId);
+    
+    if (existingIndex !== -1) {
+      // Item is selected - DESELECT it
+      categoryItems.splice(existingIndex, 1);
+      itemElement.classList.remove('selected');
+    } else {
+      // Item is not selected - SELECT it
+      categoryItems.push({
+        id: itemId,
+        imageUrl: imageUrl,
+        title: title,
+        category: category
+      });
+      itemElement.classList.add('selected');
+    }
+    
+    // Update the UI
+    updatePreview();
+    updateSelectedCount();
+    updateButtonStates();
+  }
+  
+  /**
+   * clearAllSelections - Removes all selected items and resets UI
+   */
+  function clearAllSelections() {
+    // Reset the selectedItems object
+    Object.keys(selectedItems).forEach(category => {
+      selectedItems[category] = [];
+    });
+    
+    // Remove visual selection from all items
+    document.querySelectorAll('.closet-item.selected').forEach(item => {
+      item.classList.remove('selected');
+    });
+    
+    // Update UI
+    updatePreview();
+    updateSelectedCount();
+    updateButtonStates();
+  }
+    
+  // ==========================================
+  // UI UPDATE FUNCTIONS
+  // ==========================================
+    
+  /**
+   * updatePreview - Rebuilds the outfit preview with selected items
+   * Items are positioned vertically at different heights to show the complete outfit
+   */
+  function updatePreview() {
+    const totalSelected = getTotalSelectedCount();
+    
+    if (totalSelected === 0) {
+      // Show empty state
+      outfitPreview.innerHTML = `
+        <div class="empty-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="rgba(255,255,255,0.3)" viewBox="0 0 16 16">
+            <path d="M7 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1 1a.5.5 0 1 1-.708-.708l1-1a.5.5 0 0 1 .708 0zm3.992 0a.5.5 0 0 1 .708 0l1 1a.5.5 0 0 1-.708.708l-1-1a.5.5 0 0 1 0-.708z"/>
+            <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5z"/>
+          </svg>
+          <p class="text-white-50 small mt-3 mb-1">Select items from each category</p>
+          <p class="text-white-50" style="font-size: 0.7rem; opacity: 0.6;">Click items to add to your outfit</p>
+        </div>
+      `;
+      return;
+    }
+    
+    /**
+     * Vertical positioning map
+     * Each category gets a specific vertical position (top percentage)
+     * This creates the stacked outfit visualization
+     * 
+     * Values are percentages from top of preview area:
+     * - 5% = near top (outerwear - shoulders/chest area)
+     * - 15% = dresses (full body coverage)
+     * - 25% = upper middle (tops - chest/torso area)
+     * - 50% = middle (bottoms - waist/legs area)
+     * - 75% = lower (shoes - feet area)
+     * - 85% = bottom (accessories - can be positioned anywhere, using bottom for now)
+     */
+     const categoryPositions = {
+      'outerwear': 10,     // Top with padding
+      'dress': 23,         // Upper area - dress position
+      'top': 36,           // Upper middle - shirt position
+      'bottom': 52,        // Middle - pants/skirt position
+      'shoes': 68,         // Lower - footwear position
+      'accessory': 80      // Bottom with padding (was 86, now 80 to fit better)
+    };
+    
+    /**
+     * Category labels for display
+     * Shows what type of item each layer represents
+     */
+    const categoryLabels = {
+      'outerwear': 'Outerwear',
+      'dress': 'Dress',
+      'top': 'Top',
+      'bottom': 'Bottom',
+      'shoes': 'Shoes',
+      'accessory': 'Accessory'
+    };
+    
+    // Build layered preview
+    let previewHTML = '';
+    let hasItems = false;
+    
+    categoryOrder.forEach((category, index) => {
+      const items = selectedItems[category];
+      if (items.length > 0) {
+        hasItems = true;
+        
+        // For cleaner display, show only the first selected item from each category
+        // If user selects multiple tops, we show the first one
+        // This prevents visual clutter and makes the outfit preview cleaner
+        const item = items[0];
+        const topPosition = categoryPositions[category];
+        const zIndex = 100 - index; // Higher categories get higher z-index
+        
+        /**
+         * Each preview layer includes:
+         * - Positioned at specific vertical height
+         * - Category label for context
+         * - Item image
+         * - Click to remove functionality
+         */
+        previewHTML += `
+          <div class="preview-item-layer" 
+              style="top: ${topPosition}%; z-index: ${zIndex};"
+              data-item-id="${item.id}"
+              data-category="${category}"
+              title="Click to remove ${item.title}">
+            <div class="preview-item-label">${categoryLabels[category]}</div>
+            <img src="${item.imageUrl}" alt="${item.title}">
+            <div class="preview-item-title">${item.title}</div>
+          </div>
+        `;
+      }
+    });
+    
+    if (hasItems) {
+      outfitPreview.innerHTML = previewHTML;
+      
+      // Add click handlers to preview items for quick removal
+      document.querySelectorAll('.preview-item-layer').forEach(layer => {
+        layer.addEventListener('click', function(e) {
+          e.stopPropagation(); // Prevent event bubbling
+          const itemId = this.dataset.itemId;
+          const category = this.dataset.category;
+          
+          // Find and click the corresponding closet item to deselect it
+          const closetItem = document.querySelector(`.closet-item[data-item-id="${itemId}"][data-category="${category}"]`);
+          if (closetItem) {
+            closetItem.click(); // This will trigger toggleItemSelection
+          }
+        });
+      });
+    }
+  }
+  
+  /**
+   * updateSelectedCount - Updates the badge showing number of selected items
+   */
+  function updateSelectedCount() {
+    const count = getTotalSelectedCount();
+    selectedCountBadge.textContent = count;
+    
+    // Optional: Add visual feedback when count changes
+    selectedCountBadge.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+      selectedCountBadge.style.transform = 'scale(1)';
+    }, 200);
+  }
+  
+  /**
+   * updateButtonStates - Enable/disable buttons based on selection
+   */
+  function updateButtonStates() {
+    const count = getTotalSelectedCount();
+    const hasSelection = count > 0;
+    
+    // Enable buttons only if items are selected
+    clearButton.disabled = !hasSelection;
+    createOutfitButton.disabled = !hasSelection;
+    createOutfitButtonTop.disabled = !hasSelection; // NEW
+  }
+  
+  // ==========================================
+  // HELPER FUNCTIONS
+  // ==========================================
+  
+  /**
+   * getTotalSelectedCount - Returns total number of selected items across all categories
+   * @returns {number} Total count of selected items
+   */
+  function getTotalSelectedCount() {
+    let total = 0;
+    Object.values(selectedItems).forEach(categoryItems => {
+      total += categoryItems.length;
+    });
+    return total;
+  }
+  
+  /**
+   * getSelectedItemIds - Returns array of all selected item IDs
+   * Useful for sending to backend when creating outfit
+   * @returns {Array<string>} Array of item IDs
+   */
+  function getSelectedItemIds() {
+    const ids = [];
+    Object.values(selectedItems).forEach(categoryItems => {
+      categoryItems.forEach(item => {
+        ids.push(item.id);
+      });
+    });
+    return ids;
+  }
+  
+  // ==========================================
+  // DEBUG HELPERS (optional - remove in production)
+  // ==========================================
+  
+  /**
+   * Console log current selection state (helpful for debugging)
+   */
+  function logSelectionState() {
+    console.log('Current Selection:', selectedItems);
+    console.log('Total Selected:', getTotalSelectedCount());
+    console.log('Selected IDs:', getSelectedItemIds());
+  }
+  
+  // Expose to window for debugging in browser console
+  window.debugCloset = {
+    selectedItems,
+    logState: logSelectionState,
+    getIds: getSelectedItemIds
+  };
+  
+  console.log('✅ Closet View interactive mode loaded');
+  console.log('💡 Debug with: window.debugCloset.logState()');
 </script>
 {% endblock %}
