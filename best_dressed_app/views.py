@@ -774,17 +774,6 @@ def my_outfits(request):
     
     return render(request, 'my_outfits.html', context)
 
-    context = {
-        'outfits': outfits,
-        'occasion_filter': occasion_filter or 'all',
-        'season_filter': season_filter or 'all',
-        'favorites_only': favorites_only == 'true',
-        'occasion_choices': occasion_choices,
-        'season_choices': season_choices,
-    }
-    
-    return render(request, 'my_outfits.html', context)
-
 @login_required
 def outfit_detail(request, outfit_pk):
     """
@@ -1033,29 +1022,49 @@ def closet_view(request):
             messages.error(request, 'Some selected items were not found in your wardrobe.')
             return redirect('closet_view')
         
-        # Create the outfit with an auto-generated name
-        # We count existing outfits to generate "Outfit 1", "Outfit 2", etc.
-        # Later we can add a modal for custom naming
-        outfit_count = Outfit.objects.filter(user=request.user).count()
+        # Get custom outfit details from form (with defaults)
+        # .get() with second parameter provides default if field is missing/empty
+        outfit_name = request.POST.get('outfit_name', '').strip()
+        outfit_description = request.POST.get('outfit_description', '').strip()
+        outfit_occasion = request.POST.get('outfit_occasion', '').strip()
+        outfit_season = request.POST.get('outfit_season', '').strip()
+        
+        # Validate outfit name is provided
+        # This is our required field - user must name their outfit
+        if not outfit_name:
+            messages.error(request, 'Please provide a name for your outfit.')
+            return redirect('closet_view')
+        
+        # Check for duplicate outfit name
+        # Your model has unique_together constraint on ['user', 'name']
+        # We should check this before trying to create to give a better error message
+        if Outfit.objects.filter(user=request.user, name=outfit_name).exists():
+            messages.error(request, f'You already have an outfit named "{outfit_name}". Please choose a different name.')
+            return redirect('closet_view')
+        
+        # Create the outfit with user-provided details
+        # Only set occasion/season if provided (they're blank=True in model)
         outfit = Outfit.objects.create(
             user=request.user,
-            name=f'Outfit {outfit_count + 1}',
-            description='Created from closet'
+            name=outfit_name,
+            description=outfit_description if outfit_description else '',
+            occasion=outfit_occasion if outfit_occasion else '',
+            season=outfit_season if outfit_season else ''
         )
         
         # Link the selected items to this outfit
         # .set() handles the many-to-many relationship
-        # This creates entries in the outfit_items junction table
         outfit.items.set(items)
         
         # Success message with outfit details
         messages.success(
             request, 
-            f'Outfit "{outfit.name}" created successfully with {outfit.items.count()} items!'
+            f'✨ Outfit "{outfit.name}" created successfully with {outfit.items.count()} items!'
         )
         
-        # Redirect to the outfit detail page to show the newly created outfit
+        # Redirect to the outfit detail page
         return redirect('outfit_detail', outfit_pk=outfit.pk)
+
     
     # ==========================================
     # GET REQUEST - Display Closet Interface

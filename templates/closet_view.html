@@ -116,6 +116,89 @@
       </div>
     </div>
   </div>
+
+  <!-- CREATE OUTFIT MODAL -->
+  <div class="modal fade" id="createOutfitModal" tabindex="-1" aria-labelledby="createOutfitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-white" id="createOutfitModalLabel">Create New Outfit</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Selected Items Preview -->
+          <div class="mb-4">
+            <label class="form-label text-white-50 small mb-2">Selected Items</label>
+            <div id="modal-preview" class="modal-items-preview">
+              <!-- JavaScript will populate this -->
+            </div>
+          </div>
+
+          <!-- Outfit Name Input -->
+          <div class="mb-3">
+            <label for="outfit-name-input" class="form-label text-white">Outfit Name <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control glass-input" 
+              id="outfit-name-input" 
+              placeholder="e.g., Sunday Brunch, Office Monday, Date Night"
+              maxlength="200"
+              required>
+            <div class="form-text text-white-50 small">Give your outfit a memorable name</div>
+          </div>
+
+          <!-- Description (Optional) -->
+          <div class="mb-3">
+            <label for="outfit-description-input" class="form-label text-white">Description (Optional)</label>
+            <textarea 
+              class="form-control glass-input" 
+              id="outfit-description-input" 
+              rows="2"
+              placeholder="Describe the outfit and when to wear it..."
+              maxlength="1000"></textarea>
+          </div>
+
+          <!-- Occasion -->
+          <div class="mb-3">
+            <label for="outfit-occasion-input" class="form-label text-white">Occasion</label>
+            <select class="form-select glass-input" id="outfit-occasion-input">
+              <option value="">Select occasion (optional)</option>
+              <option value="casual">Casual</option>
+              <option value="business">Business/Professional</option>
+              <option value="formal">Formal</option>
+              <option value="athletic">Athletic/Workout</option>
+              <option value="night_out">Night Out</option>
+              <option value="date">Date</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <!-- Season -->
+          <div class="mb-3">
+            <label for="outfit-season-input" class="form-label text-white">Season</label>
+            <select class="form-select glass-input" id="outfit-season-input">
+              <option value="">Select season (optional)</option>
+              <option value="spring">Spring</option>
+              <option value="summer">Summer</option>
+              <option value="fall">Fall</option>
+              <option value="winter">Winter</option>
+              <option value="all">All Seasons</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn-clean-glass" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-primary-glass" id="confirm-create-outfit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
+              <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+            </svg>
+            Create Outfit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <style>
@@ -456,6 +539,224 @@
     padding: 0.4rem 0.85rem;
     font-size: 0.8rem;
   }
+
+  /* ==================== */
+  /* MODAL STYLING        */
+  /* ==================== */
+
+  /**
+   * Glass-morphism modal styling
+   * Creates a frosted glass effect with backdrop blur
+   */
+  .glass-modal {
+    background: rgba(20, 20, 40, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    color: #fff;
+  }
+
+  /**
+   * Glass input styling for form fields
+   * Consistent with the rest of the site's glass aesthetic
+   */
+  .glass-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+  }
+
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(205, 180, 255, 0.5);
+    color: #fff;
+    box-shadow: 0 0 0 0.25rem rgba(205, 180, 255, 0.15);
+  }
+
+  .glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /**
+   * Glass select dropdown styling
+   * Style the select element itself
+   */
+   .glass-input option {
+    background: rgba(20, 20, 40, 0.95);
+    color: #fff;
+    padding: 0.5rem;
+  }
+
+  /**
+   * Selected option styling
+   */
+  .glass-input option:checked {
+    background: rgba(109, 17, 227, 0.4);
+    color: #fff;
+  }
+
+  /**
+   * Hover state for options
+   */
+  .glass-input option:hover {
+    background: rgba(109, 17, 227, 0.3);
+    color: #fff;
+  }
+
+  /**
+   * Disabled option styling
+   */
+  .glass-input option:disabled {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /**
+   * Select arrow styling (custom)
+   * This removes the default arrow and adds a custom one
+   */
+  .glass-input[type="text"],
+  .glass-input:not(textarea) {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CDB4FF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    padding-right: 2.5rem;
+  }
+
+  /**
+   * Ensure select dropdowns use the custom arrow
+   */
+  select.glass-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CDB4FF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+
+  /**
+   * Focus state for select
+   */
+  select.glass-input:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CDB4FF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  }
+
+    /**
+   * Placeholder option styling - make it subtle
+   * The first option (value="") should look like a placeholder, not a selection
+   */
+   select.glass-input option[value=""] {
+    color: rgba(255, 255, 255, 0.4);
+    font-style: italic;
+  }
+
+  /**
+   * When placeholder is selected, keep select box subtle
+   */
+  select.glass-input:invalid {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /**
+   * When a real option is selected, use normal color
+   */
+  select.glass-input:valid {
+    color: #fff;
+  }
+
+  /**
+   * Remove the blue highlight from the closed select
+   */
+  select.glass-input {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /**
+   * Ensure no weird background when select is in various states
+   */
+  select.glass-input:not(:focus) {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /**
+   * Modal items preview - shows mini thumbnails of selected items
+   */
+  .modal-items-preview {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    min-height: 80px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /**
+   * Individual item preview in modal
+   * Smaller version of the main closet items
+   */
+  .modal-item-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid rgba(205, 180, 255, 0.3);
+    position: relative;
+  }
+
+  .modal-item-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /**
+   * Category badge on preview items
+   * Shows what type of item it is
+   */
+  .modal-item-category {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(109, 17, 227, 0.8);
+    color: #fff;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /**
+   * Form label styling
+   */
+  .modal-body .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  /**
+   * Required field indicator
+   */
+  .text-danger {
+    color: #ff6b6b !important;
+  }
+
+  /**
+   * Close button for modal (white X)
+   */
+  .btn-close-white {
+    filter: brightness(0) invert(1);
+  }
 </style>
 
 <script>
@@ -513,14 +814,20 @@
   const clearButton = document.getElementById('clear-selection');
   const createOutfitButton = document.getElementById('create-outfit-btn');
   const createOutfitButtonTop = document.getElementById('create-outfit-btn-top'); // NEW
-  
+    
   // ==========================================
-  // EVENT LISTENERS
+  // CREATE OUTFIT FUNCTIONALITY - ENHANCED
   // ==========================================
-  
+
   /**
-   * Add click handlers to all closet items
-   * Using event delegation on each rail for better performance
+   * Modal instance for outfit creation
+   * Bootstrap 5 modal that we'll show/hide
+   */
+  let createOutfitModal;
+
+  /**
+   * Initialize modal on page load
+   * Bootstrap needs the modal to be initialized before use
    */
   document.addEventListener('DOMContentLoaded', function() {
     // Get all closet item elements
@@ -535,75 +842,181 @@
     // Clear selection button
     clearButton.addEventListener('click', clearAllSelections);
     
-  // ==========================================
-  // CREATE OUTFIT FUNCTIONALITY
-  // ==========================================
+    // Initialize Bootstrap modal
+    const modalElement = document.getElementById('createOutfitModal');
+    createOutfitModal = new bootstrap.Modal(modalElement);
+    
+    // Attach modal show handler to both create buttons
+    createOutfitButton.addEventListener('click', showCreateOutfitModal);
+    createOutfitButtonTop.addEventListener('click', showCreateOutfitModal);
+    
+    // Attach confirm handler to the modal's create button
+    document.getElementById('confirm-create-outfit').addEventListener('click', handleConfirmCreate);
+    
+    // Auto-focus name input when modal opens
+    modalElement.addEventListener('shown.bs.modal', function() {
+      document.getElementById('outfit-name-input').focus();
+    });
+    
+    // Clear form when modal closes
+    modalElement.addEventListener('hidden.bs.modal', function() {
+      clearModalForm();
+    });
+  });
 
   /**
-   * handleCreateOutfit - Submits form to create outfit from selected items
+   * showCreateOutfitModal - Opens the modal with outfit creation form
    * 
    * This function:
-   * 1. Gets all selected item IDs from our selectedItems state
-   * 2. Creates a hidden form dynamically with CSRF token
-   * 3. Adds selected IDs as comma-separated string
-   * 4. Submits the form to the backend
-   * 
-   * Why a form instead of AJAX?
-   * - We want to navigate to the outfit detail page anyway
-   * - Django's form handling is simple and secure
-   * - CSRF protection is built-in
-   * - Less JavaScript complexity
+   * 1. Validates that items are selected
+   * 2. Populates the modal preview with selected items
+   * 3. Shows the modal
    */
-  function handleCreateOutfit() {
+  function showCreateOutfitModal() {
     const selectedIds = getSelectedItemIds();
     
-    // Safety check - button should be disabled if nothing selected, but double-check
+    // Safety check - button should be disabled, but double-check
     if (selectedIds.length === 0) {
       alert('Please select at least one item for your outfit.');
       return;
     }
     
-    // Create a form element dynamically
-    // We use JavaScript to create it rather than having a static form in HTML
-    // This keeps the HTML cleaner and only creates the form when needed
+    // Populate the modal preview with selected items
+    populateModalPreview();
+    
+    // Show the modal
+    createOutfitModal.show();
+  }
+
+  /**
+   * populateModalPreview - Builds the visual preview in the modal
+   * Shows small thumbnails of each selected item with category badges
+   */
+  function populateModalPreview() {
+    const modalPreview = document.getElementById('modal-preview');
+    let previewHTML = '';
+    
+    // Build preview for each category
+    categoryOrder.forEach(category => {
+      const items = selectedItems[category];
+      items.forEach(item => {
+        previewHTML += `
+          <div class="modal-item-preview" title="${item.title}">
+            <img src="${item.imageUrl}" alt="${item.title}">
+            <div class="modal-item-category">${category}</div>
+          </div>
+        `;
+      });
+    });
+    
+    if (previewHTML === '') {
+      previewHTML = '<p class="text-white-50 small mb-0">No items selected</p>';
+    }
+    
+    modalPreview.innerHTML = previewHTML;
+  }
+
+  /**
+   * handleConfirmCreate - Validates form and submits outfit creation
+   * 
+   * This function:
+   * 1. Validates the outfit name is provided
+   * 2. Gets all form values (name, description, occasion, season)
+   * 3. Creates and submits the form with all data
+   */
+  function handleConfirmCreate() {
+    // Get form values
+    const outfitName = document.getElementById('outfit-name-input').value.trim();
+    const outfitDescription = document.getElementById('outfit-description-input').value.trim();
+    const outfitOccasion = document.getElementById('outfit-occasion-input').value;
+    const outfitSeason = document.getElementById('outfit-season-input').value;
+    
+    // Validate outfit name is provided
+    if (!outfitName) {
+      alert('Please enter a name for your outfit.');
+      document.getElementById('outfit-name-input').focus();
+      return;
+    }
+    
+    // Get selected item IDs
+    const selectedIds = getSelectedItemIds();
+    
+    if (selectedIds.length === 0) {
+      alert('Please select at least one item for your outfit.');
+      createOutfitModal.hide();
+      return;
+    }
+    
+    // Create form dynamically
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '{% url "closet_view" %}';  // Submit to the same URL (closet_view)
+    form.action = '{% url "closet_view" %}';
     
-    // Add CSRF token (required by Django for POST requests)
-    // CSRF = Cross-Site Request Forgery protection
-    // This token proves the request came from our site, not a malicious site
-    // {{ csrf_token }} is a Django template tag that generates a unique token
+    // Add CSRF token
     const csrfInput = document.createElement('input');
     csrfInput.type = 'hidden';
     csrfInput.name = 'csrfmiddlewaretoken';
     csrfInput.value = '{{ csrf_token }}';
     form.appendChild(csrfInput);
     
-    // Add selected item IDs as a comma-separated string
-    // Example: [1, 5, 8, 12] becomes "1,5,8,12"
-    // Backend will split this back into a list
+    // Add selected item IDs
     const itemsInput = document.createElement('input');
     itemsInput.type = 'hidden';
     itemsInput.name = 'selected_items';
     itemsInput.value = selectedIds.join(',');
     form.appendChild(itemsInput);
     
-    // Add form to page (required before submitting)
-    document.body.appendChild(form);
+    // Add outfit name
+    const nameInput = document.createElement('input');
+    nameInput.type = 'hidden';
+    nameInput.name = 'outfit_name';
+    nameInput.value = outfitName;
+    form.appendChild(nameInput);
     
-    // Submit the form
-    // This will trigger a page navigation to the outfit detail page
+    // Add description (if provided)
+    if (outfitDescription) {
+      const descInput = document.createElement('input');
+      descInput.type = 'hidden';
+      descInput.name = 'outfit_description';
+      descInput.value = outfitDescription;
+      form.appendChild(descInput);
+    }
+    
+    // Add occasion (if selected)
+    if (outfitOccasion) {
+      const occasionInput = document.createElement('input');
+      occasionInput.type = 'hidden';
+      occasionInput.name = 'outfit_occasion';
+      occasionInput.value = outfitOccasion;
+      form.appendChild(occasionInput);
+    }
+    
+    // Add season (if selected)
+    if (outfitSeason) {
+      const seasonInput = document.createElement('input');
+      seasonInput.type = 'hidden';
+      seasonInput.name = 'outfit_season';
+      seasonInput.value = outfitSeason;
+      form.appendChild(seasonInput);
+    }
+    
+    // Add form to page and submit
+    document.body.appendChild(form);
     form.submit();
     
-    // Note: No need to remove form - page will navigate away before it matters
+    // Note: Page will navigate away, so no cleanup needed
   }
 
-  // Attach the handler to both Create Outfit buttons
-  // Both buttons do the same thing - create outfit from selected items
-  createOutfitButton.addEventListener('click', handleCreateOutfit);
-  createOutfitButtonTop.addEventListener('click', handleCreateOutfit);
-    });
+  /**
+   * clearModalForm - Resets all form fields to default values
+   * Called when modal is closed
+   */
+  function clearModalForm() {
+    document.getElementById('outfit-name-input').value = '';
+    document.getElementById('outfit-description-input').value = '';
+    document.getElementById('outfit-occasion-input').value = '';
+    document.getElementById('outfit-season-input').value = '';
+  }
   
   // ==========================================
   // SELECTION LOGIC
@@ -863,4 +1276,5 @@
   console.log('✅ Closet View interactive mode loaded');
   console.log('💡 Debug with: window.debugCloset.logState()');
 </script>
+
 {% endblock %}
