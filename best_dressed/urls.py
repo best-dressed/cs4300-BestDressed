@@ -25,14 +25,18 @@ urlpatterns = [
      path('login/', views.login, name="login"),
      path('signup/', views.signup, name="signup"),
     path("accounts/", include("users.urls")),
+
+
     # ebay api path
     path('', include("api.urls")),
     path('admin/', admin.site.urls),
+
 
     # dashboard and user features
     path('dashboard/', views.dashboard, name="dashboard"),
     path('account/', views.account_settings, name="account_settings"),
     
+
     # wardrobe and wardrobe features
     path('wardrobe/', views.my_wardrobe, name="my_wardrobe"),
     path('wardrobe/add/', views.add_wardrobe_item, name="add_wardrobe_item"),
@@ -50,6 +54,9 @@ urlpatterns = [
     path('outfits/<int:outfit_pk>/duplicate/', views.duplicate_outfit, name='duplicate_outfit'),
     path('wardrobe/<int:item_pk>/add-to-outfit/', views.quick_add_to_outfit, name='quick_add_to_outfit'),
 
+    # clueless-style closet and closet features
+    path('closet/', views.closet_view, name='closet_view'),
+
 
     # item listing/catalog
     path('item_listing/', views.item_listing, name="item_listing"),
@@ -65,9 +72,11 @@ urlpatterns = [
     path('add_item/', views.add_item, name="add_item"),
     path('add_item/success/<int:pk>/', views.add_item_success, name="add_item_success"),
 
+
     # ai recommendations
     path('recommendations/', views.recommendations, name="recommendations"),
     path('recommendations/generate/', views.generate_recommendations_ajax, name="generate_recommendations_ajax"),
+
 
     # forums
     path("forum/", include("forum.urls")),

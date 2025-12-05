@@ -974,3 +974,62 @@ def quick_add_to_outfit(request, item_pk):
     }
     
     return render(request, 'quick_add_to_outfit.html', context)
+
+@login_required
+def closet_view(request):
+    """
+    Clueless-style interactive closet view for building outfits.
+    
+    This view organizes the user's wardrobe items by category and presents them
+    in a visual "closet" interface where users can select items to build outfits.
+    Items are organized in horizontal "rails" by category, similar to the iconic
+    computerized wardrobe system from the movie Clueless.
+    
+    The category order is intentional - it mirrors how clothes are naturally layered:
+    1. Outerwear (jackets, coats) - outermost layer
+    2. Tops (shirts, blouses) - middle layer
+    3. Bottoms (pants, skirts) - lower layer
+    4. Shoes - foundation
+    5. Accessories - finishing touches
+    """
+    
+    # Define the category order for logical layering
+    # This list determines both the order categories appear AND how items are layered in preview
+    category_order = [
+        'outerwear',
+        'top',
+        'bottom', 
+        'shoes',
+        'accessories'
+    ]
+    
+    # Fetch all user's wardrobe items
+    wardrobe_items = WardrobeItem.objects.filter(user=request.user).select_related('catalog_item')
+    
+    # Organize items by category
+    # We use a dictionary where keys are category names and values are querysets of items
+    items_by_category = {}
+    for category in category_order:
+        # Filter items for this specific category
+        # Using .all() creates a fresh queryset for each category to avoid evaluation issues
+        items = wardrobe_items.filter(category=category).order_by('-created_at')
+        items_by_category[category] = items
+    
+    # Get category display names for the template
+    # This creates a readable mapping like 'top' -> 'Tops'
+    category_labels = {
+        'outerwear': 'Outerwear',
+        'top': 'Tops',
+        'bottom': 'Bottoms',
+        'shoes': 'Shoes',
+        'accessories': 'Accessories'
+    }
+    
+    context = {
+        'items_by_category': items_by_category,
+        'category_order': category_order,
+        'category_labels': category_labels,
+        'total_items': wardrobe_items.count(),
+    }
+    
+    return render(request, 'closet_view.html', context)

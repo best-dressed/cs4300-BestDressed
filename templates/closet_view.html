@@ -1,0 +1,329 @@
+{% extends "main.html" %}
+{% load static %}
+{% load closet_filters %}
+
+{% block title %}My Closet · Best Dressed{% endblock %}
+
+{% block content %}
+<div class="closet-container">
+  <div class="container-fluid py-4">
+    {% include 'includes/messages.html' %}
+    
+    <!-- Header -->
+    <div class="closet-header mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="display-6 fw-bold text-white mb-2">My Closet</h1>
+          <p class="text-white-50 mb-0">Build your outfit · {{ total_items }} items available</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn-clean-glass">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+          </svg>
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Layout: Category Rails + Outfit Preview -->
+    <div class="row g-4">
+      <!-- Category Rails (Left Side - 8 columns on desktop) -->
+      <div class="col-lg-8">
+        <div class="glass-card-simple p-4">
+          <h5 class="text-white mb-4">Select Items</h5>
+          
+          {% if total_items > 0 %}
+            <!-- Loop through each category in order -->
+            {% for category in category_order %}
+              <div class="category-rail mb-4">
+                <!-- Category Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="text-white mb-0">{{ category_labels|get_item:category }}</h6>
+                  <span class="text-white-50 small">{{ items_by_category|get_item:category|length }} items</span>
+                </div>
+                
+                <!-- Horizontal Scrolling Items -->
+                {% with items=items_by_category|get_item:category %}
+                  {% if items %}
+                    <div class="items-rail">
+                      {% for item in items %}
+                        <div class="closet-item" data-item-id="{{ item.pk }}" data-category="{{ category }}">
+                          <div class="item-image">
+                            <img src="{{ item.image_url }}" alt="{{ item.title }}">
+                          </div>
+                          <div class="item-info">
+                            <p class="item-title">{{ item.title|truncatewords:3 }}</p>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-3">
+                      <p class="text-white-50 small mb-0">No items in this category</p>
+                    </div>
+                  {% endif %}
+                {% endwith %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+              <p class="text-white-50 mb-3">Your closet is empty</p>
+              <a href="{% url 'my_wardrobe' %}" class="btn-clean-glass">Add Items to Wardrobe</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Outfit Preview (Right Side - 4 columns on desktop) -->
+      <div class="col-lg-4">
+        <div class="glass-card-simple p-4 sticky-preview">
+          <h5 class="text-white mb-4">Your Outfit</h5>
+          
+          <!-- Preview Area -->
+          <div class="outfit-preview-area">
+            <div id="outfit-preview" class="outfit-layers">
+              <!-- Selected items will be displayed here, layered -->
+              <div class="empty-preview">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="rgba(255,255,255,0.3)" class="bi bi-person-standing" viewBox="0 0 16 16">
+                  <path d="M8 3a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3M6 6.5v5.5a.5.5 0 0 0 1 0V8.5h2V12a.5.5 0 0 0 1 0V6.5a1.5 1.5 0 1 0-3 0z"/>
+                </svg>
+                <p class="text-white-50 small mt-3">Select items to build your outfit</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Items Info -->
+          <div class="selected-info mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-white-50 small">Selected Items</span>
+              <span id="selected-count" class="simple-badge">0</span>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button id="clear-selection" class="btn-clean-glass" disabled>Clear Selection</button>
+              <button id="create-outfit-btn" class="btn-primary-glass" disabled>Create Outfit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* Base Container */
+  .closet-container {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  /* Glass Card */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+  }
+
+  /* Category Rail */
+  .category-rail {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 1.5rem;
+  }
+
+  .category-rail:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  /* Horizontal Scrolling Items */
+  .items-rail {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(205, 180, 255, 0.3) rgba(255, 255, 255, 0.05);
+  }
+
+  .items-rail::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .items-rail::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+
+  .items-rail::-webkit-scrollbar-thumb {
+    background: rgba(205, 180, 255, 0.3);
+    border-radius: 10px;
+  }
+
+  .items-rail::-webkit-scrollbar-thumb:hover {
+    background: rgba(205, 180, 255, 0.5);
+  }
+
+  /* Closet Item Card */
+  .closet-item {
+    flex-shrink: 0;
+    width: 140px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .closet-item:hover {
+    transform: translateY(-4px);
+  }
+
+  .item-image {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.3s ease;
+  }
+
+  .item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .closet-item:hover .item-image {
+    border-color: rgba(205, 180, 255, 0.4);
+  }
+
+  /* Selected State */
+  .closet-item.selected .item-image {
+    border-color: #CDB4FF;
+    border-width: 3px;
+    box-shadow: 0 0 20px rgba(205, 180, 255, 0.5);
+  }
+
+  .item-info {
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  .item-title {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Outfit Preview */
+  .sticky-preview {
+    position: sticky;
+    top: 20px;
+  }
+
+  .outfit-preview-area {
+    min-height: 400px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-preview {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .outfit-layers {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    min-height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover:not(:disabled) {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary-glass {
+    background: rgba(109, 17, 227, 0.3);
+    border: 1px solid rgba(109, 17, 227, 0.5);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary-glass:hover:not(:disabled) {
+    background: rgba(109, 17, 227, 0.5);
+    border-color: #6D11E3;
+    transform: translateY(-2px);
+  }
+
+  .btn-primary-glass:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .simple-badge {
+    background: rgba(205, 180, 255, 0.2);
+    border: 1px solid rgba(205, 180, 255, 0.3);
+    color: #CDB4FF;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* Responsive */
+  @media (max-width: 991px) {
+    .sticky-preview {
+      position: relative;
+      top: 0;
+    }
+  }
+</style>
+
+<script>
+// We'll add JavaScript for interactivity in the next phase
+console.log('Closet View loaded');
+</script>
+{% endblock %}
