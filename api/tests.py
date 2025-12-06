@@ -1,11 +1,14 @@
 """Test file for general testing of the eBay API interactions and associated views"""
 # chatGPT with full coverage additions
 
+# CRITICAL: Set environment variables BEFORE any Django imports
+# This ensures views.py loads these values when it's imported
+# pylint: disable=wrong-import-position
+# pylint goes crazy for this and it conflicts with actually maintaining the tests well
 import os
-# Set environment variables for testing
-# For some reason this broke the github actions so moving it up top so our tests actually access this.
 os.environ['EBAY_VERIFICATION_TOKEN'] = 'test_verification_token'
 os.environ['EBAY_BASE64_AUTHORIZATION_TOKEN'] = 'dGVzdF9iYXNlNjRfYXV0aF90b2tlbg=='  # base64 test token
+
 import base64
 import logging
 import json
@@ -20,6 +23,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 
 from best_dressed_app.models import Item
 from api.views import ebay_marketplace_deletion_notification
+# pylint: enable=wrong-import-position
 
 logger = logging.getLogger(__name__)
 
