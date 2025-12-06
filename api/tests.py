@@ -2,6 +2,10 @@
 # chatGPT with full coverage additions
 
 import os
+# Set environment variables for testing
+# For some reason this broke the github actions so moving it up top so our tests actually access this.
+os.environ['EBAY_VERIFICATION_TOKEN'] = 'test_verification_token'
+os.environ['EBAY_BASE64_AUTHORIZATION_TOKEN'] = 'dGVzdF9iYXNlNjRfYXV0aF90b2tlbg=='  # base64 test token
 import base64
 import logging
 import json
@@ -18,10 +22,6 @@ from best_dressed_app.models import Item
 from api.views import ebay_marketplace_deletion_notification
 
 logger = logging.getLogger(__name__)
-
-# Set environment variables for testing
-os.environ['EBAY_VERIFICATION_TOKEN'] = 'test_verification_token'
-os.environ['EBAY_BASE64_AUTHORIZATION_TOKEN'] = 'dGVzdF9iYXNlNjRfYXV0aF90b2tlbg=='  # base64 test token
 
 User = get_user_model()
 
