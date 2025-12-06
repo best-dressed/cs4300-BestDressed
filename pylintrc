@@ -1,4 +1,12 @@
 [MAIN]
+[MASTER]
+load-plugins=pylint_django
+ignore=migrations
+init-hook='import sys, os; sys.path.append(os.path.abspath(".")); os.environ["DJANGO_SETTINGS_MODULE"] = "best_dressed.settings"'
+
+[TYPECHECK]
+generated-members=objects,does_not_exist,MultipleObjectsReturned
+
 [Message Control]
 disable=C0303, # disable trailing whitespace
         C0301  # disable line too long
