@@ -46,7 +46,7 @@ def _handle_challenge_code(challenge_code):
 
 
 def _fetch_ebay_public_key(kid, oauth_access_token):
-    """Fetch public key from eBay API."""
+    """Fetch public key from eBay API. Raises exceptions to caller."""
     ebay_verification_url = f'https://api.ebay.com/commerce/notification/v1/public_key/{kid}'
     pk_request = requests.get(
         url=ebay_verification_url,
@@ -133,7 +133,8 @@ def ebay_marketplace_deletion_notification(request):
                 return JsonResponse({}, status=500)
 
         # catch errors
-        except (requests.RequestException, KeyError, json.JSONDecodeError) as e:
+        # pylint: disable=broad-exception-caught
+        except Exception as e:
             message_title = "Ebay Marketplace Account Deletion: Error performing validation"
             logger.error("%s Error: %s", message_title, e)
             return JsonResponse({}, status=500)
