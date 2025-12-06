@@ -1,3 +1,4 @@
+"""Forms for various models in the app"""
 from django import forms
 from .models import UserProfile, WardrobeItem, Item, Outfit
 
@@ -117,6 +118,23 @@ class WardrobeItemForm(forms.ModelForm):
 
 # mostly chatGPT here with some edits
 class ItemForm(forms.ModelForm):
+    """
+    Form for creating or editing an Item instance.
+
+    Uses Django's ModelForm to automatically generate form fields
+    from the Item model. The form includes custom widgets for better
+    styling and user guidance.
+
+    Fields included:
+    - title: Text input with placeholder.
+    - description: Textarea with placeholder and 3 rows.
+    - image_url: URL input with placeholder.
+    - tag: Dropdown select.
+
+    Comments:
+    - The short description is not manually entered, hence excluded.
+    """
+
     class Meta:
         model = Item
         # we don't get the short description manually
