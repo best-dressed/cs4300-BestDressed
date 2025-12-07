@@ -1,23 +1,33 @@
+"""Test file for general testing of the eBay API interactions and associated views"""
 # chatGPT with full coverage additions
 
-from django.test import TestCase, Client, RequestFactory
-from django.urls import reverse
-from unittest.mock import patch, MagicMock
-from cryptography.hazmat.primitives.asymmetric import ec
-from cryptography.hazmat.primitives import hashes, serialization
-from django.http import JsonResponse
+# CRITICAL: Set environment variables BEFORE any Django imports
+# This ensures views.py loads these values when it's imported
+# pylint: disable=wrong-import-position
+# pylint goes crazy for this and it conflicts with actually maintaining the tests well
 import os
+os.environ['EBAY_VERIFICATION_TOKEN'] = 'test_verification_token'
+os.environ['EBAY_BASE64_AUTHORIZATION_TOKEN'] = 'dGVzdF9iYXNlNjRfYXV0aF90b2tlbg=='  # base64 test token
+
 import base64
 import logging
 import json
+from unittest.mock import patch, MagicMock
+
+from django.test import TestCase, Client, RequestFactory
+from django.urls import reverse
+from django.contrib.auth import get_user_model
+
+from cryptography.hazmat.primitives.asymmetric import ec
+from cryptography.hazmat.primitives import hashes, serialization
+
 from best_dressed_app.models import Item
-from django.contrib.auth.models import User
+from api.views import ebay_marketplace_deletion_notification
+# pylint: enable=wrong-import-position
 
 logger = logging.getLogger(__name__)
 
-# Set environment variables for testing
-os.environ['EBAY_VERIFICATION_TOKEN'] = 'test_verification_token'
-os.environ['EBAY_BASE64_AUTHORIZATION_TOKEN'] = 'dGVzdF9iYXNlNjRfYXV0aF90b2tlbg=='  # base64 test token
+User = get_user_model()
 
 
 class EbayViewsTestCase(TestCase):
@@ -38,7 +48,7 @@ class EbayViewsTestCase(TestCase):
 
     @patch('api.views.get_oath_token', return_value='fake_token')
     @patch('requests.get')
-    def test_post_invalid_signature_returns_412(self, mock_get, mock_token):
+    def test_post_invalid_signature_returns_412(self, mock_get, _mock_token):
         """Test invalid signature handling in POST /auth/ebay_market_delete/"""
         fake_public_key = """-----BEGIN PUBLIC KEY-----
 MFYwEAYHKoZIzj0CAQYFK4EEAAoDQgAEz2dK6S0RZKoF7zT9f3v7UzE1kmD+YvXY
@@ -57,7 +67,7 @@ J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
 
     @patch('api.views.get_oath_token', return_value='fake_token')
     @patch('requests.get')
-    def test_ebay_get_items_post_parses_items_correctly(self, mock_get, mock_token):
+    def test_ebay_get_items_post_parses_items_correctly(self, mock_get, _mock_token):
         """Test POST /ebay_add_items/ parses items into context without DB save"""
         mock_search_response = {
             "itemSummaries": [{"itemId": "123", "title": "Test Item", "price": {"value": "10.00", "currency": "USD"}, "seller": {"username": "seller1"}, "itemWebUrl": "http://example.com/item/123"}]
@@ -95,7 +105,7 @@ J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
     @patch('api.views.serialization.load_pem_public_key')
     @patch('api.views.requests.get')
     @patch('api.views.get_oath_token', return_value='fake_token')
-    def test_ebay_deletion_removes_items_with_matching_seller_id(self, mock_get_oauth, mock_requests_get, mock_load_key):
+    def test_ebay_deletion_removes_items_with_matching_seller_id(self, _mock_get_oauth, mock_requests_get, mock_load_key):
         """Ensures deletion webhook removes Items with matching seller_id"""
         item1 = Item.objects.create(title="Item A", description="desc", image_url="http://img/a", tag="Accessory", item_id="111", seller_id="delete_me")
         item2 = Item.objects.create(title="Item B", description="desc", image_url="http://img/b", tag="Accessory", item_id="222", seller_id="keep_me")
@@ -122,7 +132,7 @@ J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
     @patch('api.views.requests.get')
     @patch('api.views.serialization.load_pem_public_key', side_effect=ValueError("Invalid PEM"))
     @patch('api.views.get_oath_token', return_value='fake_token')
-    def test_invalid_public_key_returns_412(self, mock_token, mock_load_key, mock_requests_get):
+    def test_invalid_public_key_returns_412(self, _mock_token, _mock_load_key, mock_requests_get):
         """
         Branch: public key deserialization fails
         """
@@ -150,7 +160,7 @@ J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
     @patch('api.views.serialization.load_pem_public_key')
     @patch('api.views.requests.get', side_effect=Exception("PK fetch failed"))
     @patch('api.views.get_oath_token', return_value='fake_token')
-    def test_public_key_fetch_exception_returns_500(self, mock_get_oauth, mock_requests_get, mock_load_key):
+    def test_public_key_fetch_exception_returns_500(self, _mock_get_oauth, _mock_requests_get, _mock_load_key):
         """Branch: exception during public key fetch"""
         fake_sig = base64.b64encode(json.dumps({"kid": "fake", "signature": base64.b64encode(b'abc').decode()}).encode()).decode()
         payload = {"username": "someone"}
@@ -160,7 +170,7 @@ J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
     @patch('api.views.requests.get')
     @patch('api.views.serialization.load_pem_public_key')
     @patch('api.views.get_oath_token', return_value='fake_token')
-    def test_missing_username_in_payload(self, mock_token, mock_load_key, mock_requests_get):
+    def test_missing_username_in_payload(self, _mock_token, mock_load_key, mock_requests_get):
         """
         Branch: payload missing 'username' field
         """
@@ -196,7 +206,7 @@ J0LxQzV2ZyJpi1Pz+nKTmPnF/cTxN9Z+KxJ7Fv+7iCV6VpplJj+s/Q==
 # -----------------------
 # Existing signature test
 # -----------------------
-from api.views import ebay_marketplace_deletion_notification
+
 
 class EbaySignatureValidationSuccessTest(TestCase):
     """Tests valid eBay signature paths."""
@@ -214,7 +224,7 @@ class EbaySignatureValidationSuccessTest(TestCase):
 
     @patch("api.views.requests.get")
     @patch("api.views.get_oath_token", return_value="fake_token")
-    def test_valid_signature_returns_200(self, mock_token, mock_get):
+    def test_valid_signature_returns_200(self, _mock_token, mock_get):
         """Valid signature returns 200"""
         mock_get.return_value.status_code = 200
         mock_get.return_value.json.return_value = {"key": self.public_key_pem}
