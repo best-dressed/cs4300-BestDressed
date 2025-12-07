@@ -33,14 +33,16 @@ from .forms import EbaySearchForm
 logger = logging.getLogger(__name__)
 
 ## Basically a giant amalgamation of
+# pylint: disable=line-too-long
 # https://stackoverflow.com/questions/68569773/ebay-marketplace-account-deletion-closure-notifications
-# and a bunch of chatGPT/Claude code for processing json, and adapting signature validation to use cryptography lib
+# and a bunch of chatGPT/Claude code for processing json,
+# and adapting signature validation to use cryptography lib
 
 EBAY_VERIFICATION_TOKEN = os.environ.get('EBAY_VERIFICATION_TOKEN')
 EBAY_BASE64_AUTHORIZATION_TOKEN = os.environ.get(
     "EBAY_BASE64_AUTHORIZATION_TOKEN")
 
-ebay_url = 'https://api.ebay.com/'
+EBAY_URL = 'https://api.ebay.com/'
 
 
 def _handle_challenge_code(challenge_code):
@@ -55,7 +57,7 @@ def _handle_challenge_code(challenge_code):
 
 def _fetch_ebay_public_key(kid, oauth_access_token):
     """Fetch public key from eBay API. Raises exceptions to caller."""
-    ebay_verification_url = (ebay_url +
+    ebay_verification_url = (EBAY_URL +
                              f'commerce/notification/v1/public_key/{kid}')
     pk_request = requests.get(
         url=ebay_verification_url,
@@ -117,7 +119,8 @@ def _verify_signature_and_process_deletion(request, signature, public_key):
     return HttpResponse(status=200)
 
 
-# need to have this to support accepting requests to delete data from Ebay users who delete accounts.
+# need to have this to support accepting requests
+# to delete data from Ebay users who delete accounts.
 @csrf_exempt
 def ebay_marketplace_deletion_notification(request):
     """Handle eBay marketplace account
@@ -130,7 +133,8 @@ def ebay_marketplace_deletion_notification(request):
 
     # when ebay sends their delete request verify it with public key then delete
     if request.method == 'POST':
-        # the ebay signature is a json body encoded so once we decode we access its elements
+        # the ebay signature is a json body encoded
+        # so once we decode we access its elements
         x_ebay_signature = request.headers["X-Ebay-Signature"]
         x_ebay_signature_decoded = json.loads(
             base64.b64decode(x_ebay_signature).decode('utf-8'))
@@ -139,7 +143,9 @@ def ebay_marketplace_deletion_notification(request):
         #logger.warning(f"SIGNATURE: {signature}")
         #logger.warning(f"kid: {kid}")
 
-        # So maybe this works, but I really have no idea how to verify it from eBay themselves.
+        # So maybe this works, but I really have no idea how to verify
+        # it from eBay themselves.
+        # pylint: disable=line-too-long
         # https://developer.ebay.com/api-docs/commerce/notification/resources/public_key/methods/getPublicKey
         try:
             oauth_access_token = get_oath_token()
@@ -179,7 +185,8 @@ def _parse_ebay_item(item, oauth_access_token):
 
     detail_data = detail_response.json()
     description = detail_data.get("shortDescription")
-    # get image url from details because we already pulled it and it is better than img url from search.
+    # get image url from details because we already
+    # pulled it and it is better than img url from search.
     image_url = detail_data.get("image", {}).get("imageUrl")
 
     # sometimes there is no desc so account for that
@@ -251,7 +258,8 @@ def ebay_get_items(request):
             search_term = form.cleaned_data['search_term']
             item_count = form.cleaned_data['item_count']
 
-            # Check if search term itself is inappropriate before making API call
+            # Check if search term itself is inappropriate
+            # before making API call
             if is_inappropriate(search_term):
                 messages.warning(request, "Search term contains inappropriate "
                                  "content and will likely result in "
@@ -314,7 +322,8 @@ def get_oath_token():
             timeout=10
         )
         logger.warning("--- ATTEMPTING TO GET OAUTH TOKEN ---:")
-        # TESTING --- DO NOT UNCOMMENT IN MAIN CODE EVEN THO PROD TERMINAL IS PRIVATE ---
+        # TESTING --- DO NOT UNCOMMENT IN MAIN
+        # CODE EVEN THO PROD TERMINAL IS PRIVATE ---
         #logger.warning(f"DEBUG: {tokenRequest.json}")
         #logger.warning(f"DEBUG: {EBAY_BASE64_AUTHORIZATION_TOKEN}")
         oauth_access_token = token_request.json()['access_token']
@@ -382,7 +391,8 @@ def ajax_add_item(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# filter so nsfw stuff won't be added from ebay if a user searches for it, and block searches too
+# filter so nsfw stuff won't be added from ebay if a user searches
+# for it, and block searches too
 def is_inappropriate(text):
     """Check if text contains inappropriate content using SafeText filter."""
     if not text:
