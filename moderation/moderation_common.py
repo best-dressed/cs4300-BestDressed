@@ -1,5 +1,7 @@
-# This file contains some decorator functions that are useful for 
-# bans and other stuff
+"""
+This module contains some decorator functions that are useful for 
+bans and other stuff
+"""
 import re
 from django.http import HttpResponseRedirect
 from django.urls import reverse
@@ -11,21 +13,23 @@ REDIRECT = 0
 VALID = 1    
 
 def get_content_filters() :
-    filters = [] 
+    """Gets the content filters from a file called filters.txt in
+    moderation folder"""
+    filter_list = [] 
     try :
         # go through line by line and get a pattern from filters.txt
-        with open("moderation/filters.txt") as f : 
+        with open("moderation/filters.txt","r",encoding="utf-8") as f : 
             for pattern in f : 
-                filters.append(re.compile(pattern.rstrip("\n")))
+                filter_list.append(re.compile(pattern.rstrip("\n")))
     except FileNotFoundError :
         print("Failed to open filters.txt, adding no filters instead")
-        filters = [] 
-    return filters
+        filter_list = [] 
+    return filter_list
 
 
 filters = get_content_filters()
 
-def content_filter_decorator(*accessors,validator=(lambda value : True)) :
+def content_filter_decorator(*accessors,validator=lambda value : True) :
     """This is a decorator that is used when a user is posting
     
     It allows for arbitrarily many accessors to get the text to filter.
@@ -52,6 +56,9 @@ def content_filter_decorator(*accessors,validator=(lambda value : True)) :
     return decorator
 
 def get_client_ip(request):
+    """
+    Gets the IP of the client
+    """
     x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
     if x_forwarded_for:
         # Can be a comma-separated list if multiple proxies are involved
@@ -81,6 +88,7 @@ def not_ip_banned_generator(*, check=lambda request: True):
     return decorator
 
 def is_post(request) :
+    """ checks if request is a post """
     request.method == "POST"
 
 not_ip_banned = not_ip_banned_generator()

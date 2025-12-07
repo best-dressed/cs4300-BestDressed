@@ -1,7 +1,13 @@
+"""
+Models for moderation tools, mainly used to track bans
+"""
 from django.db import models
 from django.utils import timezone
 
 class BannedIP(models.Model):
+    """A banned IP address, used to check if a poster's IP has been
+    banned
+    """
     ip_address = models.GenericIPAddressField(unique=True)
     reason = models.TextField(blank=True, null=True)
     banned_at = models.DateTimeField(auto_now_add=True)
