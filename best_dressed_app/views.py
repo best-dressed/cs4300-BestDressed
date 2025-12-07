@@ -3,13 +3,10 @@ Django views for the Best Dressed application.
 """
 
 from django.shortcuts import render, get_object_or_404, redirect
-from .models import Item, UserProfile, WardrobeItem, Outfit, SavedRecommendation, HiddenItem
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 # IntegrityError: exception raised when database constraints are violated
 from django.db import IntegrityError
-from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
-from .recommendation import generate_recommendations
 import threading
 from django.http import JsonResponse
 from django.utils import timezone
@@ -18,6 +15,10 @@ from django.db.models import Count
 from django.db.models import Q
 import json
 import re
+from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
+from .recommendation import generate_recommendations
+from .models import Item, UserProfile, WardrobeItem, Outfit, SavedRecommendation, HiddenItem
+
 
 def index(request):
     """
