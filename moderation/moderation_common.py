@@ -5,8 +5,8 @@ bans and other stuff
 import re
 from django.http import HttpResponseRedirect
 from django.urls import reverse
-from .models import BannedIP
 from django.contrib.auth.decorators import login_required
+from .models import BannedIP
 
 
 REDIRECT = 0
@@ -89,7 +89,7 @@ def not_ip_banned_generator(*, check=lambda request: True):
 
 def is_post(request) :
     """ checks if request is a post """
-    request.method == "POST"
+    return request.method == "POST"
 
 not_ip_banned = not_ip_banned_generator()
 poster_not_ip_banned = not_ip_banned_generator(check=is_post)
