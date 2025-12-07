@@ -932,22 +932,22 @@ def quick_add_to_outfit(request, item_pk):
         'wardrobe_item': wardrobe_item,
         'outfits': user_outfits,
     }
-    
+
     return render(request, 'quick_add_to_outfit.html', context)
 
 @login_required
 def closet_view(request):
     """
     Clueless-style interactive closet view for building outfits.
-    
+
     This view organizes the user's wardrobe items by category and presents them
     in a visual "closet" interface where users can select items to build outfits.
     Items are organized in horizontal "rails" by category, similar to the iconic
     computerized wardrobe system from the movie Clueless.
-    
+
     GET: Display all wardrobe items organized by category for selection
     POST: Create a new outfit from selected items
-    
+
     The category order is intentional - it mirrors how clothes are naturally layered:
     1. Outerwear (jackets, coats) - outermost layer
     2. Dresses - full body coverage
@@ -956,7 +956,7 @@ def closet_view(request):
     5. Shoes - foundation
     6. Accessories - finishing touches
     """
-    
+
     # ==========================================
     # POST REQUEST - Create Outfit from Selection
     # ==========================================
@@ -964,12 +964,12 @@ def closet_view(request):
         # Get the selected item IDs from the form
         # JavaScript sends them as a comma-separated string: "1,5,8,12"
         selected_ids = request.POST.get('selected_items', '')
-        
+
         # Validation: Ensure at least one item is selected
         if not selected_ids:
             messages.error(request, 'Please select at least one item for your outfit.')
             return redirect('closet_view')
-        
+
         # Convert comma-separated string to list of integers
         # Example: "1,5,8" → [1, 5, 8]
         # The try/except catches if someone sends invalid data (like letters)
@@ -979,40 +979,40 @@ def closet_view(request):
             # If conversion fails, someone sent malformed data
             messages.error(request, 'Invalid item selection.')
             return redirect('closet_view')
-        
+
         # Security Check: Verify all items belong to the user's wardrobe
         # This prevents users from adding other people's items by manipulating POST data
         items = WardrobeItem.objects.filter(
             id__in=item_ids,
             user=request.user
         )
-        
+
         # Double-check: Verify we found ALL the items they claimed to select
         # If item_ids=[1,5,8] but we only found 2 items, something's wrong
         if items.count() != len(item_ids):
             messages.error(request, 'Some selected items were not found in your wardrobe.')
             return redirect('closet_view')
-        
+
         # Get custom outfit details from form (with defaults)
         # .get() with second parameter provides default if field is missing/empty
         outfit_name = request.POST.get('outfit_name', '').strip()
         outfit_description = request.POST.get('outfit_description', '').strip()
         outfit_occasion = request.POST.get('outfit_occasion', '').strip()
         outfit_season = request.POST.get('outfit_season', '').strip()
-        
+
         # Validate outfit name is provided
         # This is our required field - user must name their outfit
         if not outfit_name:
             messages.error(request, 'Please provide a name for your outfit.')
             return redirect('closet_view')
-        
+
         # Check for duplicate outfit name
         # Your model has unique_together constraint on ['user', 'name']
         # We should check this before trying to create to give a better error message
         if Outfit.objects.filter(user=request.user, name=outfit_name).exists():
             messages.error(request, f'You already have an outfit named "{outfit_name}". Please choose a different name.')
             return redirect('closet_view')
-        
+
         # Create the outfit with user-provided details
         # Only set occasion/season if provided (they're blank=True in model)
         outfit = Outfit.objects.create(
@@ -1022,40 +1022,40 @@ def closet_view(request):
             occasion=outfit_occasion if outfit_occasion else '',
             season=outfit_season if outfit_season else ''
         )
-        
+
         # Link the selected items to this outfit
         # .set() handles the many-to-many relationship
         outfit.items.set(items)
-        
+
         # Success message with outfit details
         messages.success(
-            request, 
+            request,
             f'✨ Outfit "{outfit.name}" created successfully with {outfit.items.count()} items!'
         )
-        
+
         # Redirect to the outfit detail page
         return redirect('outfit_detail', outfit_pk=outfit.pk)
 
-    
+
     # ==========================================
     # GET REQUEST - Display Closet Interface
     # ==========================================
-    
+
     # Define the category order for logical layering
     # This list determines both the order categories appear AND how items are layered in preview
     category_order = [
         'outerwear',
         'dress',
         'top',
-        'bottom', 
+        'bottom',
         'shoes',
         'accessory'
     ]
-    
+
     # Fetch all user's wardrobe items
     # select_related('catalog_item') optimizes database queries by pre-loading related items
     wardrobe_items = WardrobeItem.objects.filter(user=request.user).select_related('catalog_item')
-    
+
     # Organize items by category
     # We use a dictionary where keys are category names and values are querysets of items
     items_by_category = {}
@@ -1064,7 +1064,7 @@ def closet_view(request):
         # order_by('-created_at') shows newest items first in each rail
         items = wardrobe_items.filter(category=category).order_by('-created_at')
         items_by_category[category] = items
-    
+
     # Get category display names for the template
     # This creates a readable mapping like 'top' -> 'Tops'
     category_labels = {
@@ -1075,12 +1075,12 @@ def closet_view(request):
         'shoes': 'Shoes',
         'accessory': 'Accessories'
     }
-    
+
     context = {
         'items_by_category': items_by_category,
         'category_order': category_order,
         'category_labels': category_labels,
         'total_items': wardrobe_items.count(),
     }
-    
+
     return render(request, 'closet_view.html', context)
