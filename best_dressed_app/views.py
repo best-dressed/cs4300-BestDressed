@@ -769,17 +769,6 @@ def outfit_detail(request, outfit_pk):
     return render(request, 'outfit_detail.html', context)
 
 @login_required
-def edit_outfit(request, outfit_pk):
-    """
-    Edit an existing outfit.
-    """
-    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
-    
-    # Redirect to create page for now
-    messages.info(request, 'Edit functionality coming soon!')
-    return redirect('my_outfits')
-
-@login_required
 def delete_outfit(request, outfit_pk):
     """
     Delete an outfit with confirmation.
@@ -819,8 +808,7 @@ def edit_outfit(request, outfit_pk):
     POST: Save changes
     """
     # Get the outfit, ensuring it belongs to current user (security)
-    # outfit =
-    get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
     
     if request.method == 'POST':
         # User submitted the form with changes
