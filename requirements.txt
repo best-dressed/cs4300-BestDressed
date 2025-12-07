@@ -1,5 +1,6 @@
 # Maintance tools
 pylint
+pylint-django
 pytest
 pytest-cov
 whitenoise

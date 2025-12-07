@@ -1,11 +1,33 @@
+"""
+Core data models for the best dressed app.
+
+This module defines the main database models for managing users,
+catalog items, personal wardrobes, outfits, and AI-generated recommendations.
+
+Key models:
+- Item: Represents a catalog item of clothing or accessory, including metadata such as title, description, image URL, tag, and optional eBay data.
+- UserProfile: Extends the Django User model to store additional information such as bio, style preferences, and favorite colors.
+- WardrobeItem: Represents items saved by a user in their personal wardrobe, optionally linked to a catalog item.
+- Outfit: A collection of WardrobeItems that a user can assemble for specific occasions or seasons.
+- SavedRecommendation: Stores AI-generated fashion recommendations and links to recommended catalog items.
+- HiddenItem: Tracks items that a user chooses to hide from their view in item listings.
+
+Each model includes helpful methods for display, URLs, and automatic timestamping.
+"""
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+
+User = get_user_model() # pylint prefers this over import User for some reason so ig we're doin it
 
 
 # article of clothing item in the catalog
 class Item(models.Model):
+    """
+    Represents an article of clothing or accessory in the catalog.
 
+    Stores metadata such as title, description, image URL, tag, and optional eBay information.
+    """
     ITEM_TAG_CHOICES = {
         "Accessory": "accessory",
         "Torso": "torso",
@@ -34,7 +56,7 @@ class Item(models.Model):
         if self.description:
             # if description is long, add ...
             if len(self.description) > 75:
-                self.short_description = (self.description[:72] + "...")
+                self.short_description = self.description[:72] + "..."
 
             # otherwise just make it the same bc doesn't matter.
             else:
@@ -47,6 +69,7 @@ class Item(models.Model):
 
     # set up url for viewing a particular item
     def get_absolute_url(self):
+        """Really basic method to get the url for an item"""
         return reverse("item_detail", kwargs={'pk': self.pk})
 
     def __str__(self):
@@ -55,6 +78,17 @@ class Item(models.Model):
 
 # user profile to extend Django's 'User' model
 class UserProfile(models.Model):
+    """
+    Extends the built-in Django User model with additional profile information.
+
+    Fields:
+    - user: One-to-one link to the Django User instance.
+    - bio: Short biography or description of the user.
+    - style_preferences: User's preferred fashion styles (e.g., casual, formal, streetwear).
+    - favorite_colors: User's favorite colors.
+    - created_at: Timestamp when the profile was created.
+    - updated_at: Timestamp when the profile was last updated.
+    """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     bio = models.TextField(max_length=500, blank=True)
     style_preferences = models.CharField(max_length=200, blank=True, help_text="e.g., casual, formal, streetwear")
@@ -252,6 +286,16 @@ class SavedRecommendation(models.Model):
 
 # For hiding items from user's particular view in item listing
 class HiddenItem(models.Model):
+    """
+    Represents a catalog item that a user has chosen to hide.
+
+    Each record links a specific user to a specific catalog item,
+    preventing that item from appearing in the user's personal view
+    of the item listings.
+
+    Database constraints:
+    - unique_together ensures a user cannot hide the same item multiple times.
+    """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="hidden_items")
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="hidden_by_users")
 

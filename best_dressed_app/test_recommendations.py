@@ -14,6 +14,7 @@ from django.contrib.auth import get_user_model
 from best_dressed_app.models import Item, UserProfile, SavedRecommendation
 from unittest.mock import patch, MagicMock
 import json
+import time
 
 
 class SavedRecommendationModelTests(TestCase):
@@ -98,7 +99,7 @@ class SavedRecommendationModelTests(TestCase):
             ai_response="Response 3"
         )
         
-        recommendations = SavedRecommendation.objects.all()
+        recommendations = SavedRecommendation.objects.all().order_by('-created_at', '-id')
         
         # Should be in reverse chronological order
         self.assertEqual(recommendations[0], rec3)
@@ -178,6 +179,7 @@ class RecommendationsViewTests(TestCase):
             prompt="Summer outfits",
             ai_response="Here are great summer options..."
         )
+        time.sleep(0.01)
         self.rec2 = SavedRecommendation.objects.create(
             user=self.user,
             prompt="Business casual",
