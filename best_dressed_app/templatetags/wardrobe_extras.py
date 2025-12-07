@@ -1,3 +1,7 @@
+"""
+A module that contains a template filter for a dictionary item.
+"""
+
 from django import template
 
 register = template.Library()

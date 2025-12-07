@@ -1,17 +1,20 @@
-from django.shortcuts import render
-from .models import BannedIP
-
-# Create your views here.
+"""
+Views for moderation stuff
+(mainly just error pages)
+"""
 from django.shortcuts import render
 from .moderation_common import get_client_ip
+from .models import BannedIP
 
 def filtered_content_message(request):
+    """ view for page when your content was filtered """
     return render(
         request,
         "errors/filtered_content.html"
     )
 
 def ip_ban_page(request):
+    """ View for page when IP was banned """
     user_ip = get_client_ip(request)
     bans = BannedIP.objects.filter(ip_address=user_ip)
 

@@ -32,23 +32,29 @@ urlpatterns = [
     # dashboard and user features
     path('dashboard/', views.dashboard, name="dashboard"),
     path('account/', views.account_settings, name="account_settings"),
-    
     # wardrobe and wardrobe features
     path('wardrobe/', views.my_wardrobe, name="my_wardrobe"),
     path('wardrobe/add/', views.add_wardrobe_item, name="add_wardrobe_item"),
-    path('wardrobe/edit/<int:item_pk>/', views.edit_wardrobe_item, name="edit_wardrobe_item"),
-    path('wardrobe/delete/<int:item_pk>/', views.delete_wardrobe_item, name="delete_wardrobe_item"),
+    path('wardrobe/edit/<int:item_pk>/',
+         views.edit_wardrobe_item, name="edit_wardrobe_item"),
+    path('wardrobe/delete/<int:item_pk>/',
+         views.delete_wardrobe_item, name="delete_wardrobe_item"),
 
 
     # outfits and outfit features
     path('outfits/create/', views.create_outfit, name='create_outfit'),
     path('outfits/', views.my_outfits, name='my_outfits'),
     path('outfits/<int:outfit_pk>/', views.outfit_detail, name='outfit_detail'),
-    path('outfits/<int:outfit_pk>/edit/', views.edit_outfit, name='edit_outfit'),
-    path('outfits/<int:outfit_pk>/delete/', views.delete_outfit, name='delete_outfit'),
-    path('outfits/<int:outfit_pk>/toggle-favorite/', views.toggle_outfit_favorite, name='toggle_outfit_favorite'),
-    path('outfits/<int:outfit_pk>/duplicate/', views.duplicate_outfit, name='duplicate_outfit'),
-    path('wardrobe/<int:item_pk>/add-to-outfit/', views.quick_add_to_outfit, name='quick_add_to_outfit'),
+    path('outfits/<int:outfit_pk>/edit/',
+         views.edit_outfit, name='edit_outfit'),
+    path('outfits/<int:outfit_pk>/delete/',
+         views.delete_outfit, name='delete_outfit'),
+    path('outfits/<int:outfit_pk>/toggle-favorite/',
+         views.toggle_outfit_favorite, name='toggle_outfit_favorite'),
+    path('outfits/<int:outfit_pk>/duplicate/',
+         views.duplicate_outfit, name='duplicate_outfit'),
+    path('wardrobe/<int:item_pk>/add-to-outfit/',
+         views.quick_add_to_outfit, name='quick_add_to_outfit'),
 
 
     # item listing/catalog
@@ -57,21 +63,26 @@ urlpatterns = [
     path('ajax/hide-item/', views.ajax_hide_item, name='ajax_hide_item'),
     # pattern (item/<int:item_pk>/save/):
     # - item/: text
-    # - <int:item_pk>: captures an integer from URL, passes it as `item_pk` parameter
+    # - <int:item_pk>: captures an integer from URL,
+    #   passes it as `item_pk` parameter
     # - /save/: text
     # - views.save_to_wardrobe: view funtion to call
     # - name="save_to_wardrobe": name for reverse URL lookup
-    path('item/<int:item_pk>/save/', views.save_to_wardrobe, name="save_to_wardrobe"),
+    path('item/<int:item_pk>/save/',
+         views.save_to_wardrobe, name="save_to_wardrobe"),
     path('add_item/', views.add_item, name="add_item"),
-    path('add_item/success/<int:pk>/', views.add_item_success, name="add_item_success"),
+    path('add_item/success/<int:pk>/',
+         views.add_item_success, name="add_item_success"),
 
     # ai recommendations
     path('recommendations/', views.recommendations, name="recommendations"),
-    path('recommendations/generate/', views.generate_recommendations_ajax, name="generate_recommendations_ajax"),
+    path('recommendations/generate/',
+         views.generate_recommendations_ajax,
+         name="generate_recommendations_ajax"),
 
     # forums
     path("forum/", include("forum.urls")),
-    
+
     #error pages
     path("errors/", include("moderation.urls"))
 ]

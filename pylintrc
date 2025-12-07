@@ -8,6 +8,6 @@ init-hook='import sys, os; sys.path.append(os.path.abspath(".")); os.environ["DJ
 generated-members=objects,does_not_exist,MultipleObjectsReturned
 
 [Message Control]
-disable=C0303, # disable trailing whitespace
-        C0301  # disable line too long
+# disable=C0303, # disable trailing whitespace
+#        C0301  # disable line too long
 

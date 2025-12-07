@@ -1,3 +1,7 @@
+"""
+Urls for error messages related to moderation
+"""
+
 from django.urls import path
 from . import views
 
