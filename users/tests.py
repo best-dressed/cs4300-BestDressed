@@ -104,7 +104,7 @@ class UserLoginTests(TestCase):
         self.assertRedirects(response, reverse('dashboard'))
         
         # User should be authenticated
-        user = get_user_model().objects.get(username='testuser')
+        dummy = get_user_model().objects.get(username='testuser')
         self.assertTrue('_auth_user_id' in self.client.session)
     
     def test_login_with_invalid_credentials(self):
