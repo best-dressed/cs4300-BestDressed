@@ -10,12 +10,14 @@ from django.contrib import messages
 from django.db import IntegrityError
 from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
 from .recommendation import generate_recommendations
-from django.http import JsonResponse
 import threading
 from django.http import JsonResponse
 from django.utils import timezone
 from datetime import timedelta
 from django.db.models import Count
+from django.db.models import Q
+import json
+import re
 
 def index(request):
     """
@@ -26,10 +28,6 @@ def index(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
     return render(request, '../templates/index.html')
-
-"""@login_required(login_url='login')   # <- forces login first
-def index_signed_in(request):
-    return render(request, 'index_signed_in.html')"""
 
 def login(request):
     """
@@ -43,11 +41,12 @@ def signup(request):
     """
     return render(request, 'signup.html')
 
-# primary item listing view for main page
 def item_listing(request):
+    """
+    primary item listing view for main page
+    """
     query = request.GET.get("q")
     if query:
-        from django.db.models import Q
         items = Item.objects.filter(Q(title__icontains=query) | Q(description__icontains=query))
     else:
         items = Item.objects.all()
@@ -59,9 +58,14 @@ def item_listing(request):
 
     return render(request, "item_listing.html", {'items': items, 'query': query})
 
-# handle ajax post from item_card.html when the user hides items from item listing w the little icon
+
 @login_required
 def ajax_hide_item(request):
+    """
+    handle ajax post from item_card.html when the user hides items
+    from item listing w the little icon
+    """
+    
     if request.method != "POST":
         return JsonResponse({"error": "POST required"}, status=400)
 
@@ -72,27 +76,15 @@ def ajax_hide_item(request):
     item = get_object_or_404(Item, pk=item_id)
 
     # Create or get
-    obj, created = HiddenItem.objects.get_or_create(
+    _, created = HiddenItem.objects.get_or_create(
         user=request.user,
         item=item
     )
 
     return JsonResponse({"success": True, "hidden": created})
-# # for a particular item view
-# def item_detail(request, pk):
-#     item = get_object_or_404(Item, pk=pk)
-#     # related items list, exclude the item we are primarily viewing
-#     items = Item.objects.exclude(pk=pk)
 
-#     context = {
-#         "item": item,
-#         "items": items
-
-#     }
-#     return render(request, "item_detail.html", context)
-
-# for a particular item view
 def item_detail(request, pk):
+    """ View for particular item """
     # get/fetch the item (if it exists)
     item = get_object_or_404(Item, pk=pk)
     
@@ -128,13 +120,14 @@ def item_detail(request, pk):
 # per chatGPT
 @login_required
 def add_item(request):
+    """view for adding an item manually"""
     context = {}
 
     if request.method == "POST":
         form = ItemForm(request.POST)
         if form.is_valid():
-            newItem = form.save()  # this writes the model instance to the database
-            return redirect('add_item_success', pk=newItem.pk)
+            new_item = form.save()  # this writes the model instance to the database
+            return redirect('add_item_success', pk=new_item.pk)
     else:
         form = ItemForm()  # empty form for GET request
 
@@ -142,6 +135,7 @@ def add_item(request):
     return render(request, "add_item.html", context)
 
 def add_item_success(request, pk):
+    """ View for successful adding of item """
     item = get_object_or_404(Item, pk=pk)
     return render(request, "add_item_success.html", {'item':item})
 
@@ -161,7 +155,8 @@ def dashboard(request):
     # get or create user profile, retrieves database record; if it doesnt exist, create it
     # profile: UserProfile object
     # created: boolean for if object was just created (True) or if it already exists (False)
-    profile, created = UserProfile.objects.get_or_create(user=user)
+    # profile, created =
+    UserProfile.objects.get_or_create(user=user)
     
     # get actual counts (of number of items in Wardrobe and number of Outfits) from the database for the logged in user
     wardrobe_count = WardrobeItem.objects.filter(user=user).count()
@@ -216,7 +211,7 @@ def account_settings(request):
     # get or create user profile, retrieves database record; if it doesnt exist, create it
     # profile: UserProfile object
     # created: boolean for if object was just created (True) or if it already exists (False)    
-    profile, created = UserProfile.objects.get_or_create(user=user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
     
     # check if this is a form submission (POST) or just viewing the page (GET)
     if request.method == 'POST':
@@ -229,11 +224,9 @@ def account_settings(request):
             form.save()
             
             # add a success message (display in template)
-            from django.contrib import messages
             messages.success(request, 'Your profile has been updated successfully!')
             
             # redirect back to account settings (prevents duplicate submissions)
-            from django.shortcuts import redirect
             return redirect('account_settings')
     else:
         # user is just viewing the page - show form with current data
@@ -321,7 +314,6 @@ def my_wardrobe(request):
     
     # Apply search filter if provided
     if search_query:
-        from django.db.models import Q
         wardrobe_items = wardrobe_items.filter(
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query) |
@@ -343,7 +335,7 @@ def my_wardrobe(request):
     
     # Count items in each category (for display)
     category_counts = {}
-    for category_value, category_label in categories:
+    for category_value, _ in categories:
         count = WardrobeItem.objects.filter(user=user, category=category_value).count()
         category_counts[category_value] = count
     
@@ -500,8 +492,6 @@ def generate_recommendations_ajax(request):
     
     try:
         # Get the user's custom prompt from the request
-        import json
-        import re
         data = json.loads(request.body)
         user_prompt = data.get('prompt', '').strip()
         
@@ -581,8 +571,10 @@ def generate_recommendations_ajax(request):
             'success': False,
             'error': 'Invalid request data.'
         }, status=400)
-    
-    except Exception as e:
+
+    # Disabling broad exception caught in this case because we
+    # absolutely need to catch every exception in this case
+    except Exception as e: # pylint: disable=broad-exception-caught
         print(f"Error generating recommendations: {e}")
         return JsonResponse({
             'success': False,
@@ -671,12 +663,9 @@ def my_outfits(request):
         elif collection == 'formal':
             outfits = outfits.filter(occasion='formal')
         elif collection == 'recent':
-            from django.utils import timezone
-            from datetime import timedelta
             thirty_days_ago = timezone.now() - timedelta(days=30)
             outfits = outfits.filter(created_at__gte=thirty_days_ago)
         elif collection == 'incomplete':
-            from django.db.models import Count
             outfits = outfits.annotate(item_count_computed=Count('items')).filter(item_count_computed__lt=3)
     else:
         # Apply regular filters only if no collection is selected
@@ -691,9 +680,6 @@ def my_outfits(request):
     
     # Apply search filter
     if search_query:
-        # Q objects allow complex queries with OR logic
-        # icontains = case-insensitive contains
-        from django.db.models import Q
         outfits = outfits.filter(
             Q(name__icontains=search_query) |
             Q(description__icontains=search_query) |
@@ -726,10 +712,6 @@ def my_outfits(request):
     season_choices = Outfit._meta.get_field('season').choices
     
     # Collection counts
-    from django.utils import timezone
-    from datetime import timedelta
-    from django.db.models import Count
-    
     thirty_days_ago = timezone.now() - timedelta(days=30)
     
     collection_counts = {
@@ -770,17 +752,6 @@ def my_outfits(request):
         'search_query': search_query,  # NEW
         'current_sort': sort_by,  # NEW
         'sort_options': sort_options,  # NEW
-    }
-    
-    return render(request, 'my_outfits.html', context)
-
-    context = {
-        'outfits': outfits,
-        'occasion_filter': occasion_filter or 'all',
-        'season_filter': season_filter or 'all',
-        'favorites_only': favorites_only == 'true',
-        'occasion_choices': occasion_choices,
-        'season_choices': season_choices,
     }
     
     return render(request, 'my_outfits.html', context)
@@ -849,7 +820,8 @@ def edit_outfit(request, outfit_pk):
     POST: Save changes
     """
     # Get the outfit, ensuring it belongs to current user (security)
-    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    # outfit =
+    get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
     
     if request.method == 'POST':
         # User submitted the form with changes
