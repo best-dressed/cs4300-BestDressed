@@ -35,6 +35,7 @@ logger = logging.getLogger(__name__)
 ## Basically a giant amalgamation of
 # pylint: disable=line-too-long
 # https://stackoverflow.com/questions/68569773/ebay-marketplace-account-deletion-closure-notifications
+# pylint: enable=line-too-long
 # and a bunch of chatGPT/Claude code for processing json,
 # and adapting signature validation to use cryptography lib
 
@@ -147,6 +148,7 @@ def ebay_marketplace_deletion_notification(request):
         # it from eBay themselves.
         # pylint: disable=line-too-long
         # https://developer.ebay.com/api-docs/commerce/notification/resources/public_key/methods/getPublicKey
+        # pylint: enable=line-too-long
         try:
             oauth_access_token = get_oath_token()
             # send out a call to get public key
@@ -162,7 +164,7 @@ def ebay_marketplace_deletion_notification(request):
                              "Deletion: Error performing validation")
             logger.error("%s Error: %s", message_title, e)
             return JsonResponse({}, status=500)
-
+        # pylint: enable=broad-exception-caught
         # if we get here we have the public key and everything from ebay,
         # so use it to verify signature actually came from eBay
         return _verify_signature_and_process_deletion(

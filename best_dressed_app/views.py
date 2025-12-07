@@ -573,12 +573,14 @@ def generate_recommendations_ajax(request):
 
     # Disabling broad exception caught in this case because we
     # absolutely need to catch every exception in this case
-    except Exception as e: # pylint: disable=broad-exception-caught
+    # pylint: disable=broad-exception-caught
+    except Exception as e: 
         print(f"Error generating recommendations: {e}")
         return JsonResponse({
             'success': False,
             'error': 'Unable to generate recommendations at this time. Please try again later.'
         }, status=500)
+    # pylint: enable=broad-exception-caught
 
 @login_required
 def create_outfit(request):
