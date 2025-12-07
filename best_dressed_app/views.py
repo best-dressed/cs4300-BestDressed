@@ -701,7 +701,6 @@ def my_outfits(request):
     
     # For item count sorting, we need to annotate
     if sort_by in ['item_count', '-item_count']:
-        from django.db.models import Count
         outfits = outfits.annotate(items_count=Count('items')).order_by(sort_by.replace('item_count', 'items_count'))
     
     # Prefetch related items for efficiency
