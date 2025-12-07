@@ -1,0 +1,20 @@
+{% extends "main.html" %}
+{% load static %}
+
+{% block title %}IP Banned · Best Dressed{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+  <h1 class="display-6 fw-bold text-danger mb-4">Access Denied</h1>
+  <p class="text-muted mb-4">
+    Your IP address has been banned.
+    {% if ban_reason %}
+      <br />
+      <strong>Reason:</strong> {{ ban_reason }}
+    {% endif %}
+  </p>
+  <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+    Back to Dashboard
+  </a>
+</div>
+{% endblock %}

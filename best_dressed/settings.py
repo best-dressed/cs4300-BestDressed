@@ -44,7 +44,7 @@ if ENVIRONMENT == 'PROD':
     raw_allowed = env_vars.get('ALLOWED_HOSTS', '') or ''
     ALLOWED_HOSTS = [h.strip() for h in raw_allowed.split(',') if h.strip()]
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-    
+
     # Put the database in prod within the /home folder to persist across deployments
     DATABASES['default']['NAME'] = '/home/site/wwwroot/db.sqlite3'
 
@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'forum',
     'api',
     'django_registration',
+    "moderation"
 ]
 
 MIDDLEWARE = [
@@ -107,16 +108,20 @@ WSGI_APPLICATION = 'best_dressed.wsgi.application'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        'NAME':
+        'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
 
@@ -189,4 +194,4 @@ SECURE_SSL_REDIRECT = not DEBUG
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Registration Settings
-ACCOUNT_ACTIVATION_DAYS = 7 
+ACCOUNT_ACTIVATION_DAYS = 7

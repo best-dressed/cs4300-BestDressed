@@ -1,8 +1,19 @@
 {% extends "main.html" %}
 {% load static %}
 
-{% block title %}Sign up · Best Dressed{% endblock %}
+{% block title %}Check your inbox · Best Dressed{% endblock %}
 
 {% block content %}
-  <h1>Registration Complete</h1>
+<link rel="stylesheet" href="{% static 'css/main.css' %}">
+
+<div class="auth-hero">
+  <div class="auth-box text-center">
+    <div class="sparkle-accent mb-3">
+      <span class="sparkle-icon">✦</span>
+    </div>
+
+    <h1>Check your inbox</h1>
+    <p class="text-muted mb-4">Thank you for registering! Please follow the link to activate your account.</p>
+  </div>
+</div>
 {% endblock %}
