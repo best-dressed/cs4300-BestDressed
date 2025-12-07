@@ -1,0 +1,1280 @@
+{% extends "main.html" %}
+{% load static %}
+{% load closet_filters %}
+
+{% block title %}My Closet · Best Dressed{% endblock %}
+
+{% block content %}
+<div class="closet-container">
+  <div class="container-fluid py-4">
+    {% include 'includes/messages.html' %}
+    
+    <!-- Header -->
+    <div class="closet-header mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="display-6 fw-bold text-white mb-2">My Closet</h1>
+          <p class="text-white-50 mb-0">Build your outfit · {{ total_items }} items available</p>
+        </div>
+        <a href="{% url 'dashboard' %}" class="btn-clean-glass">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+          </svg>
+          Back to Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Layout: Category Rails + Outfit Preview -->
+    <div class="row g-4">
+      <!-- Category Rails (Left Side - 8 columns on desktop) -->
+      <div class="col-lg-8">
+        <div class="glass-card-simple p-4">
+          <h5 class="text-white mb-4">Select Items</h5>
+          
+          {% if total_items > 0 %}
+            <!-- Loop through each category in order -->
+            {% for category in category_order %}
+              <div class="category-rail mb-4">
+                <!-- Category Header -->
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h6 class="text-white mb-0">{{ category_labels|get_item:category }}</h6>
+                  <span class="text-white-50 small">{{ items_by_category|get_item:category|length }} items</span>
+                </div>
+                
+                <!-- Horizontal Scrolling Items -->
+                {% with items=items_by_category|get_item:category %}
+                  {% if items %}
+                    <div class="items-rail">
+                      {% for item in items %}
+                        <div class="closet-item" data-item-id="{{ item.pk }}" data-category="{{ category }}">
+                          <div class="item-image">
+                            <img src="{{ item.image_url }}" alt="{{ item.title }}">
+                          </div>
+                          <div class="item-info">
+                            <p class="item-title">{{ item.title|truncatewords:3 }}</p>
+                          </div>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="text-center py-3">
+                      <p class="text-white-50 small mb-0">No items in this category</p>
+                    </div>
+                  {% endif %}
+                {% endwith %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-5">
+              <p class="text-white-50 mb-3">Your closet is empty</p>
+              <a href="{% url 'my_wardrobe' %}" class="btn-clean-glass">Add Items to Wardrobe</a>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Outfit Preview (Right Side - 4 columns on desktop) -->
+      <div class="col-lg-4">
+        <div class="glass-card-simple p-4 sticky-preview">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h5 class="text-white mb-0">Your Outfit</h5>
+            <button id="create-outfit-btn-top" class="btn-primary-glass btn-sm" disabled>
+              Create
+            </button>
+          </div>
+
+          <div class="outfit-preview-area">
+            <div id="outfit-preview" class="outfit-layers">
+              <!-- Empty state shown by default -->
+              <div class="empty-preview">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="rgba(255,255,255,0.3)" viewBox="0 0 16 16">
+                  <path d="M7 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1 1a.5.5 0 1 1-.708-.708l1-1a.5.5 0 0 1 .708 0zm3.992 0a.5.5 0 0 1 .708 0l1 1a.5.5 0 0 1-.708.708l-1-1a.5.5 0 0 1 0-.708z"/>
+                  <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5z"/>
+                </svg>
+                <p class="text-white-50 small mt-3 mb-1">Select items from each category</p>
+                <p class="text-white-50" style="font-size: 0.7rem; opacity: 0.6;">Click items to add to your outfit</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Items Info -->
+          <div class="selected-info mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <span class="text-white-50 small">Selected Items</span>
+              <span id="selected-count" class="simple-badge">0</span>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              <button id="clear-selection" class="btn-clean-glass" disabled>Clear Selection</button>
+              <button id="create-outfit-btn" class="btn-primary-glass" disabled>Create Outfit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CREATE OUTFIT MODAL -->
+  <div class="modal fade" id="createOutfitModal" tabindex="-1" aria-labelledby="createOutfitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content glass-modal">
+        <div class="modal-header border-0">
+          <h5 class="modal-title text-white" id="createOutfitModalLabel">Create New Outfit</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Selected Items Preview -->
+          <div class="mb-4">
+            <label class="form-label text-white-50 small mb-2">Selected Items</label>
+            <div id="modal-preview" class="modal-items-preview">
+              <!-- JavaScript will populate this -->
+            </div>
+          </div>
+
+          <!-- Outfit Name Input -->
+          <div class="mb-3">
+            <label for="outfit-name-input" class="form-label text-white">Outfit Name <span class="text-danger">*</span></label>
+            <input 
+              type="text" 
+              class="form-control glass-input" 
+              id="outfit-name-input" 
+              placeholder="e.g., Sunday Brunch, Office Monday, Date Night"
+              maxlength="200"
+              required>
+            <div class="form-text text-white-50 small">Give your outfit a memorable name</div>
+          </div>
+
+          <!-- Description (Optional) -->
+          <div class="mb-3">
+            <label for="outfit-description-input" class="form-label text-white">Description (Optional)</label>
+            <textarea 
+              class="form-control glass-input" 
+              id="outfit-description-input" 
+              rows="2"
+              placeholder="Describe the outfit and when to wear it..."
+              maxlength="1000"></textarea>
+          </div>
+
+          <!-- Occasion -->
+          <div class="mb-3">
+            <label for="outfit-occasion-input" class="form-label text-white">Occasion</label>
+            <select class="form-select glass-input" id="outfit-occasion-input">
+              <option value="">Select occasion (optional)</option>
+              <option value="casual">Casual</option>
+              <option value="business">Business/Professional</option>
+              <option value="formal">Formal</option>
+              <option value="athletic">Athletic/Workout</option>
+              <option value="night_out">Night Out</option>
+              <option value="date">Date</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <!-- Season -->
+          <div class="mb-3">
+            <label for="outfit-season-input" class="form-label text-white">Season</label>
+            <select class="form-select glass-input" id="outfit-season-input">
+              <option value="">Select season (optional)</option>
+              <option value="spring">Spring</option>
+              <option value="summer">Summer</option>
+              <option value="fall">Fall</option>
+              <option value="winter">Winter</option>
+              <option value="all">All Seasons</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer border-0">
+          <button type="button" class="btn-clean-glass" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn-primary-glass" id="confirm-create-outfit">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
+              <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z"/>
+            </svg>
+            Create Outfit
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<style>
+  /* Base Container */
+  .closet-container {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  /* Glass Card */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+  }
+
+  /* Category Rail */
+  .category-rail {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 1.5rem;
+  }
+
+  .category-rail:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  /* Horizontal Scrolling Items */
+  .items-rail {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    padding-bottom: 1rem;
+    
+    /* Custom scrollbar */
+    scrollbar-width: thin;
+    scrollbar-color: rgba(205, 180, 255, 0.3) rgba(255, 255, 255, 0.05);
+  }
+
+  .items-rail::-webkit-scrollbar {
+    height: 8px;
+  }
+
+  .items-rail::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+  }
+
+  .items-rail::-webkit-scrollbar-thumb {
+    background: rgba(205, 180, 255, 0.3);
+    border-radius: 10px;
+  }
+
+  .items-rail::-webkit-scrollbar-thumb:hover {
+    background: rgba(205, 180, 255, 0.5);
+  }
+
+  /* Closet Item Card */
+  .closet-item {
+    flex-shrink: 0;
+    width: 140px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  .closet-item:hover {
+    transform: translateY(-4px);
+  }
+
+  .item-image {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.3s ease;
+  }
+
+  .item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .closet-item:hover .item-image {
+    border-color: rgba(205, 180, 255, 0.4);
+  }
+
+  /* Selected State */
+  .closet-item.selected .item-image {
+    border-color: #CDB4FF;
+    border-width: 3px;
+    box-shadow: 0 0 20px rgba(205, 180, 255, 0.5);
+  }
+
+  .item-info {
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  .item-title {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.75rem;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Outfit Preview */
+  .sticky-preview {
+    position: sticky;
+    top: 20px;
+  }
+
+  .outfit-preview-area {
+    min-height: 800px; /* Increased from 650px */
+    position: relative;
+  }
+
+
+  .empty-preview {
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .outfit-layers {
+    min-height: 800px; /* Increased from 650px */
+    position: relative;
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover:not(:disabled) {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .btn-primary-glass {
+    background: rgba(109, 17, 227, 0.3);
+    border: 1px solid rgba(109, 17, 227, 0.5);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .btn-primary-glass:hover:not(:disabled) {
+    background: rgba(109, 17, 227, 0.5);
+    border-color: #6D11E3;
+    transform: translateY(-2px);
+  }
+
+  .btn-primary-glass:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .simple-badge {
+    background: rgba(205, 180, 255, 0.2);
+    border: 1px solid rgba(205, 180, 255, 0.3);
+    color: #CDB4FF;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  /* Responsive */
+  @media (max-width: 991px) {
+    .sticky-preview {
+      position: relative;
+      top: 0;
+    }
+  }
+
+  /* ==================== */
+  /* PREVIEW LAYERS       */
+  /* ==================== */
+
+  /**
+  * Preview item layers - positioned vertically to show complete outfit
+  * Each item is absolutely positioned at a different top value
+  */
+  .preview-item-layer {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally only */
+    width: 160px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: visible; /* Changed from hidden to show labels */
+    border: 2px solid rgba(205, 180, 255, 0.4);
+    background: rgba(255, 255, 255, 0.08);
+    animation: slideIn 0.4s ease;
+    transition: all 0.3s ease;
+    cursor: pointer; /* Indicate it's clickable */
+  }
+
+  /**
+  * Slide-in animation for when items are added
+  * Creates smooth entrance effect
+  */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  /**
+  * Image container - ensure image fills the space properly
+  */
+  .preview-item-layer img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 10px;
+  }
+
+  /**
+  * Hover effect - slight scale and enhanced border
+  * Also increases z-index to bring item to front
+  */
+  .preview-item-layer:hover {
+    transform: translateX(-50%) scale(1.08);
+    border-color: rgba(205, 180, 255, 0.8);
+    box-shadow: 0 8px 24px rgba(109, 17, 227, 0.4);
+    z-index: 999 !important; /* Bring to front on hover */
+  }
+
+  /**
+  * Category label - appears above the item
+  * Shows what type of clothing this is
+  */
+  .preview-item-label {
+    position: absolute;
+    top: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(109, 17, 227, 0.4);
+    border: 1px solid rgba(109, 17, 227, 0.6);
+    color: #fff;
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    white-space: nowrap;
+    backdrop-filter: blur(10px);
+    pointer-events: none; /* Don't interfere with clicking */
+  }
+
+  /**
+  * Item title - appears below the item
+  * Shows the specific item name
+  */
+  .preview-item-title {
+    position: absolute;
+    bottom: -28px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.9);
+    padding: 0.25rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    white-space: nowrap;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    backdrop-filter: blur(10px);
+    pointer-events: none; /* Don't interfere with clicking */
+  }
+
+  /**
+  * Hover effect for labels - show on hover
+  * Makes them more visible when user hovers
+  */
+  .preview-item-layer:hover .preview-item-label,
+  .preview-item-layer:hover .preview-item-title {
+    opacity: 1;
+    border-color: rgba(205, 180, 255, 0.6);
+  }
+
+  /**
+  * Badge transition for count updates
+  */
+  .simple-badge {
+    transition: transform 0.2s ease;
+  }
+
+  /**
+  * Ensure preview area has enough height for vertical stacking
+  */
+  .outfit-preview-area {
+    min-height: 800px; /* Increased from 800px - gives more room */
+    position: relative;
+  }
+
+  .outfit-layers {
+    min-height: 800px; /* Increased from 800px */
+    position: relative;
+  }
+
+  .btn-primary-glass.btn-sm {
+    padding: 0.4rem 0.85rem;
+    font-size: 0.8rem;
+  }
+
+  /* ==================== */
+  /* MODAL STYLING        */
+  /* ==================== */
+
+  /**
+   * Glass-morphism modal styling
+   * Creates a frosted glass effect with backdrop blur
+   */
+  .glass-modal {
+    background: rgba(20, 20, 40, 0.95);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    color: #fff;
+  }
+
+  /**
+   * Glass input styling for form fields
+   * Consistent with the rest of the site's glass aesthetic
+   */
+  .glass-input {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+  }
+
+  .glass-input:focus {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(205, 180, 255, 0.5);
+    color: #fff;
+    box-shadow: 0 0 0 0.25rem rgba(205, 180, 255, 0.15);
+  }
+
+  .glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /**
+   * Glass select dropdown styling
+   * Style the select element itself
+   */
+   .glass-input option {
+    background: rgba(20, 20, 40, 0.95);
+    color: #fff;
+    padding: 0.5rem;
+  }
+
+  /**
+   * Selected option styling
+   */
+  .glass-input option:checked {
+    background: rgba(109, 17, 227, 0.4);
+    color: #fff;
+  }
+
+  /**
+   * Hover state for options
+   */
+  .glass-input option:hover {
+    background: rgba(109, 17, 227, 0.3);
+    color: #fff;
+  }
+
+  /**
+   * Disabled option styling
+   */
+  .glass-input option:disabled {
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /**
+   * Select arrow styling (custom)
+   * This removes the default arrow and adds a custom one
+   */
+  .glass-input[type="text"],
+  .glass-input:not(textarea) {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CDB4FF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    padding-right: 2.5rem;
+  }
+
+  /**
+   * Ensure select dropdowns use the custom arrow
+   */
+  select.glass-input {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CDB4FF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    padding-right: 2.5rem;
+    cursor: pointer;
+  }
+
+  /**
+   * Focus state for select
+   */
+  select.glass-input:focus {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23CDB4FF' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  }
+
+    /**
+   * Placeholder option styling - make it subtle
+   * The first option (value="") should look like a placeholder, not a selection
+   */
+   select.glass-input option[value=""] {
+    color: rgba(255, 255, 255, 0.4);
+    font-style: italic;
+  }
+
+  /**
+   * When placeholder is selected, keep select box subtle
+   */
+  select.glass-input:invalid {
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /**
+   * When a real option is selected, use normal color
+   */
+  select.glass-input:valid {
+    color: #fff;
+  }
+
+  /**
+   * Remove the blue highlight from the closed select
+   */
+  select.glass-input {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /**
+   * Ensure no weird background when select is in various states
+   */
+  select.glass-input:not(:focus) {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  /**
+   * Modal items preview - shows mini thumbnails of selected items
+   */
+  .modal-items-preview {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    min-height: 80px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /**
+   * Individual item preview in modal
+   * Smaller version of the main closet items
+   */
+  .modal-item-preview {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid rgba(205, 180, 255, 0.3);
+    position: relative;
+  }
+
+  .modal-item-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /**
+   * Category badge on preview items
+   * Shows what type of item it is
+   */
+  .modal-item-category {
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(109, 17, 227, 0.8);
+    color: #fff;
+    font-size: 0.6rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /**
+   * Form label styling
+   */
+  .modal-body .form-label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+  }
+
+  /**
+   * Required field indicator
+   */
+  .text-danger {
+    color: #ff6b6b !important;
+  }
+
+  /**
+   * Close button for modal (white X)
+   */
+  .btn-close-white {
+    filter: brightness(0) invert(1);
+  }
+</style>
+
+<script>
+  /**
+   * CLOSET VIEW - INTERACTIVE ITEM SELECTION
+   * 
+   * This script handles the interactive selection of wardrobe items in the closet view.
+   * It manages:
+   * - Selecting/deselecting items by clicking
+   * - Visual feedback for selected state
+   * - Real-time outfit preview with proper layering
+   * - Selected item count tracking
+   * - Button state management
+   */
+  
+  // ==========================================
+  // STATE MANAGEMENT
+  // ==========================================
+  
+  /**
+   * selectedItems: Object storing selected items organized by category
+   * Structure: {
+   *   'outerwear': [{id: 1, imageUrl: '...', title: '...'}],
+   *   'top': [{id: 2, imageUrl: '...', title: '...'}],
+   *   ...
+   * }
+   * 
+   * We organize by category because:
+   * 1. Easy to check if item already selected
+   * 2. Maintains category grouping for layered display
+   * 3. Can enforce limits per category if needed later
+   */
+  let selectedItems = {
+    'outerwear': [],
+    'dress': [],
+    'top': [],
+    'bottom': [],
+    'shoes': [],
+    'accessory': []
+  };
+  
+  /**
+   * categoryOrder: Array defining the visual layering order
+   * First item = top layer (outerwear), last item = bottom layer (shoes)
+   * This matches the order defined in the Django view
+   */
+  const categoryOrder = ['outerwear', 'dress', 'top', 'bottom', 'shoes', 'accessory'];
+  
+  // ==========================================
+  // DOM ELEMENTS
+  // ==========================================
+  
+  const outfitPreview = document.getElementById('outfit-preview');
+  const selectedCountBadge = document.getElementById('selected-count');
+  const clearButton = document.getElementById('clear-selection');
+  const createOutfitButton = document.getElementById('create-outfit-btn');
+  const createOutfitButtonTop = document.getElementById('create-outfit-btn-top'); // NEW
+    
+  // ==========================================
+  // CREATE OUTFIT FUNCTIONALITY - ENHANCED
+  // ==========================================
+
+  /**
+   * Modal instance for outfit creation
+   * Bootstrap 5 modal that we'll show/hide
+   */
+  let createOutfitModal;
+
+  /**
+   * Initialize modal on page load
+   * Bootstrap needs the modal to be initialized before use
+   */
+  document.addEventListener('DOMContentLoaded', function() {
+    // Get all closet item elements
+    const closetItems = document.querySelectorAll('.closet-item');
+    
+    closetItems.forEach(item => {
+      item.addEventListener('click', function() {
+        toggleItemSelection(this);
+      });
+    });
+    
+    // Clear selection button
+    clearButton.addEventListener('click', clearAllSelections);
+    
+    // Initialize Bootstrap modal
+    const modalElement = document.getElementById('createOutfitModal');
+    createOutfitModal = new bootstrap.Modal(modalElement);
+    
+    // Attach modal show handler to both create buttons
+    createOutfitButton.addEventListener('click', showCreateOutfitModal);
+    createOutfitButtonTop.addEventListener('click', showCreateOutfitModal);
+    
+    // Attach confirm handler to the modal's create button
+    document.getElementById('confirm-create-outfit').addEventListener('click', handleConfirmCreate);
+    
+    // Auto-focus name input when modal opens
+    modalElement.addEventListener('shown.bs.modal', function() {
+      document.getElementById('outfit-name-input').focus();
+    });
+    
+    // Clear form when modal closes
+    modalElement.addEventListener('hidden.bs.modal', function() {
+      clearModalForm();
+    });
+  });
+
+  /**
+   * showCreateOutfitModal - Opens the modal with outfit creation form
+   * 
+   * This function:
+   * 1. Validates that items are selected
+   * 2. Populates the modal preview with selected items
+   * 3. Shows the modal
+   */
+  function showCreateOutfitModal() {
+    const selectedIds = getSelectedItemIds();
+    
+    // Safety check - button should be disabled, but double-check
+    if (selectedIds.length === 0) {
+      alert('Please select at least one item for your outfit.');
+      return;
+    }
+    
+    // Populate the modal preview with selected items
+    populateModalPreview();
+    
+    // Show the modal
+    createOutfitModal.show();
+  }
+
+  /**
+   * populateModalPreview - Builds the visual preview in the modal
+   * Shows small thumbnails of each selected item with category badges
+   */
+  function populateModalPreview() {
+    const modalPreview = document.getElementById('modal-preview');
+    let previewHTML = '';
+    
+    // Build preview for each category
+    categoryOrder.forEach(category => {
+      const items = selectedItems[category];
+      items.forEach(item => {
+        previewHTML += `
+          <div class="modal-item-preview" title="${item.title}">
+            <img src="${item.imageUrl}" alt="${item.title}">
+            <div class="modal-item-category">${category}</div>
+          </div>
+        `;
+      });
+    });
+    
+    if (previewHTML === '') {
+      previewHTML = '<p class="text-white-50 small mb-0">No items selected</p>';
+    }
+    
+    modalPreview.innerHTML = previewHTML;
+  }
+
+  /**
+   * handleConfirmCreate - Validates form and submits outfit creation
+   * 
+   * This function:
+   * 1. Validates the outfit name is provided
+   * 2. Gets all form values (name, description, occasion, season)
+   * 3. Creates and submits the form with all data
+   */
+  function handleConfirmCreate() {
+    // Get form values
+    const outfitName = document.getElementById('outfit-name-input').value.trim();
+    const outfitDescription = document.getElementById('outfit-description-input').value.trim();
+    const outfitOccasion = document.getElementById('outfit-occasion-input').value;
+    const outfitSeason = document.getElementById('outfit-season-input').value;
+    
+    // Validate outfit name is provided
+    if (!outfitName) {
+      alert('Please enter a name for your outfit.');
+      document.getElementById('outfit-name-input').focus();
+      return;
+    }
+    
+    // Get selected item IDs
+    const selectedIds = getSelectedItemIds();
+    
+    if (selectedIds.length === 0) {
+      alert('Please select at least one item for your outfit.');
+      createOutfitModal.hide();
+      return;
+    }
+    
+    // Create form dynamically
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{% url "closet_view" %}';
+    
+    // Add CSRF token
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    // Add selected item IDs
+    const itemsInput = document.createElement('input');
+    itemsInput.type = 'hidden';
+    itemsInput.name = 'selected_items';
+    itemsInput.value = selectedIds.join(',');
+    form.appendChild(itemsInput);
+    
+    // Add outfit name
+    const nameInput = document.createElement('input');
+    nameInput.type = 'hidden';
+    nameInput.name = 'outfit_name';
+    nameInput.value = outfitName;
+    form.appendChild(nameInput);
+    
+    // Add description (if provided)
+    if (outfitDescription) {
+      const descInput = document.createElement('input');
+      descInput.type = 'hidden';
+      descInput.name = 'outfit_description';
+      descInput.value = outfitDescription;
+      form.appendChild(descInput);
+    }
+    
+    // Add occasion (if selected)
+    if (outfitOccasion) {
+      const occasionInput = document.createElement('input');
+      occasionInput.type = 'hidden';
+      occasionInput.name = 'outfit_occasion';
+      occasionInput.value = outfitOccasion;
+      form.appendChild(occasionInput);
+    }
+    
+    // Add season (if selected)
+    if (outfitSeason) {
+      const seasonInput = document.createElement('input');
+      seasonInput.type = 'hidden';
+      seasonInput.name = 'outfit_season';
+      seasonInput.value = outfitSeason;
+      form.appendChild(seasonInput);
+    }
+    
+    // Add form to page and submit
+    document.body.appendChild(form);
+    form.submit();
+    
+    // Note: Page will navigate away, so no cleanup needed
+  }
+
+  /**
+   * clearModalForm - Resets all form fields to default values
+   * Called when modal is closed
+   */
+  function clearModalForm() {
+    document.getElementById('outfit-name-input').value = '';
+    document.getElementById('outfit-description-input').value = '';
+    document.getElementById('outfit-occasion-input').value = '';
+    document.getElementById('outfit-season-input').value = '';
+  }
+  
+  // ==========================================
+  // SELECTION LOGIC
+  // ==========================================
+  
+  /**
+   * toggleItemSelection - Handles clicking an item to select/deselect it
+   * @param {HTMLElement} itemElement - The clicked closet-item div
+   */
+  function toggleItemSelection(itemElement) {
+    const itemId = itemElement.dataset.itemId;
+    const category = itemElement.dataset.category;
+    const imageUrl = itemElement.querySelector('img').src;
+    const title = itemElement.querySelector('.item-title').textContent;
+    
+    // Check if this item is already selected
+    const categoryItems = selectedItems[category];
+    const existingIndex = categoryItems.findIndex(item => item.id === itemId);
+    
+    if (existingIndex !== -1) {
+      // Item is selected - DESELECT it
+      categoryItems.splice(existingIndex, 1);
+      itemElement.classList.remove('selected');
+    } else {
+      // Item is not selected - SELECT it
+      categoryItems.push({
+        id: itemId,
+        imageUrl: imageUrl,
+        title: title,
+        category: category
+      });
+      itemElement.classList.add('selected');
+    }
+    
+    // Update the UI
+    updatePreview();
+    updateSelectedCount();
+    updateButtonStates();
+  }
+  
+  /**
+   * clearAllSelections - Removes all selected items and resets UI
+   */
+  function clearAllSelections() {
+    // Reset the selectedItems object
+    Object.keys(selectedItems).forEach(category => {
+      selectedItems[category] = [];
+    });
+    
+    // Remove visual selection from all items
+    document.querySelectorAll('.closet-item.selected').forEach(item => {
+      item.classList.remove('selected');
+    });
+    
+    // Update UI
+    updatePreview();
+    updateSelectedCount();
+    updateButtonStates();
+  }
+    
+  // ==========================================
+  // UI UPDATE FUNCTIONS
+  // ==========================================
+    
+  /**
+   * updatePreview - Rebuilds the outfit preview with selected items
+   * Items are positioned vertically at different heights to show the complete outfit
+   */
+  function updatePreview() {
+    const totalSelected = getTotalSelectedCount();
+    
+    if (totalSelected === 0) {
+      // Show empty state
+      outfitPreview.innerHTML = `
+        <div class="empty-preview">
+          <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="rgba(255,255,255,0.3)" viewBox="0 0 16 16">
+            <path d="M7 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm-1.496-.854a.5.5 0 0 1 0 .708l-1 1a.5.5 0 1 1-.708-.708l1-1a.5.5 0 0 1 .708 0zm3.992 0a.5.5 0 0 1 .708 0l1 1a.5.5 0 0 1-.708.708l-1-1a.5.5 0 0 1 0-.708z"/>
+            <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1zm3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4h-3.5z"/>
+          </svg>
+          <p class="text-white-50 small mt-3 mb-1">Select items from each category</p>
+          <p class="text-white-50" style="font-size: 0.7rem; opacity: 0.6;">Click items to add to your outfit</p>
+        </div>
+      `;
+      return;
+    }
+    
+    /**
+     * Vertical positioning map
+     * Each category gets a specific vertical position (top percentage)
+     * This creates the stacked outfit visualization
+     * 
+     * Values are percentages from top of preview area:
+     * - 5% = near top (outerwear - shoulders/chest area)
+     * - 15% = dresses (full body coverage)
+     * - 25% = upper middle (tops - chest/torso area)
+     * - 50% = middle (bottoms - waist/legs area)
+     * - 75% = lower (shoes - feet area)
+     * - 85% = bottom (accessories - can be positioned anywhere, using bottom for now)
+     */
+     const categoryPositions = {
+      'outerwear': 10,     // Top with padding
+      'dress': 23,         // Upper area - dress position
+      'top': 36,           // Upper middle - shirt position
+      'bottom': 52,        // Middle - pants/skirt position
+      'shoes': 68,         // Lower - footwear position
+      'accessory': 80      // Bottom with padding (was 86, now 80 to fit better)
+    };
+    
+    /**
+     * Category labels for display
+     * Shows what type of item each layer represents
+     */
+    const categoryLabels = {
+      'outerwear': 'Outerwear',
+      'dress': 'Dress',
+      'top': 'Top',
+      'bottom': 'Bottom',
+      'shoes': 'Shoes',
+      'accessory': 'Accessory'
+    };
+    
+    // Build layered preview
+    let previewHTML = '';
+    let hasItems = false;
+    
+    categoryOrder.forEach((category, index) => {
+      const items = selectedItems[category];
+      if (items.length > 0) {
+        hasItems = true;
+        
+        // For cleaner display, show only the first selected item from each category
+        // If user selects multiple tops, we show the first one
+        // This prevents visual clutter and makes the outfit preview cleaner
+        const item = items[0];
+        const topPosition = categoryPositions[category];
+        const zIndex = 100 - index; // Higher categories get higher z-index
+        
+        /**
+         * Each preview layer includes:
+         * - Positioned at specific vertical height
+         * - Category label for context
+         * - Item image
+         * - Click to remove functionality
+         */
+        previewHTML += `
+          <div class="preview-item-layer" 
+              style="top: ${topPosition}%; z-index: ${zIndex};"
+              data-item-id="${item.id}"
+              data-category="${category}"
+              title="Click to remove ${item.title}">
+            <div class="preview-item-label">${categoryLabels[category]}</div>
+            <img src="${item.imageUrl}" alt="${item.title}">
+            <div class="preview-item-title">${item.title}</div>
+          </div>
+        `;
+      }
+    });
+    
+    if (hasItems) {
+      outfitPreview.innerHTML = previewHTML;
+      
+      // Add click handlers to preview items for quick removal
+      document.querySelectorAll('.preview-item-layer').forEach(layer => {
+        layer.addEventListener('click', function(e) {
+          e.stopPropagation(); // Prevent event bubbling
+          const itemId = this.dataset.itemId;
+          const category = this.dataset.category;
+          
+          // Find and click the corresponding closet item to deselect it
+          const closetItem = document.querySelector(`.closet-item[data-item-id="${itemId}"][data-category="${category}"]`);
+          if (closetItem) {
+            closetItem.click(); // This will trigger toggleItemSelection
+          }
+        });
+      });
+    }
+  }
+  
+  /**
+   * updateSelectedCount - Updates the badge showing number of selected items
+   */
+  function updateSelectedCount() {
+    const count = getTotalSelectedCount();
+    selectedCountBadge.textContent = count;
+    
+    // Optional: Add visual feedback when count changes
+    selectedCountBadge.style.transform = 'scale(1.2)';
+    setTimeout(() => {
+      selectedCountBadge.style.transform = 'scale(1)';
+    }, 200);
+  }
+  
+  /**
+   * updateButtonStates - Enable/disable buttons based on selection
+   */
+  function updateButtonStates() {
+    const count = getTotalSelectedCount();
+    const hasSelection = count > 0;
+    
+    // Enable buttons only if items are selected
+    clearButton.disabled = !hasSelection;
+    createOutfitButton.disabled = !hasSelection;
+    createOutfitButtonTop.disabled = !hasSelection; // NEW
+  }
+  
+  // ==========================================
+  // HELPER FUNCTIONS
+  // ==========================================
+  
+  /**
+   * getTotalSelectedCount - Returns total number of selected items across all categories
+   * @returns {number} Total count of selected items
+   */
+  function getTotalSelectedCount() {
+    let total = 0;
+    Object.values(selectedItems).forEach(categoryItems => {
+      total += categoryItems.length;
+    });
+    return total;
+  }
+  
+  /**
+   * getSelectedItemIds - Returns array of all selected item IDs
+   * Useful for sending to backend when creating outfit
+   * @returns {Array<string>} Array of item IDs
+   */
+  function getSelectedItemIds() {
+    const ids = [];
+    Object.values(selectedItems).forEach(categoryItems => {
+      categoryItems.forEach(item => {
+        ids.push(item.id);
+      });
+    });
+    return ids;
+  }
+  
+  // ==========================================
+  // DEBUG HELPERS (optional - remove in production)
+  // ==========================================
+  
+  /**
+   * Console log current selection state (helpful for debugging)
+   */
+  function logSelectionState() {
+    console.log('Current Selection:', selectedItems);
+    console.log('Total Selected:', getTotalSelectedCount());
+    console.log('Selected IDs:', getSelectedItemIds());
+  }
+  
+  // Expose to window for debugging in browser console
+  window.debugCloset = {
+    selectedItems,
+    logState: logSelectionState,
+    getIds: getSelectedItemIds
+  };
+  
+  console.log('✅ Closet View interactive mode loaded');
+  console.log('💡 Debug with: window.debugCloset.logState()');
+</script>
+
+{% endblock %}

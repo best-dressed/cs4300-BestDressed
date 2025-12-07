@@ -1,100 +1,138 @@
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // CSRF token helper
-        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-        // ------------------------
-        // Save to Wardrobe
-        // ------------------------
-        document.querySelectorAll('.save-to-wardrobe-form').forEach(form => {
-            form.addEventListener('submit', async e => {
-                e.preventDefault();
-                const itemId = form.dataset.itemId;
-                const button = form.querySelector('button');
-                const btnText = button.querySelector('.btn-text');
-                const svg = button.querySelector('svg');
-
-                // disable immediately to prevent multiple clicks
-                button.disabled = true;
-
-                try {
-                    const response = await fetch(
-                        "{% url 'save_to_wardrobe' item_pk=0 %}".replace('0', itemId),
-                        {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': csrftoken,
-                                'X-Requested-With': 'XMLHttpRequest'
-                            }
-                        }
-                    );
-
-                    if (!response.ok) throw new Error('Server error');
-                    const data = await response.json();
-
-                    if (data.success) {
-                        if (data.status === 'added') {
-                            button.classList.remove('btn-outline-light');
-                            button.classList.add('btn-success');
-                            btnText.textContent = 'Item added to wardrobe!';
-                            if (svg) svg.remove();
-
-                        } else if (data.status === 'exists') {
-                            button.classList.remove('btn-outline-light');
-                            button.classList.add('btn-secondary');
-                            btnText.textContent = 'Already in wardrobe';
-                            if (svg) svg.remove();
-                        }
-                    } else {
-                        alert(data.message || 'Error saving item.');
-                        button.disabled = false;
-                    }
-
-                } catch (err) {
-                    console.error(err);
-                    alert('Network or server error. Try again.');
-                    button.disabled = false;
+      // CSRF token helper
+      const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+  
+      // ------------------------
+      // Save to Wardrobe
+      // ------------------------
+      document.querySelectorAll('.save-to-wardrobe-form').forEach(form => {
+        form.addEventListener('submit', async e => {
+          e.preventDefault();
+          const itemId = form.dataset.itemId;
+          const button = form.querySelector('button');
+          const btnText = button.querySelector('.btn-text');
+          const svg = button.querySelector('svg');
+  
+          // Disable immediately to prevent multiple clicks
+          button.disabled = true;
+  
+          // Store original HTML
+          const originalHTML = button.innerHTML;
+  
+          // Show loading state
+          button.innerHTML = `
+            <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+            Saving...
+          `;
+  
+          try {
+            const response = await fetch(
+              "{% url 'save_to_wardrobe' item_pk=0 %}".replace('0', itemId),
+              {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': csrftoken,
+                  'X-Requested-With': 'XMLHttpRequest'
                 }
-            });
+              }
+            );
+  
+            if (!response.ok) throw new Error('Server error');
+            const data = await response.json();
+  
+            if (data.success) {
+              if (data.status === 'added') {
+                // Success - item added
+                button.classList.add('success');
+                button.innerHTML = `
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
+                    <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+                  </svg>
+                  Added to Wardrobe!
+                `;
+              } else if (data.status === 'exists') {
+                // Already in wardrobe
+                button.classList.add('already-saved');
+                button.innerHTML = `
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-check-circle me-1" viewBox="0 0 16 16">
+                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                    <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05"/>
+                  </svg>
+                  Already in Wardrobe
+                `;
+              }
+            } else {
+              // Error from server
+              alert(data.message || 'Error saving item.');
+              button.innerHTML = originalHTML;
+              button.disabled = false;
+            }
+  
+          } catch (err) {
+            console.error(err);
+            alert('Network or server error. Please try again.');
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+          }
         });
-
-        // ------------------------
-        // Hide Item
-        // ------------------------
-        document.querySelectorAll('.hide-item-btn').forEach(button => {
-            button.addEventListener('click', async () => {
-                const itemId = button.dataset.itemId;
-                const card = button.closest('.col');
-
-                // disable button immediately
-                button.disabled = true;
-
-                try {
-                    const response = await fetch("{% url 'ajax_hide_item' %}", {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': csrftoken
-                        },
-                        body: new URLSearchParams({ 'item_id': itemId })
-                    });
-
-                    if (!response.ok) throw new Error('Server error');
-
-                    const data = await response.json();
-                    if (data.hidden) {
-                        // Remove the card from DOM
-                        card.remove();
-                    } else {
-                        button.disabled = false;
-                        alert('Failed to hide item.');
-                    }
-
-                } catch (err) {
-                    console.error(err);
-                    alert('Error hiding item.');
-                    button.disabled = false;
-                }
+      });
+  
+      // ------------------------
+      // Hide Item
+      // ------------------------
+      document.querySelectorAll('.hide-item-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+          const itemId = button.dataset.itemId;
+          const card = button.closest('.col');
+  
+          // Confirm action
+          if (!confirm('Hide this item from your catalog view?')) {
+            return;
+          }
+  
+          // Disable button immediately
+          button.disabled = true;
+  
+          // Add fade-out animation
+          card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.9)';
+  
+          try {
+            const response = await fetch("{% url 'ajax_hide_item' %}", {
+              method: 'POST',
+              headers: {
+                'X-CSRFToken': csrftoken
+              },
+              body: new URLSearchParams({ 'item_id': itemId })
             });
+  
+            if (!response.ok) throw new Error('Server error');
+  
+            const data = await response.json();
+            if (data.success || data.hidden) {
+              // Remove the card from DOM after animation
+              setTimeout(() => {
+                card.remove();
+              }, 300);
+            } else {
+              // Restore card if hiding failed
+              card.style.opacity = '1';
+              card.style.transform = 'scale(1)';
+              button.disabled = false;
+              alert('Failed to hide item.');
+            }
+  
+          } catch (err) {
+            console.error(err);
+            // Restore card on error
+            card.style.opacity = '1';
+            card.style.transform = 'scale(1)';
+            button.disabled = false;
+            alert('Error hiding item. Please try again.');
+          }
         });
+      });
     });
-</script>
+  </script>
