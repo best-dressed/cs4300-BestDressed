@@ -1,8 +1,9 @@
+"""URL configuration for the forum app."""
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('', views.threads, name='threads'),
+    path('threads/', views.threads_list, name='threads'),
     path('threads/new/', views.thread_create, name='thread_create'),
     path('threads/<int:thread_id>/', views.thread_detail, name='thread_detail'),
     path('threads/<int:thread_id>/edit/', views.thread_edit, name='thread_edit'),

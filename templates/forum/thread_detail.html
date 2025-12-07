@@ -1,6 +1,7 @@
 {% extends "main.html" %}
 {% load static %}
 {% block content %}
+
   
 <div class="landing-hero-bg" style="padding-top: 2rem;">
 <div class="container my-4">
@@ -51,6 +52,33 @@
               {{ thread.content|linebreaks }}
             </div>
           {% endif %}
+
+
+          <!-- NEWNEWNEWNEWNEW: Show attached outfit if it exists -->
+          {% if thread.attached_outfit %}
+          <div class="mt-3 p-3 border rounded" style="background: rgba(205, 180, 255, 0.1); border-color: rgba(205, 180, 255, 0.3) !important;">
+            <div class="d-flex align-items-center mb-2">
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#CDB4FF" class="me-2" viewBox="0 0 16 16">
+              <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+             </svg>
+             <strong style="color: #CDB4FF;">Outfit Attached</strong>
+            </div>
+            <a href="{% url 'outfit_detail' outfit_pk=thread.attached_outfit.pk %}" class="text-decoration-none">
+             <h6 class="mb-1">{{ thread.attached_outfit.name }}</h6>
+             {% if thread.attached_outfit.description %}
+               <p class="mb-2 small text-muted">{{ thread.attached_outfit.description|truncatewords:20 }}</p>
+             {% endif %}
+             <span class="badge bg-secondary">{{ thread.attached_outfit.item_count }} items</span>
+             {% if thread.attached_outfit.occasion %}
+               <span class="badge bg-secondary">{{ thread.attached_outfit.get_occasion_display }}</span>
+             {% endif %}
+           </a>
+         </div>
+       {% endif %}  
+
+
+      
+
 
           <!-- Action buttons: Like and Share -->
           <div class="d-flex gap-3 mt-3 pt-3 border-top">
