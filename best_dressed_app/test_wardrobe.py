@@ -13,12 +13,12 @@ This test file covers:
 - Integration workflows
 """
 
+from django.contrib.auth import get_user_model
+from django.db import transaction
 from django.test import TestCase, Client
 from django.urls import reverse
-from django.contrib.auth import get_user_model
-from best_dressed_app.models import Item, UserProfile, WardrobeItem, Outfit
-from django.db import transaction
-import json
+
+from best_dressed_app.models import Item, WardrobeItem
 
 
 # ==================== WARDROBE TESTS ====================
@@ -28,8 +28,8 @@ class SaveToWardrobeTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             password='testpass123'
         )
@@ -58,9 +58,15 @@ class SaveToWardrobeTests(TestCase):
             reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
         )
 
-        self.assertRedirects(response, reverse('item_detail', kwargs={'pk': self.catalog_item.pk}))
+        self.assertRedirects(
+            response,
+            reverse('item_detail', kwargs={'pk': self.catalog_item.pk})
+        )
 
-        wardrobe_item = WardrobeItem.objects.get(user=self.user, catalog_item=self.catalog_item)
+        wardrobe_item = WardrobeItem.objects.get(
+            user=self.user,
+            catalog_item=self.catalog_item
+        )
         self.assertEqual(wardrobe_item.title, "Cool Jacket")
         self.assertEqual(wardrobe_item.description, "A very cool jacket")
 
@@ -68,20 +74,35 @@ class SaveToWardrobeTests(TestCase):
         """Test that saving the same item twice doesn't create duplicates"""
         self.client.login(username='testuser', password='testpass123')
 
-        response1 = self.client.post(
+        self.client.post(
             reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
         )
 
-        self.assertEqual(WardrobeItem.objects.filter(user=self.user, catalog_item=self.catalog_item).count(), 1)
+        self.assertEqual(
+            WardrobeItem.objects.filter(
+                user=self.user,
+                catalog_item=self.catalog_item
+            ).count(),
+            1
+        )
 
         with transaction.atomic():
             response2 = self.client.post(
-                reverse('save_to_wardrobe', kwargs={'item_pk': self.catalog_item.pk})
+                reverse(
+                    'save_to_wardrobe',
+                    kwargs={'item_pk': self.catalog_item.pk}
+                )
             )
 
         self.assertEqual(response2.status_code, 302)
 
-        self.assertEqual(WardrobeItem.objects.filter(user=self.user, catalog_item=self.catalog_item).count(), 1)
+        self.assertEqual(
+            WardrobeItem.objects.filter(
+                user=self.user,
+                catalog_item=self.catalog_item
+            ).count(),
+            1
+        )
 
     def test_save_to_wardrobe_shows_success_message(self):
         """Test that success message is displayed when item is saved"""
@@ -93,7 +114,9 @@ class SaveToWardrobeTests(TestCase):
         )
 
         messages_list = list(response.context['messages'])
-        self.assertTrue(any('added to your wardrobe' in str(msg) for msg in messages_list))
+        self.assertTrue(
+            any('added to your wardrobe' in str(msg) for msg in messages_list)
+        )
 
     def test_save_to_wardrobe_only_accepts_post(self):
         """Test that GET requests are not allowed"""
@@ -106,7 +129,9 @@ class SaveToWardrobeTests(TestCase):
 
         self.assertEqual(WardrobeItem.objects.filter(user=self.user).count(), 0)
         messages_list = list(response.context['messages'])
-        self.assertTrue(any('Invalid request method' in str(msg) for msg in messages_list))
+        self.assertTrue(
+            any('Invalid request method' in str(msg) for msg in messages_list)
+        )
 
     def test_save_to_wardrobe_handles_nonexistent_item(self):
         """Test that 404 is returned for non-existent catalog items"""
@@ -124,8 +149,8 @@ class MyWardrobeTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             password='testpass123'
         )
@@ -170,8 +195,8 @@ class MyWardrobeTests(TestCase):
 
     def test_my_wardrobe_only_shows_user_items(self):
         """Test that users only see their own items, not other users' items"""
-        User = get_user_model()
-        other_user = User.objects.create_user(
+        user_model = get_user_model()
+        other_user = user_model.objects.create_user(
             username='otheruser',
             password='otherpass123'
         )
@@ -261,8 +286,8 @@ class AddWardrobeItemTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             password='testpass123'
         )
@@ -324,8 +349,8 @@ class EditWardrobeItemTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             password='testpass123'
         )
@@ -383,8 +408,8 @@ class EditWardrobeItemTests(TestCase):
 
     def test_edit_wardrobe_item_user_can_only_edit_own_items(self):
         """Test that users can only edit their own items"""
-        User = get_user_model()
-        other_user = User.objects.create_user(
+        user_model = get_user_model()
+        other_user = user_model.objects.create_user(
             username='otheruser',
             password='otherpass123'
         )
@@ -417,7 +442,9 @@ class EditWardrobeItemTests(TestCase):
         )
 
         messages_list = list(response.context['messages'])
-        self.assertTrue(any('updated' in str(msg).lower() for msg in messages_list))
+        self.assertTrue(
+            any('updated' in str(msg).lower() for msg in messages_list)
+        )
 
 
 class DeleteWardrobeItemTests(TestCase):
@@ -425,8 +452,8 @@ class DeleteWardrobeItemTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             password='testpass123'
         )
@@ -474,8 +501,8 @@ class DeleteWardrobeItemTests(TestCase):
 
     def test_delete_wardrobe_item_user_can_only_delete_own_items(self):
         """Test that users can only delete their own items"""
-        User = get_user_model()
-        other_user = User.objects.create_user(
+        user_model = get_user_model()
+        other_user = user_model.objects.create_user(
             username='otheruser',
             password='otherpass123'
         )
@@ -505,5 +532,7 @@ class DeleteWardrobeItemTests(TestCase):
         )
 
         messages_list = list(response.context['messages'])
-        self.assertTrue(any('removed from your wardrobe' in str(msg) for msg in messages_list))
+        self.assertTrue(
+            any('removed from your wardrobe' in str(msg) for msg in messages_list)
+        )
         self.assertTrue(any(item_title in str(msg) for msg in messages_list))
