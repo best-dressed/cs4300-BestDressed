@@ -341,7 +341,7 @@ def ajax_add_item(request):
 
     except (json.JSONDecodeError, KeyError, TypeError) as e:
         logger.error("Error adding item: %s", e)
-        return JsonResponse({"error": str(e)}, status=500)
+        return JsonResponse({"error": "Failed to add item due to internal error."}, status=500)
 
 
 # filter so nsfw stuff won't be added from ebay if a user searches for it, and block searches too
