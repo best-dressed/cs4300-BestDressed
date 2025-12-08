@@ -1,3 +1,6 @@
+# pylint: disable=duplicate-code
+# it would make sense in a larger scale to make some kinda function so our openAI is standard
+# But here it is just one instance and you might want them to be different later aswell.
 """AI recommendations by prompting chatGPT with items from db"""
 import os
 import openai
