@@ -38,7 +38,7 @@ def prompt_ai(prompt: str, client: openai.OpenAI, model: str) -> str:
 
 def generate_recommendations(available_items, user_profile, user_prompt: str = None) -> str:
     """
-    Generate personalized clothing recommendations using AI based on user preferences and user prompt.
+    Generate personalized clothing recommendations using AI based on user preferences and prompt.
 
     Args:
         available_items (list): Items with attributes `id`, `title`, `description`, `tag`.
@@ -56,7 +56,12 @@ def generate_recommendations(available_items, user_profile, user_prompt: str = N
     # Format items with ID, title, description, and tag for the AI
     items_list = []
     for item in available_items:
-        items_list.append(f"ID: {item.id} | Title: {item.title} | Description: {item.description} | Category: {item.tag}")
+        # THIS WAS FIXED FOR PYLINT I AM PRETTY SURE I DIDNT SCREW IT UP
+        items_list.append(
+            f"ID: {item.id} | Title: {item.title} | "
+            f"Description: {item.description} | Category: {item.tag}"
+        )
+        # end pylint fix
     items_formatted = "\n".join(items_list)
 
     # Build the base prompt with user profile information

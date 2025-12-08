@@ -13,19 +13,13 @@ This test file covers:
 - Integration workflows
 """
 
-# Standard library imports
-import json
-from datetime import timedelta
-
 # Third-party imports
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from django.db import IntegrityError, transaction
-from django.utils import timezone
 
 # First-party imports
-from best_dressed_app.models import Item, UserProfile, WardrobeItem, Outfit
+from best_dressed_app.models import Item, WardrobeItem, Outfit
 
 
 # ==================== INTEGRATION TESTS ====================

@@ -30,7 +30,8 @@ class UserProfileForm(forms.ModelForm):
                 'placeholder': 'Tell us about your style...'
             }),
             # ^^^ this is the same as:
-            # <textarea class="form-control" rows="4" placeholder="Tell us about your style..."></textarea>
+            # <textarea class="form-control" rows="4"
+            # placeholder="Tell us about your style..."></textarea>
             'style_preferences': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g., casual, streetwear, minimalist'
@@ -140,9 +141,12 @@ class ItemForm(forms.ModelForm):
         # we don't get the short description manually
         fields = ['title', 'description', 'image_url', 'tag']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter title'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter description'}),
-            'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Enter image URL'}),
+            'title': forms.TextInput(attrs={'class': 'form-control',
+                                            'placeholder': 'Enter title'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3,
+                                                 'placeholder': 'Enter description'}),
+            'image_url': forms.URLInput(attrs={'class': 'form-control',
+                                               'placeholder': 'Enter image URL'}),
             'tag': forms.Select(attrs={'class': 'form-control'}),
         }
 
