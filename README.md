@@ -2,6 +2,29 @@
 
 Best dressed is a website where you can create and share outfits
 
+## Setting up the website
+This website requires a linux environment
+
+To set up the website, do the following commands
+```shell
+git clone https://github.com/best-dressed/cs4300-BestDressed 
+cd cs4300-BestDressed
+python3 -m venv virtualenvironment # set up virtual environment
+source virtualenvironment/bin/activate # enter virtual environment
+python3 -m pip install -r requirements.txt # install requirements
+python3 manage.py makemigrations
+python3 manage.py migrate
+```
+
+After that you need to run the server, you can do that with
+
+```
+python3 manage.py runserver
+```
+
+while you are in the server.
+ 
+
 Resources: 
 
 Mason
