@@ -918,9 +918,14 @@ def outfit_detail(request, outfit_pk):
     View detailed information about a specific outfit.
     """
     outfit = get_object_or_404(Outfit, pk=outfit_pk)
+    active_user = False
+
+    if outfit.user == request.user:
+        active_user = True
 
     context = {
         'outfit': outfit,
+        'active_user': active_user
     }
 
     return render(request, 'outfit_detail.html', context)
