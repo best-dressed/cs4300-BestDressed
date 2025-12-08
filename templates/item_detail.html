@@ -1,127 +1,258 @@
 {% extends "main.html" %}
 {% load static %}
-{% block title %}{{ item.title }} - Best Dressed{% endblock title %}
+{% block title %}{{ item.title }} · Best Dressed{% endblock %}
+
 {% block content %}
+<div class="clean-glass-item-detail">
+  <div class="container py-5">
 
-<link rel="stylesheet" href="{% static 'css/main.css' %}" type="text/css">
+    <!-- Success/Error Messages -->
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert-glass alert-{{ message.tags }} mb-4">
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
 
-<!-- Success/Error Messages -->
-{% if messages %}
-    <div class="container mt-3">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Item Detail Card -->
+    <div class="glass-card-simple p-0 mb-4">
+      <div class="row g-0">
+        <!-- Item Image -->
+        <div class="col-lg-6">
+          <div class="item-detail-image">
+            <img src="{{ item.image_url }}" alt="{{ item.title }}">
+          </div>
         </div>
-        {% endfor %}
-    </div>
-{% endif %}
 
-<!-- Primary Item -->
-<section class="py-5">
-    <div class="container px-4 px-lg-5 my-5">
-        <div class="row gx-4 gx-lg-5 align-items-center">
-            <!-- Item Image -->
-            <div class="col-md-6">
-                <img class="img-fluid rounded shadow" src="{{ item.image_url }}" alt="{{ item.title }}" />
-            </div>
+        <!-- Item Details -->
+        <div class="col-lg-6">
+          <div class="p-4 p-lg-5">
+            <!-- Category Badge -->
+            <span class="simple-badge mb-3">{{ item.get_tag_display }}</span>
             
-            <!-- Item Details -->
-            <div class="col-md-6">
-                <h1 class="display-5 fw-bolder mb-3">{{ item.title }}</h1>
-                {% if item.item_ebay_url %}
-                <div class="text-center">
-                    <a href="{{ item.item_ebay_url }}" class="btn btn-primary">
-                        View on eBay
-                    </a>
-                </div>
-                {% endif %}
-                <p class="lead mb-4">{{ item.description }}</p>
-                
-                <!-- Action Buttons -->
-                <div class="d-grid gap-3">
-                    {% if user.is_authenticated %}
-                        {% if already_saved %}
-                            <!-- Item already in wardrobe -->
-                            <button class="btn btn-success btn-lg" disabled>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-circle-fill me-2" viewBox="0 0 16 16">
-                                    <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
-                                </svg>
-                                In Your Wardrobe
-                            </button>
-                        {% else %}
-                            <!-- Save to wardrobe form -->
-                            <form method="post" action="{% url 'save_to_wardrobe' item_pk=item.pk %}">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-primary btn-lg w-100">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-bag-plus me-2" viewBox="0 0 16 16">
-                                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
-                                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
-                                    </svg>
-                                    Save to Wardrobe
-                                </button>
-                            </form>
-                        {% endif %}
-                        
-                        <!-- Add to Outfit Button -->
-                        <button class="btn btn-outline-primary btn-lg" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-plus-circle me-2" viewBox="0 0 16 16">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                            </svg>
-                            Add to Outfit (Coming Soon)
-                        </button>
-                    {% else %}
-                        <!-- User not logged in -->
-                        <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary btn-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-box-arrow-in-right me-2" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"/>
-                                <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
-                            </svg>
-                            Log in to Save Items
-                        </a>
-                    {% endif %}
-                    
-                    <!-- Back Button (context-aware) -->
-                    {% if came_from == 'wardrobe' %}
-                        <!-- User came from wardrobe -->
-                        <a href="{% url 'my_wardrobe' %}" class="btn btn-outline-secondary btn-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-                            </svg>
-                            Back to Wardrobe
-                        </a>
-                    {% else %}
-                        <!-- User came from catalog or elsewhere -->
-                        <a href="{% url 'item_listing' %}" class="btn btn-outline-secondary btn-lg">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
-                                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
-                            </svg>
-                            Back to Item Listing
-                        </a>
-                    {% endif %}
-                </div>
+            <!-- Title -->
+            <h1 class="display-6 fw-bold text-white mb-3">{{ item.title }}</h1>
+            
+            <!-- Description -->
+            <p class="text-white-50 mb-4">{{ item.description }}</p>
+            
+            <!-- eBay Link (if available) -->
+            {% if item.item_ebay_url %}
+            <div class="mb-4">
+              <a href="{{ item.item_ebay_url }}" target="_blank" class="btn-clean-glass-secondary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right me-1" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
+                  <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
+                </svg>
+                View on eBay
+              </a>
             </div>
+            {% endif %}
+            
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+              {% if user.is_authenticated %}
+                {% if already_saved %}
+                  <!-- Already in wardrobe -->
+                  <button class="btn-success-glass" disabled>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill me-2" viewBox="0 0 16 16">
+                      <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+                    </svg>
+                    In Your Wardrobe
+                  </button>
+                {% else %}
+                  <!-- Save to wardrobe -->
+                  <form method="post" action="{% url 'save_to_wardrobe' item_pk=item.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn-clean-glass w-100">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-bag-plus me-2" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M8 7.5a.5.5 0 0 1 .5.5v1.5H10a.5.5 0 0 1 0 1H8.5V12a.5.5 0 0 1-1 0v-1.5H6a.5.5 0 0 1 0-1h1.5V8a.5.5 0 0 1 .5-.5"/>
+                        <path d="M8 1a2.5 2.5 0 0 1 2.5 2.5V4h-5v-.5A2.5 2.5 0 0 1 8 1m3.5 3v-.5a3.5 3.5 0 1 0-7 0V4H1v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V4zM2 5h12v9a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1z"/>
+                      </svg>
+                      Save to Wardrobe
+                    </button>
+                  </form>
+                {% endif %}
+              {% else %}
+                <!-- Not logged in -->
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn-clean-glass">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-in-right me-2" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0z"/>
+                    <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/>
+                  </svg>
+                  Log in to Save Items
+                </a>
+              {% endif %}
+              
+              <!-- Back Button -->
+              {% if came_from == 'wardrobe' %}
+                <a href="{% url 'my_wardrobe' %}" class="btn-clean-glass-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                  </svg>
+                  Back to Wardrobe
+                </a>
+              {% else %}
+                <a href="{% url 'item_listing' %}" class="btn-clean-glass-secondary">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-2" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                  </svg>
+                  Back to Catalog
+                </a>
+              {% endif %}
+            </div>
+          </div>
         </div>
+      </div>
     </div>
-</section>
 
-<!-- Related Items -->
-<section class="py-5" style="background-color: #2d3238;">
-    <div class="container px-4 px-lg-5">
-        <h2 class="fw-bold mb-4 text-white">Related Items</h2>
-        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
-            {% for item in items|slice:":4" %}
-            {% include "item_card.html" with item=item %}
-            {% endfor %}
-        </div>
+    <!-- Related Items -->
+    {% if items %}
+    <div class="mb-3">
+      <h3 class="text-white mb-4">You Might Also Like</h3>
     </div>
-</section>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+      {% for related_item in items|slice:":4" %}
+      {% include "item_card.html" with item=related_item %}
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
 
 <style>
-.card:hover {
-    transform: translateY(-5px);
-}
+  /* Base */
+  .clean-glass-item-detail {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Glass Card */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
+  /* Item Image */
+  .item-detail-image {
+    height: 100%;
+    min-height: 400px;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .item-detail-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Badge */
+  .simple-badge {
+    background: rgba(205, 180, 255, 0.2);
+    border: 1px solid rgba(205, 180, 255, 0.3);
+    color: #CDB4FF;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  /* Alerts */
+  .alert-glass {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .alert-glass.alert-success {
+    border-color: rgba(40, 167, 69, 0.3);
+    background: rgba(40, 167, 69, 0.1);
+  }
+
+  .alert-glass.alert-info {
+    border-color: rgba(13, 202, 240, 0.3);
+    background: rgba(13, 202, 240, 0.1);
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .btn-success-glass {
+    background: rgba(40, 167, 69, 0.15);
+    border: 1px solid rgba(40, 167, 69, 0.3);
+    color: #28a745;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: not-allowed;
+    width: 100%;
+  }
+
+  /* Responsive */
+  @media (max-width: 992px) {
+    .item-detail-image {
+      min-height: 300px;
+    }
+  }
 </style>
+
 {% include "item_card_logic.html" %}
-{% endblock content %}
+{% endblock %}

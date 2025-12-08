@@ -1,4 +1,7 @@
-"""Views associated with API actions such as item adding via ebay and some general item listing stuff."""
+"""
+Views associated with API actions such as
+item adding via ebay and some general item listing stuff.
+"""
 import hashlib
 import json
 import os
@@ -30,24 +33,33 @@ from .forms import EbaySearchForm
 logger = logging.getLogger(__name__)
 
 ## Basically a giant amalgamation of
+# pylint: disable=line-too-long
 # https://stackoverflow.com/questions/68569773/ebay-marketplace-account-deletion-closure-notifications
-# and a bunch of chatGPT/Claude code for processing json, and adapting signature validation to use cryptography lib
+# pylint: enable=line-too-long
+# and a bunch of chatGPT/Claude code for processing json,
+# and adapting signature validation to use cryptography lib
 
 EBAY_VERIFICATION_TOKEN = os.environ.get('EBAY_VERIFICATION_TOKEN')
-EBAY_BASE64_AUTHORIZATION_TOKEN = os.environ.get("EBAY_BASE64_AUTHORIZATION_TOKEN")
+EBAY_BASE64_AUTHORIZATION_TOKEN = os.environ.get(
+    "EBAY_BASE64_AUTHORIZATION_TOKEN")
+
+EBAY_URL = 'https://api.ebay.com/'
 
 
 def _handle_challenge_code(challenge_code):
     """Handle eBay challenge code verification."""
     verification_token = EBAY_VERIFICATION_TOKEN  # random 32-80 char string
     endpoint_url = "https://best-dressed.net/auth/ebay_market_delete/"
-    m = hashlib.sha256((challenge_code + verification_token + endpoint_url).encode('utf-8'))
+    m = hashlib.sha256((challenge_code +
+                        verification_token +
+                        endpoint_url).encode('utf-8'))
     return JsonResponse({"challengeResponse": m.hexdigest()}, status=200)
 
 
 def _fetch_ebay_public_key(kid, oauth_access_token):
     """Fetch public key from eBay API. Raises exceptions to caller."""
-    ebay_verification_url = f'https://api.ebay.com/commerce/notification/v1/public_key/{kid}'
+    ebay_verification_url = (EBAY_URL +
+                             f'commerce/notification/v1/public_key/{kid}')
     pk_request = requests.get(
         url=ebay_verification_url,
         headers={
@@ -72,22 +84,28 @@ def _verify_signature_and_process_deletion(request, signature, public_key):
         pk = serialization.load_pem_public_key(public_key_pem)
     except (ValueError, InvalidKey):
         logging.error("Invalid public key received.")
-        return JsonResponse({'error': 'Invalid public key or Signature'}, status=412)
+        return JsonResponse({'error':
+                             'Invalid public key or Signature'}, status=412)
 
     try:
-        pk.verify(base64.b64decode(signature), msg_body_bytes, ec.ECDSA(hashes.SHA1()))
+        pk.verify(base64.b64decode(signature),
+                  msg_body_bytes, ec.ECDSA(hashes.SHA1()))
         logger.info("Ebay Signature verified successfully")
 
         deletion_payload = json.loads(request.body.decode("utf-8"))
 
         # Ebay sends "username" for marketplace data deletion
         ebay_username = deletion_payload.get("username")
-        logger.warning("EBAY MARKETPLACE DELETE REQUEST FOR USER: %s", ebay_username)
+        logger.warning("EBAY MARKETPLACE"
+                       " DELETE REQUEST FOR USER: %s", ebay_username)
 
         if ebay_username:
             # Delete all items where seller_id matches this username
-            deleted_count, _ = Item.objects.filter(seller_id=ebay_username).delete()
-            logger.warning("Deleted %s Item(s) belonging to deleted eBay user: %s", deleted_count, ebay_username)
+            deleted_count, _ = (Item.objects.filter(seller_id=ebay_username)
+                                .delete())
+            logger.warning("Deleted %s Item(s) "
+                           "belonging to deleted eBay "
+                           "user: %s", deleted_count, ebay_username)
         else:
             logger.error("Deletion payload missing 'username' field")
 
@@ -102,10 +120,12 @@ def _verify_signature_and_process_deletion(request, signature, public_key):
     return HttpResponse(status=200)
 
 
-# need to have this to support accepting requests to delete data from Ebay users who delete accounts.
+# need to have this to support accepting requests
+# to delete data from Ebay users who delete accounts.
 @csrf_exempt
 def ebay_marketplace_deletion_notification(request):
-    """Handle eBay marketplace account deletion notifications with signature verification."""
+    """Handle eBay marketplace account
+    deletion notifications with signature verification."""
     challenge_code = request.GET.get('challenge_code')
 
     # reply to challengecode basically just saying "yeah we got it"
@@ -114,16 +134,21 @@ def ebay_marketplace_deletion_notification(request):
 
     # when ebay sends their delete request verify it with public key then delete
     if request.method == 'POST':
-        # the ebay signature is a json body encoded so once we decode we access its elements
+        # the ebay signature is a json body encoded
+        # so once we decode we access its elements
         x_ebay_signature = request.headers["X-Ebay-Signature"]
-        x_ebay_signature_decoded = json.loads(base64.b64decode(x_ebay_signature).decode('utf-8'))
+        x_ebay_signature_decoded = json.loads(
+            base64.b64decode(x_ebay_signature).decode('utf-8'))
         kid = x_ebay_signature_decoded['kid']
         signature = x_ebay_signature_decoded['signature']
         #logger.warning(f"SIGNATURE: {signature}")
         #logger.warning(f"kid: {kid}")
 
-        # So maybe this works, but I really have no idea how to verify it from eBay themselves.
+        # So maybe this works, but I really have no idea how to verify
+        # it from eBay themselves.
+        # pylint: disable=line-too-long
         # https://developer.ebay.com/api-docs/commerce/notification/resources/public_key/methods/getPublicKey
+        # pylint: enable=line-too-long
         try:
             oauth_access_token = get_oath_token()
             # send out a call to get public key
@@ -135,13 +160,15 @@ def ebay_marketplace_deletion_notification(request):
         # catch errors
         # pylint: disable=broad-exception-caught
         except Exception as e:
-            message_title = "Ebay Marketplace Account Deletion: Error performing validation"
+            message_title = ("Ebay Marketplace Account "
+                             "Deletion: Error performing validation")
             logger.error("%s Error: %s", message_title, e)
             return JsonResponse({}, status=500)
-
+        # pylint: enable=broad-exception-caught
         # if we get here we have the public key and everything from ebay,
         # so use it to verify signature actually came from eBay
-        return _verify_signature_and_process_deletion(request, signature, public_key)
+        return _verify_signature_and_process_deletion(
+            request, signature, public_key)
 
     # if it fails make it known
     return HttpResponseBadRequest()
@@ -160,7 +187,8 @@ def _parse_ebay_item(item, oauth_access_token):
 
     detail_data = detail_response.json()
     description = detail_data.get("shortDescription")
-    # get image url from details because we already pulled it and it is better than img url from search.
+    # get image url from details because we already
+    # pulled it and it is better than img url from search.
     image_url = detail_data.get("image", {}).get("imageUrl")
 
     # sometimes there is no desc so account for that
@@ -170,7 +198,8 @@ def _parse_ebay_item(item, oauth_access_token):
     return {
         "item_id": item_id,
         "title": item.get("title"),
-        "price": f"{item['price']['value']} {item['price']['currency']}" if "price" in item else None,
+        "price": (f"{item['price']['value']} {item['price']['currency']}"
+                  if "price" in item else None),
         "seller_id": item.get("seller", {}).get("username"),
         "item_url": item.get("itemWebUrl"),
         "image_url": image_url,
@@ -180,7 +209,9 @@ def _parse_ebay_item(item, oauth_access_token):
 
 def _fetch_and_parse_ebay_items(search_term, item_count):
     """Fetch items from eBay API and parse them."""
-    ebay_items_url = f"https://api.ebay.com/buy/browse/v1/item_summary/search?q={search_term}&limit={item_count}"
+    ebay_items_url = (
+        "https://api.ebay.com/buy/browse/v1/item_summary/"
+        f"search?q={search_term}&limit={item_count}")
     oauth_access_token = get_oath_token()
 
     # send call to get some item data
@@ -203,7 +234,8 @@ def _fetch_and_parse_ebay_items(search_term, item_count):
         parsed_item = _parse_ebay_item(item, oauth_access_token)
 
         # when inappropriate items are found flag so we send an error message and dont add that item
-        if is_inappropriate(parsed_item.get("title")) or is_inappropriate(parsed_item.get("description")):
+        if (is_inappropriate(parsed_item.get("title"))
+            or is_inappropriate(parsed_item.get("description"))):
             flagged_any_item = True
         else:
             parsed_items.append(parsed_item)
@@ -228,26 +260,36 @@ def ebay_get_items(request):
             search_term = form.cleaned_data['search_term']
             item_count = form.cleaned_data['item_count']
 
-            # Check if search term itself is inappropriate before making API call
+            # Check if search term itself is inappropriate
+            # before making API call
             if is_inappropriate(search_term):
-                messages.warning(request, "Search term contains inappropriate content and will likely result in filtered items. Please try a different search term.")
+                messages.warning(request, "Search term contains inappropriate "
+                                 "content and will likely result in "
+                                 "filtered items. "
+                                 "Please try a different search term.")
                 form = EbaySearchForm()  # reset form to empty
                 context['form'] = form
                 return render(request, "ebay_add_item.html", context)
 
             try:
-                parsed_items, flagged_any_item = _fetch_and_parse_ebay_items(search_term, item_count)
+                parsed_items, flagged_any_item = (
+                    _fetch_and_parse_ebay_items(search_term, item_count))
 
                 if flagged_any_item:
-                    messages.warning(request, "Some inappropriate items were removed from search results")
+                    messages.warning(request,
+                                     "Some inappropriate items "
+                                     "were removed from search results")
 
                 context['recent_items'] = parsed_items
 
             # per chatGPT
-            except (requests.RequestException, KeyError, json.JSONDecodeError) as e:
+            except (requests.RequestException,
+                    KeyError, json.JSONDecodeError) as e:
                 logger.error("Error while calling eBay API: %s", e)
-                messages.error(request, "Unable to retrieve eBay items. Please try again later.")   # 🟩 new user-facing message
-                form = EbaySearchForm()  # 🟩 reset form to empty
+                messages.error(request,
+                               "Unable to retrieve eBay items. "
+                               "Please try again later.")
+                form = EbaySearchForm()  # reset form to empty
                 context['form'] = form
                 return render(request, "ebay_add_item.html", context)
 
@@ -282,7 +324,8 @@ def get_oath_token():
             timeout=10
         )
         logger.warning("--- ATTEMPTING TO GET OAUTH TOKEN ---:")
-        # TESTING --- DO NOT UNCOMMENT IN MAIN CODE EVEN THO PROD TERMINAL IS PRIVATE ---
+        # TESTING --- DO NOT UNCOMMENT IN MAIN
+        # CODE EVEN THO PROD TERMINAL IS PRIVATE ---
         #logger.warning(f"DEBUG: {tokenRequest.json}")
         #logger.warning(f"DEBUG: {EBAY_BASE64_AUTHORIZATION_TOKEN}")
         oauth_access_token = token_request.json()['access_token']
@@ -321,11 +364,15 @@ def ajax_add_item(request):
         seller_id = data.get("seller_id")
 
         if not title or not description:
-            return JsonResponse({"error": "Missing required fields"}, status=400)
+            return JsonResponse(
+                {"error": "Missing required fields"},
+                status=400)
 
         # ✅ Duplicate check based on eBay item_id
         if item_id and Item.objects.filter(item_id=item_id).exists():
-            return JsonResponse({"error": "Item already exists in catalog."}, status=200)
+            return JsonResponse(
+                {"error": "Item already exists in catalog."},
+                status=200)
 
         # ✅ Create new item only if not a duplicate
         item = Item.objects.create(
@@ -337,14 +384,17 @@ def ajax_add_item(request):
             item_ebay_url=item_url,
             seller_id=seller_id
         )
-        return JsonResponse({"message": "Item added successfully", "id": item.id})
+        return JsonResponse(
+            {"message": "Item added successfully",
+             "id": item.id})
 
     except (json.JSONDecodeError, KeyError, TypeError) as e:
         logger.error("Error adding item: %s", e)
         return JsonResponse({"error": str(e)}, status=500)
 
 
-# filter so nsfw stuff won't be added from ebay if a user searches for it, and block searches too
+# filter so nsfw stuff won't be added from ebay if a user searches
+# for it, and block searches too
 def is_inappropriate(text):
     """Check if text contains inappropriate content using SafeText filter."""
     if not text:

@@ -2,9 +2,11 @@
 # pylint: disable=no-member,too-many-instance-attributes
 from django.test import TestCase
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from forum.models import Thread, Post
 
+# silly little pylint thing for good practice
+User = get_user_model()
 
 class ForumTests(TestCase):
     """Test cases for forum functionality."""

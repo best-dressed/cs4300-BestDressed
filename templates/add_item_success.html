@@ -1,29 +1,214 @@
 {% extends "main.html" %}
 {% load static %}
-{% block title %} Item Listing {% endblock title %}
+{% block title %}Item Added · Best Dressed{% endblock %}
+
 {% block content %}
-
-<link rel="stylesheet" href="{% static 'css/single_item.css' %}" type="text/css">
-<!-- primary item -->
-<section class="py-5">
-  <h1>Item Added!</h1>
-  <div class="text-center">
-    <a href = "{% url 'add_item' %}" class = "btn btn-primary">
-      Add another?</a>
-  </div>
-
-  <div class="container px-4 px-lg-5 mt-5">
-    <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
-      <div class="col mb-5">
-        {% include "item_card.html" with item=item %}
+<div class="clean-glass-success">
+  <div class="container py-5">
+    
+    <!-- Success Header -->
+    <div class="text-center mb-5">
+      <!-- Success Icon -->
+      <div class="success-icon-wrapper mb-3">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-check-circle-fill text-success" viewBox="0 0 16 16">
+          <path d="M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0m-3.97-3.03a.75.75 0 0 0-1.08.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-.01-1.05z"/>
+        </svg>
+      </div>
+      <h1 class="display-5 fw-bold text-white mb-2">Item Added!</h1>
+      <p class="text-white-50 mb-4">Your item has been added to the catalog successfully</p>
+      
+      <!-- Quick Actions -->
+      <div class="d-flex gap-2 justify-content-center flex-wrap">
+        <a href="{% url 'add_item' %}" class="btn-clean-glass">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-lg me-1" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+          </svg>
+          Add Another Item
+        </a>
+        <a href="{% url 'item_listing' %}" class="btn-clean-glass-secondary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+            <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+          </svg>
+          Back to Catalog
+        </a>
       </div>
     </div>
-  </div>
-  <div class="text-center">
-    <a href = "{% url 'item_listing' %}" class = "btn btn-primary" >
-      Back to item listing </a>
+
+    <!-- Item Preview Card -->
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-4">
+        <div class="success-item-card glass-card-simple">
+          <!-- Item Image -->
+          <div class="success-item-image">
+            <img src="{{ item.image_url }}" alt="{{ item.title }}">
+          </div>
+          
+          <!-- Item Details -->
+          <div class="success-item-body p-4">
+            <span class="simple-badge mb-2">{{ item.get_tag_display }}</span>
+            <h4 class="text-white mb-2">{{ item.title }}</h4>
+            <p class="text-white-50 mb-3">{{ item.description|truncatewords:20 }}</p>
+            
+            <!-- Action Button -->
+            <a href="{% url 'item_detail' pk=item.pk %}" class="btn-clean-glass w-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-eye me-1" viewBox="0 0 16 16">
+                <path d="M16 8s-3-5.5-8-5.5S0 8 0 8s3 5.5 8 5.5S16 8 16 8M1.173 8a13 13 0 0 1 1.66-2.043C4.12 4.668 5.88 3.5 8 3.5s3.879 1.168 5.168 2.457A13 13 0 0 1 14.828 8q-.086.13-.195.288c-.335.48-.83 1.12-1.465 1.755C11.879 11.332 10.119 12.5 8 12.5s-3.879-1.168-5.168-2.457A13 13 0 0 1 1.172 8z"/>
+                <path d="M8 5.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5M4.5 8a3.5 3.5 0 1 1 7 0 3.5 3.5 0 0 1-7 0"/>
+              </svg>
+              View Item Details
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
-</section>
+</div>
 
-{% endblock content %}
+<style>
+  /* Base */
+  .clean-glass-success {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Success Icon */
+  .success-icon-wrapper {
+    animation: successPulse 0.6s ease-out;
+  }
+
+  @keyframes successPulse {
+    0% {
+      transform: scale(0.5);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  .text-success {
+    color: #28a745 !important;
+    filter: drop-shadow(0 0 10px rgba(40, 167, 69, 0.5));
+  }
+
+  /* Glass Card */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-simple:hover {
+    border-color: rgba(205, 180, 255, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(109, 17, 227, 0.2);
+  }
+
+  /* Success Item Card */
+  .success-item-card {
+    animation: slideUp 0.5s ease-out 0.2s backwards;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .success-item-image {
+    width: 100%;
+    height: 300px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .success-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .success-item-body {
+    text-align: center;
+  }
+
+  /* Badge */
+  .simple-badge {
+    background: rgba(205, 180, 255, 0.2);
+    border: 1px solid rgba(205, 180, 255, 0.3);
+    color: #CDB4FF;
+    padding: 0.35rem 0.75rem;
+    border-radius: 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-clean-glass:hover {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass-secondary {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-clean-glass-secondary:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  /* Responsive */
+  @media (max-width: 576px) {
+    .success-item-image {
+      height: 250px;
+    }
+  }
+</style>
+{% endblock %}

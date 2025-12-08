@@ -1,9 +1,11 @@
 """Models for the forum app."""
 # pylint: disable=too-few-public-methods,no-member
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from best_dressed_app.models import Outfit
 
+# silly little pylint thing for good practice
+User = get_user_model()
 
 class Thread(models.Model):
     """Model representing a forum thread."""

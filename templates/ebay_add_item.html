@@ -1,107 +1,304 @@
 {% extends "main.html" %}
 {% load static %}
-{% block title %} Item Listing {% endblock title %}
+{% block title %}Search eBay · Best Dressed{% endblock %}
+
 {% block content %}
-
-<link rel="stylesheet" href="{% static 'css/main.css' %}" type="text/css">
-
-<!-- alert system if ebay API calls fail -->
-{% if messages %}
-{% for message in messages %}
-<div
-        class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags }}{% endif %} alert-dismissible fade show"
-        role="alert"
->
-  {{ message }}
-  <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-{% endfor %}
-{% endif %}
-
-<!-- form -->
-<section class="py-5">
-  <div class="container px-3 px-lg-4 mt-5 w-50">
-    <div class="text-center">
-      <h1>Add Items via eBay Search</h1>
-
-      <!-- ✅ Search Form -->
-      <form id="ebay-search-form" method="POST">
-        {% csrf_token %}
-        {% for field in form %}
-        <div class="form-group">
-          <label class="form-label fw-semibold">{{ field.label }}</label>
-          {{ field }}
-          {% if field.errors %}
-          <div class="text-danger small mt-1">
-            {{ field.errors|striptags }}
-          </div>
-          {% endif %}
-        </div>
-        {% endfor %}
-        <div style="margin-top:20px;">
-          <button type="submit" class="btn btn-primary w-100">Submit</button>
-        </div>
-      </form>
-
-      <!-- ✅ Loading Indicator (always in DOM, not in conditional) -->
-      <div id="loading-indicator" class="text-center my-5" style="display: none;">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="mt-3">Searching eBay for items...</p>
+<div class="clean-glass-ebay-search">
+  <div class="container py-5">
+    
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <div>
+        <h1 class="display-6 fw-bold text-white">Search eBay</h1>
+        <p class="text-white-50 mb-0">Find and add items from eBay to your catalog</p>
       </div>
-
-      <div style="padding-bottom: 10%">
-        <a href="{% url 'item_listing' %}" class="btn btn-primary">Back to item listing</a>
-      </div>
+      <a href="{% url 'item_listing' %}" class="btn-clean-glass">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left me-1" viewBox="0 0 16 16">
+          <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+        </svg>
+        Back to Catalog
+      </a>
     </div>
-  </div>
 
-  <!-- ✅ Keep results section separate -->
-  {% if recent_items %}
-  <section class="py-5" style="background-color: #2d3238">
-    <div class="container px-4 px-lg-5">
-      <h2 class="fw-bold mb-4 text-white">Search Results</h2>
-      <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4">
+    <!-- Messages -->
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert-glass alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} mb-4">
+        {{ message }}
+      </div>
+      {% endfor %}
+    {% endif %}
 
-        {% for item in recent_items %}
-        <div class="col mb-4">
-          <div class="card h-100 bg-dark border border-secondary shadow-sm">
-
-            <!-- ✅ eBay Link Icon in top-right -->
-            <a href="{{ item.item_url }}" target="_blank"
-               class="ebay-link-icon position-absolute top-0 end-0 m-2"
-               title="View on eBay">
-              <img src="{% static 'img/arrow_link.png' %}" alt="eBay" style="width:36px; height:36px;">
-            </a>
-
-              <img class="card-img-top" src="{{ item.image_url }}" alt="{{ item.title }}" style="height: 200px; object-fit: cover;">
-            <div class="card-body p-3 text-white">
-              <h5 class="fw-bolder mb-2">{{ item.title|truncatewords:8 }}</h5>
-              <p class="small text-muted mb-3">{{ item.description|truncatewords:10 }}</p>
-              <!-- PASSES SOME DATA TO AJAX FROM RECENT_ITEMS TEMP LIST IN VIEW -->
-              <button
-                      class="btn btn-sm btn-outline-light w-100 add-item-btn"
-                      data-title="{{ item.title }}"
-                      data-description="{{ item.description }}"
-                      data-image="{{ item.image_url }}"
-                      data-item-id="{{ item.item_id }}"
-                      data-item-url="{{ item.item_url }}"
-                      data-seller-id="{{ item.seller_id }}"
-              >
-                Add Item
-              </button>
+    <!-- Search Form -->
+    <div class="row justify-content-center mb-5">
+      <div class="col-lg-8">
+        <div class="glass-card-simple p-4">
+          <form id="ebay-search-form" method="POST">
+            {% csrf_token %}
+            
+            {% for field in form %}
+            <div class="mb-4">
+              <label for="{{ field.id_for_label }}" class="form-label text-white-50 small">
+                {{ field.label }}
+              </label>
+              {{ field }}
+              {% if field.help_text %}
+                <div class="form-text text-white-50 small">{{ field.help_text }}</div>
+              {% endif %}
+              {% if field.errors %}
+                <div class="text-danger small mt-1">
+                  {{ field.errors|striptags }}
+                </div>
+              {% endif %}
             </div>
+            {% endfor %}
+            
+            <button type="submit" class="btn-clean-glass w-100">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16">
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+              </svg>
+              Search eBay
+            </button>
+          </form>
+          
+          <!-- Loading Indicator -->
+          <div id="loading-indicator" class="text-center mt-4" style="display: none;">
+            <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-white-50 mt-3">Searching eBay for items...</p>
           </div>
         </div>
-        {% endfor %}
       </div>
     </div>
-  </section>
-  {% endif %}
-</section>
 
-<!-- ✅ JavaScript -->
+    <!-- Search Results -->
+    {% if recent_items %}
+    <div class="mb-3">
+      <h3 class="text-white mb-0">Search Results</h3>
+      <p class="text-white-50 small">Found {{ recent_items|length }} item{{ recent_items|length|pluralize }}</p>
+    </div>
+    
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+      {% for item in recent_items %}
+      <div class="col">
+        <div class="ebay-item-card glass-card-simple">
+          <!-- eBay Link Icon -->
+          <a href="{{ item.item_url }}" target="_blank" class="ebay-link-badge" title="View on eBay">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16">
+              <path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5"/>
+              <path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0z"/>
+            </svg>
+          </a>
+          
+          <!-- Item Image -->
+          <div class="ebay-item-image">
+            <img src="{{ item.image_url }}" alt="{{ item.title }}">
+          </div>
+          
+          <!-- Item Details -->
+          <div class="ebay-item-body p-3">
+            <h5 class="text-white mb-2">{{ item.title|truncatewords:8 }}</h5>
+            <p class="text-white-50 small mb-3">{{ item.description|truncatewords:10 }}</p>
+            
+            <!-- Add Button -->
+            <button
+              class="btn-clean-glass w-100 add-item-btn"
+              data-title="{{ item.title }}"
+              data-description="{{ item.description }}"
+              data-image="{{ item.image_url }}"
+              data-item-id="{{ item.item_id }}"
+              data-item-url="{{ item.item_url }}"
+              data-seller-id="{{ item.seller_id }}">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-plus-lg me-1" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 2a.5.5 0 0 1 .5.5v5h5a.5.5 0 0 1 0 1h-5v5a.5.5 0 0 1-1 0v-5h-5a.5.5 0 0 1 0-1h5v-5A.5.5 0 0 1 8 2"/>
+              </svg>
+              Add to Catalog
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<style>
+  /* Base */
+  .clean-glass-ebay-search {
+    min-height: 100vh;
+    background: linear-gradient(180deg, 
+      rgba(109, 17, 227, 0.05) 0%, 
+      rgba(0, 0, 0, 0) 100%);
+  }
+
+  .text-white-50 {
+    color: rgba(255, 255, 255, 0.5) !important;
+  }
+
+  /* Glass Card */
+  .glass-card-simple {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+  }
+
+  /* Form Inputs */
+  .glass-card-simple input[type="text"],
+  .glass-card-simple input[type="number"],
+  .glass-card-simple textarea,
+  .glass-card-simple select {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 0.65rem 1rem;
+    color: #fff;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+  }
+
+  .glass-card-simple input:focus,
+  .glass-card-simple textarea:focus,
+  .glass-card-simple select:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(205, 180, 255, 0.4);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(205, 180, 255, 0.1);
+  }
+
+  /* Alerts */
+  .alert-glass {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 1rem;
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .alert-glass.alert-danger {
+    border-color: rgba(220, 53, 69, 0.3);
+    background: rgba(220, 53, 69, 0.1);
+  }
+
+  /* eBay Item Cards */
+  .ebay-item-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ebay-item-card:hover {
+    border-color: rgba(205, 180, 255, 0.4);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 32px rgba(109, 17, 227, 0.2);
+  }
+
+  .ebay-link-badge {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    padding: 0.5rem;
+    color: #fff;
+    z-index: 10;
+    transition: all 0.3s ease;
+    text-decoration: none;
+  }
+
+  .ebay-link-badge:hover {
+    background: rgba(205, 180, 255, 0.3);
+    border-color: rgba(205, 180, 255, 0.5);
+    color: #fff;
+  }
+
+  .ebay-item-image {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .ebay-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .ebay-item-card:hover .ebay-item-image img {
+    transform: scale(1.05);
+  }
+
+  .ebay-item-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ebay-item-body .btn-clean-glass {
+    margin-top: auto;
+  }
+
+  /* Buttons */
+  .btn-clean-glass {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: #fff;
+    padding: 0.65rem 1.25rem;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+  }
+
+  .btn-clean-glass:hover:not(:disabled) {
+    background: rgba(205, 180, 255, 0.2);
+    border-color: rgba(205, 180, 255, 0.4);
+    color: #fff;
+    transform: translateY(-2px);
+  }
+
+  .btn-clean-glass:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* Success state for added items */
+  .btn-clean-glass.added {
+    background: rgba(40, 167, 69, 0.15);
+    border-color: rgba(40, 167, 69, 0.3);
+    color: #28a745;
+  }
+
+  /* Warning state for duplicates */
+  .btn-clean-glass.duplicate {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: rgba(255, 193, 7, 0.3);
+    color: #ffc107;
+  }
+
+  /* Error state */
+  .btn-clean-glass.error {
+    background: rgba(220, 53, 69, 0.15);
+    border-color: rgba(220, 53, 69, 0.3);
+    color: #dc3545;
+  }
+</style>
+
 <script>
   // Show spinner when submitting eBay search form
   const ebayForm = document.getElementById("ebay-search-form");
@@ -117,42 +314,59 @@
       const title = this.dataset.title;
       const description = this.dataset.description;
       const image = this.dataset.image;
-      // This pulls from the button post above with
-      // data-title =
-      // data-description = ...
-      // and item-id converts to itemId for some reason, same w itemUrl
       const item_id = this.dataset.itemId;
       const item_url = this.dataset.itemUrl;
       const seller_id = this.dataset.sellerId;
 
+      // Store original text
+      const originalHTML = this.innerHTML;
+
+      // Disable and show loading state
       this.disabled = true;
-      this.textContent = "Adding...";
+      this.innerHTML = `
+        <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+        Adding...
+      `;
 
-      const response = await fetch("{% url 'ajax_add_item' %}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRFToken": "{{ csrf_token }}",
-        },
-        body: JSON.stringify({ title, description, image_url: image, item_id, item_url, seller_id })
-      });
+      try {
+        const response = await fetch("{% url 'ajax_add_item' %}", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}",
+          },
+          body: JSON.stringify({ title, description, image_url: image, item_id, item_url, seller_id })
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.error) {
-          this.textContent = data.error;
-          this.classList.add("btn-warning");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.error) {
+            // Duplicate or error
+            this.innerHTML = data.error;
+            this.classList.add("duplicate");
+          } else {
+            // Success
+            this.innerHTML = `
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-check-lg me-1" viewBox="0 0 16 16">
+                <path d="M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425z"/>
+              </svg>
+              Added!
+            `;
+            this.classList.add("added");
+          }
         } else {
-          this.textContent = "Added!";
-          this.classList.remove("btn-outline-light");
-          this.classList.add("btn-success");
+          // Server error
+          this.innerHTML = "Error";
+          this.classList.add("error");
+          this.disabled = false;
         }
-      } else {
-        this.textContent = "Error";
-        this.classList.add("btn-danger");
+      } catch (error) {
+        console.error("Error:", error);
+        this.innerHTML = "Network Error";
+        this.classList.add("error");
+        this.disabled = false;
       }
     });
   });
 </script>
-
-{% endblock content %}
+{% endblock %}

@@ -6,31 +6,32 @@ from .models import UserProfile, WardrobeItem, Item, Outfit
 class UserProfileForm(forms.ModelForm):
     """
     form for editing user profile information
-    
+
     this is a ModelForm - Django automatically creates form fields
     based on the UserProfile model fields we specify in Meta
     """
-    
+
     class Meta:
         """
         provides configuration for the ModelForm
         """
         # which model this form is for
         model = UserProfile
-        
+
         # which fields from the model to include in the form
         fields = ['bio', 'style_preferences', 'favorite_colors']
-        
+
         # customize how fields appear in the HTML
         widgets = {
-            
+
             'bio': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 4,
                 'placeholder': 'Tell us about your style...'
             }),
             # ^^^ this is the same as:
-            # <textarea class="form-control" rows="4" placeholder="Tell us about your style..."></textarea>
+            # <textarea class="form-control" rows="4"
+            # placeholder="Tell us about your style..."></textarea>
             'style_preferences': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'e.g., casual, streetwear, minimalist'
@@ -40,14 +41,14 @@ class UserProfileForm(forms.ModelForm):
                 'placeholder': 'e.g., black, navy, olive green'
             }),
         }
-        
+
         # custom labels for the fields
         labels = {
             'bio': 'About Your Style',
             'style_preferences': 'Style Preferences',
             'favorite_colors': 'Favorite Colors',
         }
-        
+
         # help text that appears below each field
         help_texts = {
             'bio': 'Share your personal style story (optional)',
@@ -59,16 +60,16 @@ class UserProfileForm(forms.ModelForm):
 class WardrobeItemForm(forms.ModelForm):
     """
     Form for creating and editing wardrobe items.
-    
+
     Users can manually add items or edit existing ones.
     This form does NOT include the user or catalog_item fields
     as those are handled automatically.
     """
-    
+
     class Meta:
         model = WardrobeItem
         fields = ['title', 'description', 'category', 'image_url', 'color', 'brand', 'season']
-        
+
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -99,7 +100,7 @@ class WardrobeItemForm(forms.ModelForm):
                 'placeholder': 'e.g., summer, winter, all-season'
             }),
         }
-        
+
         labels = {
             'title': 'Item Name',
             'description': 'Description',
@@ -109,7 +110,7 @@ class WardrobeItemForm(forms.ModelForm):
             'brand': 'Brand',
             'season': 'Season',
         }
-        
+
         help_texts = {
             'image_url': 'Paste a link to an image of this item',
             'season': 'When do you typically wear this?',
@@ -140,9 +141,12 @@ class ItemForm(forms.ModelForm):
         # we don't get the short description manually
         fields = ['title', 'description', 'image_url', 'tag']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter title'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Enter description'}),
-            'image_url': forms.URLInput(attrs={'class': 'form-control', 'placeholder': 'Enter image URL'}),
+            'title': forms.TextInput(attrs={'class': 'form-control',
+                                            'placeholder': 'Enter title'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3,
+                                                 'placeholder': 'Enter description'}),
+            'image_url': forms.URLInput(attrs={'class': 'form-control',
+                                               'placeholder': 'Enter image URL'}),
             'tag': forms.Select(attrs={'class': 'form-control'}),
         }
 
@@ -150,15 +154,15 @@ class ItemForm(forms.ModelForm):
 class OutfitForm(forms.ModelForm):
     """
     Form for creating and editing outfits.
-    
+
     Users can name their outfit, describe it, and select wardrobe items.
     The items field uses checkboxes for multiple selection.
     """
-    
+
     class Meta:
         model = Outfit
         fields = ['name', 'description', 'occasion', 'season', 'is_favorite', 'items']
-        
+
         widgets = {
             'name': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -183,7 +187,7 @@ class OutfitForm(forms.ModelForm):
                 'class': 'form-check-input',
             }),
         }
-        
+
         labels = {
             'name': 'Outfit Name',
             'description': 'Description',
@@ -192,22 +196,22 @@ class OutfitForm(forms.ModelForm):
             'is_favorite': 'Mark as Favorite',
             'items': 'Select Items for This Outfit',
         }
-        
+
         help_texts = {
             'name': 'Give your outfit a memorable name',
             'description': 'Optional - describe the look or when you\'d wear it',
             'items': 'Check all items you want to include in this outfit',
         }
-    
+
     def __init__(self, user, *args, **kwargs):
         """
         Custom initialization to filter items by user.
-        
+
         This ensures users only see their own wardrobe items, not other users' items.
         The __init__ method is called when the form is created.
         """
         super().__init__(*args, **kwargs)
-        
+
         # Filter the items queryset to only show this user's wardrobe items
         # The 'items' field will only display wardrobe items belonging to this user
         self.fields['items'].queryset = WardrobeItem.objects.filter(user=user)

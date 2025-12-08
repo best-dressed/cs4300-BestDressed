@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.db.models import Count
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from moderation.moderation_common import (
@@ -142,7 +143,13 @@ def thread_detail(request, thread_id):
     posts = thread.posts.select_related('user').order_by('created_at')
     if request.method == 'POST':
         if not request.user.is_authenticated:
-            return redirect(f"{reverse('login')}?next={request.path}")
+            # dependabot/copilot fix here
+            if url_has_allowed_host_and_scheme(request.path, allowed_hosts={request.get_host()}):
+                next_url = request.path
+            else:
+                next_url = reverse('threads')
+            # end copilot fix
+            return redirect(f"{reverse('login')}?next={next_url}")
         form = PostForm(request.POST)
         if form.is_valid():
             post = form.save(commit=False)
