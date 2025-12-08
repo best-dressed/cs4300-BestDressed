@@ -1,3 +1,6 @@
+# pylint: disable=too-many-lines
+# Honestly just a lot of work to move this into two files with re-registering urls and everything
+# Made sense to just let it be a little longer
 """
 Django views for the Best Dressed application.
 """
@@ -15,7 +18,10 @@ from django.db.models import Count
 from django.db.models import Q
 from .forms import UserProfileForm, WardrobeItemForm, ItemForm, OutfitForm
 from .recommendation import generate_recommendations
-from .models import Item, UserProfile, WardrobeItem, Outfit, SavedRecommendation, HiddenItem
+from .models import (
+    Item, UserProfile, WardrobeItem, Outfit,
+    SavedRecommendation, HiddenItem
+)
 
 
 def index(request):
@@ -28,11 +34,13 @@ def index(request):
         return redirect('dashboard')
     return render(request, '../templates/index.html')
 
+
 def login(request):
     """
     View the login page
     """
     return render(request, 'login.html')
+
 
 def signup(request):
     """
@@ -40,22 +48,29 @@ def signup(request):
     """
     return render(request, 'signup.html')
 
+
 def item_listing(request):
     """
     primary item listing view for main page
     """
     query = request.GET.get("q")
     if query:
-        items = Item.objects.filter(Q(title__icontains=query) | Q(description__icontains=query))
+        items = Item.objects.filter(
+            Q(title__icontains=query) | Q(description__icontains=query)
+        )
     else:
         items = Item.objects.all()
 
     # Filter out items hidden by current user
     if request.user.is_authenticated:
-        hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
+        hidden_ids = request.user.hidden_items.values_list(
+            "item__id", flat=True
+        )
         items = items.exclude(pk__in=hidden_ids)
 
-    return render(request, "item_listing.html", {'items': items, 'query': query})
+    return render(
+        request, "item_listing.html", {'items': items, 'query': query}
+    )
 
 
 @login_required
@@ -82,6 +97,7 @@ def ajax_hide_item(request):
 
     return JsonResponse({"success": True, "hidden": created})
 
+
 def item_detail(request, pk):
     """ View for particular item """
     # get/fetch the item (if it exists)
@@ -104,7 +120,9 @@ def item_detail(request, pk):
 
     # block hidden items here too
     if request.user.is_authenticated:
-        hidden_ids = request.user.hidden_items.values_list("item__id", flat=True)
+        hidden_ids = request.user.hidden_items.values_list(
+            "item__id", flat=True
+        )
         items = items.exclude(pk__in=hidden_ids)
 
     context = {
@@ -114,6 +132,7 @@ def item_detail(request, pk):
         "came_from": came_from,
     }
     return render(request, "item_detail.html", context)
+
 
 # view for adding an item manually
 # per chatGPT
@@ -125,7 +144,8 @@ def add_item(request):
     if request.method == "POST":
         form = ItemForm(request.POST)
         if form.is_valid():
-            new_item = form.save()  # this writes the model instance to the database
+            # this writes the model instance to the database
+            new_item = form.save()
             return redirect('add_item_success', pk=new_item.pk)
     else:
         form = ItemForm()  # empty form for GET request
@@ -133,10 +153,12 @@ def add_item(request):
     context['form'] = form
     return render(request, "add_item.html", context)
 
+
 def add_item_success(request, pk):
     """ View for successful adding of item """
     item = get_object_or_404(Item, pk=pk)
-    return render(request, "add_item_success.html", {'item':item})
+    return render(request, "add_item_success.html", {'item': item})
+
 
 @login_required
 def dashboard(request):
@@ -151,38 +173,52 @@ def dashboard(request):
     """
     user = request.user
 
-    # get or create user profile, retrieves database record; if it doesnt exist, create it
+    # get or create user profile, retrieves database record
+    # if it doesnt exist, create it
     # profile: UserProfile object
-    # created: boolean for if object was just created (True) or if it already exists (False)
+    # created: boolean for if object was just created (True)
+    # or if it already exists (False)
     # profile, created =
     UserProfile.objects.get_or_create(user=user)
 
-    # get actual counts (of number of items in Wardrobe and number of Outfits) from the database for the logged in user
+    # get actual counts (of number of items in Wardrobe and number of
+    # Outfits) from the database for the logged in user
     wardrobe_count = WardrobeItem.objects.filter(user=user).count()
     outfit_count = Outfit.objects.filter(user=user).count()
     # implement later
-    recommendation_count = SavedRecommendation.objects.filter(user=user).count()
+    recommendation_count = SavedRecommendation.objects.filter(
+        user=user
+    ).count()
 
     # Outfit statistics by category
-    favorites_count = Outfit.objects.filter(user=user, is_favorite=True).count()
+    favorites_count = Outfit.objects.filter(
+        user=user, is_favorite=True
+    ).count()
 
     # Count outfits by season
     # values('season') groups the results by season
     # annotate(count=Count('id')) counts how many in each group
-    season_stats = Outfit.objects.filter(user=user).values('season').annotate(count=Count('id'))
+    season_stats = Outfit.objects.filter(user=user).values(
+        'season'
+    ).annotate(count=Count('id'))
 
     # Count outfits by occasion
-    occasion_stats = Outfit.objects.filter(user=user).values('occasion').annotate(count=Count('id'))
+    occasion_stats = Outfit.objects.filter(user=user).values(
+        'occasion'
+    ).annotate(count=Count('id'))
 
     # Recent outfits (last 4)
     # prefetch_related loads all items for these outfits efficiently
-    recent_outfits = Outfit.objects.filter(user=user).prefetch_related('items').order_by('-created_at')[:4]
+    recent_outfits = Outfit.objects.filter(user=user).prefetch_related(
+        'items'
+    ).order_by('-created_at')[:4]
 
     # Random outfit suggestion ("Outfit of the Day")
     # order_by('?') randomizes the order, [:1] gets just one
     random_outfit = Outfit.objects.filter(user=user).order_by('?').first()
 
-    # python dictionary that passes data from Python (Django view) to the HTML template
+    # python dictionary that passes data from Python (Django view)
+    # to the HTML template
     context = {
         'wardrobe_count': wardrobe_count,
         'outfit_count': outfit_count,
@@ -207,12 +243,15 @@ def account_settings(request):
     """
     user = request.user
 
-    # get or create user profile, retrieves database record; if it doesnt exist, create it
+    # get or create user profile, retrieves database record
+    # if it doesnt exist, create it
     # profile: UserProfile object
-    # created: boolean for if object was just created (True) or if it already exists (False)
+    # created: boolean for if object was just created (True)
+    # or if it already exists (False)
     profile, _ = UserProfile.objects.get_or_create(user=user)
 
-    # check if this is a form submission (POST) or just viewing the page (GET)
+    # check if this is a form submission (POST) or just viewing
+    # the page (GET)
     if request.method == 'POST':
         # user submitted the form - process it
         form = UserProfileForm(request.POST, instance=profile)
@@ -223,15 +262,20 @@ def account_settings(request):
             form.save()
 
             # add a success message (display in template)
-            messages.success(request, 'Your profile has been updated successfully!')
+            messages.success(
+                request,
+                'Your profile has been updated successfully!'
+            )
 
-            # redirect back to account settings (prevents duplicate submissions)
+            # redirect back to account settings
+            # (prevents duplicate submissions)
             return redirect('account_settings')
     else:
         # user is just viewing the page - show form with current data
         form = UserProfileForm(instance=profile)
 
-    # python dictionary that passes data from Python (Django view) to the HTML template
+    # python dictionary that passes data from Python (Django view)
+    # to the HTML template
     context = {
         'profile': profile,
         # pass the form to the template
@@ -240,10 +284,12 @@ def account_settings(request):
 
     return render(request, 'account_settings.html', context)
 
+
 @login_required
 def save_to_wardrobe(request, item_pk):
     """
-    Save a catalog item (from the item listing page) to the user's wardrobe.
+    Save a catalog item (from the item listing page) to the
+    user's wardrobe.
 
     This view handles POST requests to add items from the catalog
     to a user's personal wardrobe. It prevents duplicate saves
@@ -269,7 +315,8 @@ def save_to_wardrobe(request, item_pk):
             title=catalog_item.title,
             description=catalog_item.description,
             image_url=catalog_item.image_url,
-            category=catalog_item.tag,  # FIX: Copy the tag from catalog item
+            # FIX: Copy the tag from catalog item
+            category=catalog_item.tag,
             catalog_item=catalog_item
         )
         success_message = 'Item added to wardrobe!'
@@ -290,23 +337,31 @@ def save_to_wardrobe(request, item_pk):
 
     # Normal redirect
     if status == 'exists':
-        messages.info(request, f'"{catalog_item.title}" is already in your wardrobe.')
+        messages.info(
+            request,
+            f'"{catalog_item.title}" is already in your wardrobe.'
+        )
     else:
-        messages.success(request, f'"{catalog_item.title}" has been added to your wardrobe!')
+        messages.success(
+            request,
+            f'"{catalog_item.title}" has been added to your wardrobe!'
+        )
 
     return redirect('item_detail', pk=item_pk)
+
 
 @login_required
 def my_wardrobe(request):
     """
-    Display user's wardrobe items with filtering, search, and sorting options
+    Display user's wardrobe items with filtering, search, and
+    sorting options
     """
     user = request.user
 
     # Get filter, search, and sort parameters from URL
     category_filter = request.GET.get('category', None)
     search_query = request.GET.get('search', '').strip()
-    sort_by = request.GET.get('sort', '-created_at')  # default: newest first
+    sort_by = request.GET.get('sort', '-created_at')  # default: newest
 
     # Start with all user's wardrobe items
     wardrobe_items = WardrobeItem.objects.filter(user=user)
@@ -335,7 +390,9 @@ def my_wardrobe(request):
     # Count items in each category (for display)
     category_counts = {}
     for category_value, _ in categories:
-        count = WardrobeItem.objects.filter(user=user, category=category_value).count()
+        count = WardrobeItem.objects.filter(
+            user=user, category=category_value
+        ).count()
         category_counts[category_value] = count
 
     # Define available sorting options (value, display_name)
@@ -360,6 +417,7 @@ def my_wardrobe(request):
 
     return render(request, 'my_wardrobe.html', context)
 
+
 @login_required
 def delete_wardrobe_item(request, item_pk):
     """
@@ -369,14 +427,19 @@ def delete_wardrobe_item(request, item_pk):
     """
     # Get the wardrobe item, but only if it belongs to the current user
     # also prevents users from deleting other users wardrobe items
-    wardrobe_item = get_object_or_404(WardrobeItem, pk=item_pk, user=request.user)
+    wardrobe_item = get_object_or_404(
+        WardrobeItem, pk=item_pk, user=request.user
+    )
 
     # Only allow POST requests (security best practice)
     if request.method == 'POST':
         item_title = wardrobe_item.title  # Save title for the message
         wardrobe_item.delete()
 
-        messages.success(request, f'"{item_title}" has been removed from your wardrobe.')
+        messages.success(
+            request,
+            f'"{item_title}" has been removed from your wardrobe.'
+        )
         return redirect('my_wardrobe')
 
     # If GET request, show confirmation page (we'll create this template)
@@ -384,6 +447,7 @@ def delete_wardrobe_item(request, item_pk):
         'item': wardrobe_item,
     }
     return render(request, 'confirm_delete_wardrobe_item.html', context)
+
 
 @login_required
 def add_wardrobe_item(request):
@@ -405,7 +469,11 @@ def add_wardrobe_item(request):
             # now save to database
             wardrobe_item.save()
 
-            messages.success(request, f'"{wardrobe_item.title}" has been added to your wardrobe!')
+            messages.success(
+                request,
+                f'"{wardrobe_item.title}" has been added to '
+                f'your wardrobe!'
+            )
             return redirect('my_wardrobe')
     else:
         form = WardrobeItemForm()
@@ -417,6 +485,7 @@ def add_wardrobe_item(request):
     }
     return render(request, 'wardrobe_item_form.html', context)
 
+
 @login_required
 def edit_wardrobe_item(request, item_pk):
     """
@@ -426,7 +495,9 @@ def edit_wardrobe_item(request, item_pk):
     Changes here only affect the user's personal wardrobe copy.
     """
     # Get the wardrobe item, ensuring it belongs to the current user
-    wardrobe_item = get_object_or_404(WardrobeItem, pk=item_pk, user=request.user)
+    wardrobe_item = get_object_or_404(
+        WardrobeItem, pk=item_pk, user=request.user
+    )
 
     if request.method == 'POST':
         # Pass the existing instance to the form
@@ -437,7 +508,9 @@ def edit_wardrobe_item(request, item_pk):
             # Note: This does NOT affect catalog_item
             form.save()
 
-            messages.success(request, f'"{wardrobe_item.title}" has been updated!')
+            messages.success(
+                request, f'"{wardrobe_item.title}" has been updated!'
+            )
             return redirect('my_wardrobe')
     else:
         # Pre-fill form with existing data
@@ -450,6 +523,7 @@ def edit_wardrobe_item(request, item_pk):
     }
     return render(request, 'wardrobe_item_form.html', context)
 
+
 @login_required
 def recommendations(request):
     """
@@ -461,12 +535,67 @@ def recommendations(request):
     user = request.user
 
     # Fetch past recommendations for this user (newest first)
-    past_recommendations = SavedRecommendation.objects.filter(user=user).prefetch_related('recommended_items')
+    past_recommendations = SavedRecommendation.objects.filter(
+        user=user
+    ).prefetch_related('recommended_items')
 
     context = {
         'past_recommendations': past_recommendations,
     }
     return render(request, 'recommendations.html', context)
+
+
+def _parse_recommendation_ids(ai_recommendations):
+    """
+    Helper function to parse recommended item IDs from AI response.
+    Returns tuple of (item_ids_list, cleaned_ai_response)
+    """
+    recommended_item_ids = []
+    match = re.search(
+        r'RECOMMENDED_ITEMS:\s*\[([\d,\s]+)\]', ai_recommendations
+    )
+    if match:
+        ids_str = match.group(1)
+        recommended_item_ids = [
+            int(id.strip()) for id in ids_str.split(',')
+            if id.strip().isdigit()
+        ]
+        ai_recommendations = re.sub(
+            r'\n*RECOMMENDED_ITEMS:\s*\[[\d,\s]+\]\n*',
+            '', ai_recommendations
+        ).strip()
+
+    return recommended_item_ids, ai_recommendations
+
+
+def _build_recommended_items_list(recommended_item_ids):
+    """
+    Helper function to fetch and format recommended items.
+    Returns tuple of (item_objects_list, recommended_items_dict_list)
+    """
+    recommended_items = []
+    item_objects = []
+
+    if recommended_item_ids:
+        items = Item.objects.filter(id__in=recommended_item_ids)
+        items_dict = {item.id: item for item in items}
+
+        for item_id in recommended_item_ids:
+            if item_id in items_dict:
+                item = items_dict[item_id]
+                item_objects.append(item)
+                recommended_items.append({
+                    'id': item.id,
+                    'title': item.title,
+                    'description': item.description,
+                    'short_description': item.short_description,
+                    'image_url': item.image_url,
+                    'tag': item.tag,
+                    'detail_url': item.get_absolute_url(),
+                })
+
+    return item_objects, recommended_items
+
 
 @login_required
 def generate_recommendations_ajax(request):
@@ -497,7 +626,8 @@ def generate_recommendations_ajax(request):
         if not user_prompt:
             return JsonResponse({
                 'success': False,
-                'error': 'Please provide a prompt describing what you\'re looking for.'
+                'error': "Please provide a prompt describing what "
+                         "you're looking for."
             }, status=400)
 
         # Get user profile and available items
@@ -505,42 +635,19 @@ def generate_recommendations_ajax(request):
         user_profile = UserProfile.objects.get(user=user)
 
         # Generate AI recommendations with the user's custom prompt
-        ai_recommendations = generate_recommendations(available_items, user_profile, user_prompt)
+        ai_recommendations = generate_recommendations(
+            available_items, user_profile, user_prompt
+        )
 
         # Parse the recommended item IDs from the AI response
-        # Look for pattern: RECOMMENDED_ITEMS: [id1, id2, id3, ...]
-        recommended_item_ids = []
-        match = re.search(r'RECOMMENDED_ITEMS:\s*\[([\d,\s]+)\]', ai_recommendations)
-        if match:
-            # Extract the IDs and convert to integers
-            ids_str = match.group(1)
-            recommended_item_ids = [int(id.strip()) for id in ids_str.split(',') if id.strip().isdigit()]
+        recommended_item_ids, ai_recommendations = _parse_recommendation_ids(
+            ai_recommendations
+        )
 
-            # Remove the RECOMMENDED_ITEMS line from the text
-            ai_recommendations = re.sub(r'\n*RECOMMENDED_ITEMS:\s*\[[\d,\s]+\]\n*', '', ai_recommendations).strip()
-
-        # Fetch the actual Item objects
-        recommended_items = []
-        item_objects = []
-        if recommended_item_ids:
-            items = Item.objects.filter(id__in=recommended_item_ids)
-            # Create a dictionary to maintain order
-            items_dict = {item.id: item for item in items}
-
-            # Build the list in the order specified by the AI
-            for item_id in recommended_item_ids:
-                if item_id in items_dict:
-                    item = items_dict[item_id]
-                    item_objects.append(item)
-                    recommended_items.append({
-                        'id': item.id,
-                        'title': item.title,
-                        'description': item.description,
-                        'short_description': item.short_description,
-                        'image_url': item.image_url,
-                        'tag': item.tag,
-                        'detail_url': item.get_absolute_url(),
-                    })
+        # Fetch and format the actual Item objects
+        item_objects, recommended_items = _build_recommended_items_list(
+            recommended_item_ids
+        )
 
         # Save the recommendation to the database
         saved_rec = SavedRecommendation.objects.create(
@@ -562,7 +669,8 @@ def generate_recommendations_ajax(request):
     except UserProfile.DoesNotExist:
         return JsonResponse({
             'success': False,
-            'error': 'User profile not found. Please complete your profile first.'
+            'error': 'User profile not found. Please complete your '
+                     'profile first.'
         }, status=404)
 
     except json.JSONDecodeError:
@@ -578,7 +686,8 @@ def generate_recommendations_ajax(request):
         print(f"Error generating recommendations: {e}")
         return JsonResponse({
             'success': False,
-            'error': 'Unable to generate recommendations at this time. Please try again later.'
+            'error': 'Unable to generate recommendations at this time. '
+                     'Please try again later.'
         }, status=500)
     # pylint: enable=broad-exception-caught
 
@@ -600,17 +709,21 @@ def create_outfit(request):
             # Create outfit but don't save to database yet
             outfit = form.save(commit=False)
 
-            # Set the user (security - only current user can create for themselves)
+            # Set the user (security - only current user can create
+            # for themselves)
             outfit.user = user
 
-            # Now save to database (this saves the outfit, but not the many-to-many items yet)
+            # Now save to database (this saves the outfit, but not the
+            # many-to-many items yet)
             outfit.save()
 
             # Save the many-to-many relationships (the items)
             # form.save_m2m() handles the many-to-many field (items)
             form.save_m2m()
 
-            messages.success(request, f'Outfit "{outfit.name}" created successfully!')
+            messages.success(
+                request, f'Outfit "{outfit.name}" created successfully!'
+            )
             return redirect('my_outfits')
     else:
         # User is viewing the form (GET request)
@@ -627,47 +740,48 @@ def create_outfit(request):
 
     return render(request, 'create_outfit.html', context)
 
-@login_required
-def my_outfits(request):
+# basically just for pylint
+def collection_helper(collection, outfits):
+    """another helper to fix too many branches"""
+
+    if collection == 'favorites':
+        outfits = outfits.filter(is_favorite=True)
+    elif collection == 'summer':
+        outfits = outfits.filter(season='summer')
+    elif collection == 'winter':
+        outfits = outfits.filter(season='winter')
+    elif collection == 'casual':
+        outfits = outfits.filter(occasion='casual')
+    elif collection == 'work':
+        outfits = outfits.filter(occasion='business')
+    elif collection == 'date':
+        outfits = outfits.filter(occasion='date')
+    elif collection == 'formal':
+        outfits = outfits.filter(occasion='formal')
+    elif collection == 'recent':
+        thirty_days_ago = timezone.now() - timedelta(days=30)
+        outfits = outfits.filter(created_at__gte=thirty_days_ago)
+    elif collection == 'incomplete':
+        outfits = outfits.annotate(
+            item_count_computed=Count('items')
+        ).filter(item_count_computed__lt=3)
+
+    return outfits
+
+# Helper function for my_outfits view
+def _apply_outfit_filters(outfits, params):
     """
-    Display all outfits created by the user with filtering, search, and sorting.
+    Apply filters to outfit queryset based on request parameters.
+    Extracted to reduce complexity of my_outfits view.
     """
-    user = request.user
-
-    # Get filter parameters from URL
-    occasion_filter = request.GET.get('occasion', None)
-    season_filter = request.GET.get('season', None)
-    favorites_only = request.GET.get('favorites', None)
-    collection = request.GET.get('collection', None)
-
-    # Get search and sort parameters
-    search_query = request.GET.get('search', '').strip()
-    sort_by = request.GET.get('sort', '-created_at')  # default: newest first
-
-    # Start with all user's outfits
-    outfits = Outfit.objects.filter(user=user)
+    collection = params.get('collection')
+    occasion_filter = params.get('occasion')
+    season_filter = params.get('season')
+    favorites_only = params.get('favorites')
 
     # Apply smart collection filters
     if collection:
-        if collection == 'favorites':
-            outfits = outfits.filter(is_favorite=True)
-        elif collection == 'summer':
-            outfits = outfits.filter(season='summer')
-        elif collection == 'winter':
-            outfits = outfits.filter(season='winter')
-        elif collection == 'casual':
-            outfits = outfits.filter(occasion='casual')
-        elif collection == 'work':
-            outfits = outfits.filter(occasion='business')
-        elif collection == 'date':
-            outfits = outfits.filter(occasion='date')
-        elif collection == 'formal':
-            outfits = outfits.filter(occasion='formal')
-        elif collection == 'recent':
-            thirty_days_ago = timezone.now() - timedelta(days=30)
-            outfits = outfits.filter(created_at__gte=thirty_days_ago)
-        elif collection == 'incomplete':
-            outfits = outfits.annotate(item_count_computed=Count('items')).filter(item_count_computed__lt=3)
+        outfits = collection_helper(collection, outfits)
     else:
         # Apply regular filters only if no collection is selected
         if occasion_filter and occasion_filter != 'all':
@@ -678,6 +792,35 @@ def my_outfits(request):
 
         if favorites_only == 'true':
             outfits = outfits.filter(is_favorite=True)
+
+    return outfits
+
+
+@login_required
+def my_outfits(request):
+    """
+    Display all outfits created by the user with filtering,
+    search, and sorting.
+    """
+    user = request.user
+
+    # Get filter parameters from URL
+    params = {
+        'occasion': request.GET.get('occasion', None),
+        'season': request.GET.get('season', None),
+        'favorites': request.GET.get('favorites', None),
+        'collection': request.GET.get('collection', None),
+    }
+
+    # Get search and sort parameters
+    search_query = request.GET.get('search', '').strip()
+    sort_by = request.GET.get('sort', '-created_at')  # default: newest
+
+    # Start with all user's outfits
+    outfits = Outfit.objects.filter(user=user)
+
+    # Apply filters using helper function
+    outfits = _apply_outfit_filters(outfits, params)
 
     # Apply search filter
     if search_query:
@@ -692,7 +835,7 @@ def my_outfits(request):
     valid_sorts = [
         'name', '-name',  # A-Z, Z-A
         'created_at', '-created_at',  # oldest first, newest first
-        'updated_at', '-updated_at',  # least recently updated, most recently updated
+        'updated_at', '-updated_at',  # least/most recently updated
     ]
 
     if sort_by in valid_sorts:
@@ -702,7 +845,9 @@ def my_outfits(request):
 
     # For item count sorting, we need to annotate
     if sort_by in ['item_count', '-item_count']:
-        outfits = outfits.annotate(items_count=Count('items')).order_by(sort_by.replace('item_count', 'items_count'))
+        outfits = outfits.annotate(
+            items_count=Count('items')
+        ).order_by(sort_by.replace('item_count', 'items_count'))
 
     # Prefetch related items for efficiency
     outfits = outfits.prefetch_related('items')
@@ -715,14 +860,24 @@ def my_outfits(request):
     thirty_days_ago = timezone.now() - timedelta(days=30)
 
     collection_counts = {
-        'favorites': Outfit.objects.filter(user=user, is_favorite=True).count(),
+        'favorites': Outfit.objects.filter(
+            user=user, is_favorite=True
+        ).count(),
         'summer': Outfit.objects.filter(user=user, season='summer').count(),
         'winter': Outfit.objects.filter(user=user, season='winter').count(),
-        'casual': Outfit.objects.filter(user=user, occasion='casual').count(),
-        'work': Outfit.objects.filter(user=user, occasion='business').count(),
+        'casual': Outfit.objects.filter(
+            user=user, occasion='casual'
+        ).count(),
+        'work': Outfit.objects.filter(
+            user=user, occasion='business'
+        ).count(),
         'date': Outfit.objects.filter(user=user, occasion='date').count(),
-        'formal': Outfit.objects.filter(user=user, occasion='formal').count(),
-        'recent': Outfit.objects.filter(user=user, created_at__gte=thirty_days_ago).count(),
+        'formal': Outfit.objects.filter(
+            user=user, occasion='formal'
+        ).count(),
+        'recent': Outfit.objects.filter(
+            user=user, created_at__gte=thirty_days_ago
+        ).count(),
         'incomplete': Outfit.objects.filter(user=user).annotate(
             item_count_computed=Count('items')
         ).filter(item_count_computed__lt=3).count(),
@@ -742,19 +897,20 @@ def my_outfits(request):
 
     context = {
         'outfits': outfits,
-        'occasion_filter': occasion_filter or 'all',
-        'season_filter': season_filter or 'all',
-        'favorites_only': favorites_only == 'true',
+        'occasion_filter': params['occasion'] or 'all',
+        'season_filter': params['season'] or 'all',
+        'favorites_only': params['favorites'] == 'true',
         'occasion_choices': occasion_choices,
         'season_choices': season_choices,
-        'current_collection': collection,
+        'current_collection': params['collection'],
         'collection_counts': collection_counts,
-        'search_query': search_query,  # NEW
-        'current_sort': sort_by,  # NEW
-        'sort_options': sort_options,  # NEW
+        'search_query': search_query,
+        'current_sort': sort_by,
+        'sort_options': sort_options,
     }
 
     return render(request, 'my_outfits.html', context)
+
 
 @login_required
 def outfit_detail(request, outfit_pk):
@@ -768,6 +924,7 @@ def outfit_detail(request, outfit_pk):
     }
 
     return render(request, 'outfit_detail.html', context)
+
 
 @login_required
 def delete_outfit(request, outfit_pk):
@@ -796,6 +953,7 @@ def delete_outfit(request, outfit_pk):
     }
     return render(request, 'confirm_delete_outfit.html', context)
 
+
 @login_required
 def edit_outfit(request, outfit_pk):
     """
@@ -813,21 +971,25 @@ def edit_outfit(request, outfit_pk):
 
     if request.method == 'POST':
         # User submitted the form with changes
-        # instance=outfit tells the form to update the existing outfit, not create a new one
+        # instance=outfit tells the form to update the existing outfit,
+        # not create a new one
         form = OutfitForm(request.user, request.POST, instance=outfit)
 
         if form.is_valid():
             # Save changes to the outfit
-            # commit=False means "create the object but don't save to DB yet"
+            # commit=False means "create the object but don't save to
+            # DB yet"
             outfit = form.save(commit=False)
-            outfit.user = request.user  # Ensure user doesn't change (security)
+            outfit.user = request.user  # Ensure user doesn't change
             outfit.save()
 
             # Save the many-to-many relationships (the items)
             # This must happen after the outfit is saved
             form.save_m2m()
 
-            messages.success(request, f'Outfit "{outfit.name}" has been updated!')
+            messages.success(
+                request, f'Outfit "{outfit.name}" has been updated!'
+            )
             return redirect('outfit_detail', outfit_pk=outfit.pk)
     else:
         # GET request: show form pre-filled with current outfit data
@@ -846,6 +1008,7 @@ def edit_outfit(request, outfit_pk):
 
     return render(request, 'edit_outfit.html', context)
 
+
 @login_required
 def toggle_outfit_favorite(request, outfit_pk):
     """
@@ -855,7 +1018,9 @@ def toggle_outfit_favorite(request, outfit_pk):
     Security: Only the owner can toggle their outfit's favorite status.
     """
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'error': 'Invalid method'}, status=405)
+        return JsonResponse(
+            {'success': False, 'error': 'Invalid method'}, status=405
+        )
 
     # Get the outfit, ensuring it belongs to current user
     outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
@@ -872,6 +1037,7 @@ def toggle_outfit_favorite(request, outfit_pk):
         'is_favorite': outfit.is_favorite
     })
 
+
 @login_required
 def duplicate_outfit(request, outfit_pk):
     """
@@ -881,10 +1047,13 @@ def duplicate_outfit(request, outfit_pk):
     and will include all the same items as the original.
     """
     # Get the original outfit
-    original_outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    original_outfit = get_object_or_404(
+        Outfit, pk=outfit_pk, user=request.user
+    )
 
     # Create a new outfit with copied data
-    # pk=None means Django will create a new object instead of updating existing
+    # pk=None means Django will create a new object instead of
+    # updating existing
     duplicate = Outfit.objects.get(pk=outfit_pk)
     duplicate.pk = None  # This makes it a new object
     duplicate.name = f"{original_outfit.name} (Copy)"
@@ -895,19 +1064,25 @@ def duplicate_outfit(request, outfit_pk):
     # We need to do this after save() because M2M requires a saved object
     duplicate.items.set(original_outfit.items.all())
 
-    messages.success(request, f'Created a copy of "{original_outfit.name}"!')
+    messages.success(
+        request, f'Created a copy of "{original_outfit.name}"!'
+    )
     return redirect('outfit_detail', outfit_pk=duplicate.pk)
+
 
 @login_required
 def quick_add_to_outfit(request, item_pk):
     """
-    Show a modal/page to quickly add a wardrobe item to an existing outfit.
+    Show a modal/page to quickly add a wardrobe item to an existing
+    outfit.
 
     GET: Show list of outfits to choose from
     POST: Add the item to selected outfit
     """
     # Get the wardrobe item
-    wardrobe_item = get_object_or_404(WardrobeItem, pk=item_pk, user=request.user)
+    wardrobe_item = get_object_or_404(
+        WardrobeItem, pk=item_pk, user=request.user
+    )
 
     if request.method == 'POST':
         # User selected an outfit
@@ -917,16 +1092,24 @@ def quick_add_to_outfit(request, item_pk):
         # Add the item to the outfit if not already there
         if wardrobe_item not in outfit.items.all():
             outfit.items.add(wardrobe_item)
-            messages.success(request, f'Added "{wardrobe_item.title}" to "{outfit.name}"!')
+            messages.success(
+                request,
+                f'Added "{wardrobe_item.title}" to "{outfit.name}"!'
+            )
         else:
-            messages.info(request, f'"{wardrobe_item.title}" is already in "{outfit.name}"')
+            messages.info(
+                request,
+                f'"{wardrobe_item.title}" is already in "{outfit.name}"'
+            )
 
         # Redirect back to wardrobe
         return redirect('my_wardrobe')
 
     # GET: Show outfit selection page
     # Get all user's outfits
-    user_outfits = Outfit.objects.filter(user=request.user).order_by('-created_at')
+    user_outfits = Outfit.objects.filter(
+        user=request.user
+    ).order_by('-created_at')
 
     context = {
         'wardrobe_item': wardrobe_item,
@@ -935,20 +1118,118 @@ def quick_add_to_outfit(request, item_pk):
 
     return render(request, 'quick_add_to_outfit.html', context)
 
+
+# Helper function for closet_view POST processing
+def _process_closet_outfit_creation(request):
+    """
+    Process outfit creation from closet view.
+    Extracted to reduce complexity and return statements in closet_view.
+    Returns tuple of (success, redirect_response_or_none, error_message)
+    """
+    # Get the selected item IDs from the form
+    # JavaScript sends them as a comma-separated string: "1,5,8,12"
+    selected_ids = request.POST.get('selected_items', '')
+
+    # Validation: Ensure at least one item is selected
+    if not selected_ids:
+        return (
+            False, None,
+            'Please select at least one item for your outfit.'
+        )
+
+    # Convert comma-separated string to list of integers
+    # Example: "1,5,8" → [1, 5, 8]
+    # The try/except catches if someone sends invalid data (like letters)
+    try:
+        item_ids = [
+            int(id.strip()) for id in selected_ids.split(',')
+            if id.strip()
+        ]
+    except ValueError:
+        # If conversion fails, someone sent malformed data
+        return False, None, 'Invalid item selection.'
+
+    # Security Check: Verify all items belong to the user's wardrobe
+    # This prevents users from adding other people's items by
+    # manipulating POST data
+    items = WardrobeItem.objects.filter(
+        id__in=item_ids,
+        user=request.user
+    )
+
+    # Double-check: Verify we found ALL the items they claimed to select
+    # If item_ids=[1,5,8] but we only found 2 items, something's wrong
+    if items.count() != len(item_ids):
+        return (
+            False, None,
+            'Some selected items were not found in your wardrobe.'
+        )
+
+    # Get custom outfit details from form (with defaults)
+    # .get() with second parameter provides default if field is
+    # missing/empty
+    outfit_name = request.POST.get('outfit_name', '').strip()
+    outfit_description = request.POST.get('outfit_description', '').strip()
+    outfit_occasion = request.POST.get('outfit_occasion', '').strip()
+    outfit_season = request.POST.get('outfit_season', '').strip()
+
+    # Validate outfit name is provided
+    # This is our required field - user must name their outfit
+    if not outfit_name:
+        return False, None, 'Please provide a name for your outfit.'
+
+    # Check for duplicate outfit name
+    # Your model has unique_together constraint on ['user', 'name']
+    # We should check this before trying to create to give a better
+    # error message
+    if Outfit.objects.filter(user=request.user, name=outfit_name).exists():
+        return (
+            False, None,
+            f'You already have an outfit named "{outfit_name}". '
+            f'Please choose a different name.'
+        )
+
+    # Create the outfit with user-provided details
+    # Only set occasion/season if provided (they're blank=True in model)
+    outfit = Outfit.objects.create(
+        user=request.user,
+        name=outfit_name,
+        description=outfit_description if outfit_description else '',
+        occasion=outfit_occasion if outfit_occasion else '',
+        season=outfit_season if outfit_season else ''
+    )
+
+    # Link the selected items to this outfit
+    # .set() handles the many-to-many relationship
+    outfit.items.set(items)
+
+    # Success message with outfit details
+    messages.success(
+        request,
+        f'✨ Outfit "{outfit.name}" created successfully with '
+        f'{outfit.items.count()} items!'
+    )
+
+    # Return success and the redirect
+    return True, redirect('outfit_detail', outfit_pk=outfit.pk), None
+
+
 @login_required
 def closet_view(request):
     """
     Clueless-style interactive closet view for building outfits.
 
-    This view organizes the user's wardrobe items by category and presents them
-    in a visual "closet" interface where users can select items to build outfits.
-    Items are organized in horizontal "rails" by category, similar to the iconic
-    computerized wardrobe system from the movie Clueless.
+    This view organizes the user's wardrobe items by category and
+    presents them in a visual "closet" interface where users can
+    select items to build outfits. Items are organized in horizontal
+    "rails" by category, similar to the iconic computerized wardrobe
+    system from the movie Clueless.
 
     GET: Display all wardrobe items organized by category for selection
     POST: Create a new outfit from selected items
 
-    The category order is intentional - it mirrors how clothes are naturally layered:
+    The category order is intentional - it mirrors how clothes are
+    naturally layered:
     1. Outerwear (jackets, coats) - outermost layer
     2. Dresses - full body coverage
     3. Tops (shirts, blouses) - middle layer
@@ -957,92 +1238,21 @@ def closet_view(request):
     6. Accessories - finishing touches
     """
 
-    # ==========================================
     # POST REQUEST - Create Outfit from Selection
-    # ==========================================
     if request.method == 'POST':
-        # Get the selected item IDs from the form
-        # JavaScript sends them as a comma-separated string: "1,5,8,12"
-        selected_ids = request.POST.get('selected_items', '')
-
-        # Validation: Ensure at least one item is selected
-        if not selected_ids:
-            messages.error(request, 'Please select at least one item for your outfit.')
-            return redirect('closet_view')
-
-        # Convert comma-separated string to list of integers
-        # Example: "1,5,8" → [1, 5, 8]
-        # The try/except catches if someone sends invalid data (like letters)
-        try:
-            item_ids = [int(id.strip()) for id in selected_ids.split(',') if id.strip()]
-        except ValueError:
-            # If conversion fails, someone sent malformed data
-            messages.error(request, 'Invalid item selection.')
-            return redirect('closet_view')
-
-        # Security Check: Verify all items belong to the user's wardrobe
-        # This prevents users from adding other people's items by manipulating POST data
-        items = WardrobeItem.objects.filter(
-            id__in=item_ids,
-            user=request.user
+        success, redirect_response, error_msg = (
+            _process_closet_outfit_creation(request)
         )
-
-        # Double-check: Verify we found ALL the items they claimed to select
-        # If item_ids=[1,5,8] but we only found 2 items, something's wrong
-        if items.count() != len(item_ids):
-            messages.error(request, 'Some selected items were not found in your wardrobe.')
+        if not success:
+            messages.error(request, error_msg)
             return redirect('closet_view')
+        return redirect_response
 
-        # Get custom outfit details from form (with defaults)
-        # .get() with second parameter provides default if field is missing/empty
-        outfit_name = request.POST.get('outfit_name', '').strip()
-        outfit_description = request.POST.get('outfit_description', '').strip()
-        outfit_occasion = request.POST.get('outfit_occasion', '').strip()
-        outfit_season = request.POST.get('outfit_season', '').strip()
-
-        # Validate outfit name is provided
-        # This is our required field - user must name their outfit
-        if not outfit_name:
-            messages.error(request, 'Please provide a name for your outfit.')
-            return redirect('closet_view')
-
-        # Check for duplicate outfit name
-        # Your model has unique_together constraint on ['user', 'name']
-        # We should check this before trying to create to give a better error message
-        if Outfit.objects.filter(user=request.user, name=outfit_name).exists():
-            messages.error(request, f'You already have an outfit named "{outfit_name}". Please choose a different name.')
-            return redirect('closet_view')
-
-        # Create the outfit with user-provided details
-        # Only set occasion/season if provided (they're blank=True in model)
-        outfit = Outfit.objects.create(
-            user=request.user,
-            name=outfit_name,
-            description=outfit_description if outfit_description else '',
-            occasion=outfit_occasion if outfit_occasion else '',
-            season=outfit_season if outfit_season else ''
-        )
-
-        # Link the selected items to this outfit
-        # .set() handles the many-to-many relationship
-        outfit.items.set(items)
-
-        # Success message with outfit details
-        messages.success(
-            request,
-            f'✨ Outfit "{outfit.name}" created successfully with {outfit.items.count()} items!'
-        )
-
-        # Redirect to the outfit detail page
-        return redirect('outfit_detail', outfit_pk=outfit.pk)
-
-
-    # ==========================================
     # GET REQUEST - Display Closet Interface
-    # ==========================================
 
     # Define the category order for logical layering
-    # This list determines both the order categories appear AND how items are layered in preview
+    # This list determines both the order categories appear AND how
+    # items are layered in preview
     category_order = [
         'outerwear',
         'dress',
@@ -1053,16 +1263,22 @@ def closet_view(request):
     ]
 
     # Fetch all user's wardrobe items
-    # select_related('catalog_item') optimizes database queries by pre-loading related items
-    wardrobe_items = WardrobeItem.objects.filter(user=request.user).select_related('catalog_item')
+    # select_related('catalog_item') optimizes database queries by
+    # pre-loading related items
+    wardrobe_items = WardrobeItem.objects.filter(
+        user=request.user
+    ).select_related('catalog_item')
 
     # Organize items by category
-    # We use a dictionary where keys are category names and values are querysets of items
+    # We use a dictionary where keys are category names and values are
+    # querysets of items
     items_by_category = {}
     for category in category_order:
         # Filter items for this specific category
         # order_by('-created_at') shows newest items first in each rail
-        items = wardrobe_items.filter(category=category).order_by('-created_at')
+        items = wardrobe_items.filter(
+            category=category
+        ).order_by('-created_at')
         items_by_category[category] = items
 
     # Get category display names for the template

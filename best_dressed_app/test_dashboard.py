@@ -1,3 +1,5 @@
+# pylint: disable=duplicate-code
+# basically just the nature of testing that you will repeat setup stuff and not a big deal.
 """
 Comprehensive test suite for Dashboard and Account Settings features.
 
