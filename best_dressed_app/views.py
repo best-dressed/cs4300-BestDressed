@@ -917,7 +917,7 @@ def outfit_detail(request, outfit_pk):
     """
     View detailed information about a specific outfit.
     """
-    outfit = get_object_or_404(Outfit, pk=outfit_pk, user=request.user)
+    outfit = get_object_or_404(Outfit, pk=outfit_pk)
 
     context = {
         'outfit': outfit,
