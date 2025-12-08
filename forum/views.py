@@ -149,6 +149,10 @@ def thread_detail(request, thread_id):
             else:
                 next_url = reverse('threads')
             # end copilot fix
+            # Next thing copilot wants to do IDK
+            if not url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}):
+                next_url = reverse('threads')
+            # end fix attempt 2.
             return redirect(f"{reverse('login')}?next={next_url}")
         form = PostForm(request.POST)
         if form.is_valid():
