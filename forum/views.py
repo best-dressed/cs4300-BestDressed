@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
 from django.db.models import Count
-from django.utils.http import url_has_allowed_host_and_scheme
+# from django.utils.http import url_has_allowed_host_and_scheme
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from moderation.moderation_common import (
