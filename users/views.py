@@ -2,7 +2,16 @@
 Django views for the Best Dressed 'users' application.
 """
 
-from django.contrib.auth.views import ( LoginView, LogoutView, PasswordChangeView, PasswordChangeDoneView, PasswordResetView, PasswordResetDoneView, PasswordResetConfirmView, PasswordResetCompleteView)
+from django.contrib.auth.views import (
+    LoginView,
+    LogoutView,
+    PasswordChangeView,
+    PasswordChangeDoneView,
+    PasswordResetView,
+    PasswordResetDoneView,
+    PasswordResetConfirmView,
+    PasswordResetCompleteView
+)
 from django.views.generic import CreateView
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView

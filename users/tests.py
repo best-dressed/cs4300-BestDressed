@@ -3,12 +3,12 @@ Unit tests for the Django authentication backend in the users app.
 """
 
 from django.test import TestCase, Client
-from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, get_user_model
 from django.urls import reverse
 from django.core import mail
 from users.forms import SignUpForm
 
+User = get_user_model()
 
 class AuthenticationBackendTests(TestCase):
     """Tests for Django's authentication backend."""
