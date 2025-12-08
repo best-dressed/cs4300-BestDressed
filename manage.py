@@ -8,6 +8,8 @@ def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'best_dressed.settings')
     try:
+        # pylint: disable=import-outside-toplevel
+        # just somethin django does and pylint is Wrong
         from django.core.management import execute_from_command_line
     except ImportError as exc:
         raise ImportError(
