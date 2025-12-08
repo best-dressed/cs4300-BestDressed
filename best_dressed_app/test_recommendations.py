@@ -8,13 +8,15 @@ This test file covers:
 - Security: users only see their own recommendations
 """
 
-from django.test import TestCase, Client
-from django.urls import reverse
-from django.contrib.auth import get_user_model
-from best_dressed_app.models import Item, UserProfile, SavedRecommendation
-from unittest.mock import patch, MagicMock
 import json
 import time
+from unittest.mock import patch
+
+from django.contrib.auth import get_user_model
+from django.test import TestCase, Client
+from django.urls import reverse
+
+from best_dressed_app.models import Item, UserProfile, SavedRecommendation
 
 
 class SavedRecommendationModelTests(TestCase):
@@ -22,8 +24,8 @@ class SavedRecommendationModelTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             email='test@example.com',
             password='testpass123'
@@ -99,7 +101,10 @@ class SavedRecommendationModelTests(TestCase):
             ai_response="Response 3"
         )
 
-        recommendations = SavedRecommendation.objects.all().order_by('-created_at', '-id')
+        recommendations = SavedRecommendation.objects.all().order_by(
+            '-created_at',
+            '-id'
+        )
 
         # Should be in reverse chronological order
         self.assertEqual(recommendations[0], rec3)
@@ -114,7 +119,10 @@ class SavedRecommendationModelTests(TestCase):
             ai_response="Test response"
         )
 
-        self.assertEqual(SavedRecommendation.objects.filter(user=self.user).count(), 1)
+        self.assertEqual(
+            SavedRecommendation.objects.filter(user=self.user).count(),
+            1
+        )
 
         # Delete user
         self.user.delete()
@@ -124,8 +132,8 @@ class SavedRecommendationModelTests(TestCase):
 
     def test_multiple_users_recommendations(self):
         """Test that recommendations are properly separated by user"""
-        User = get_user_model()
-        user2 = User.objects.create_user(
+        user_model = get_user_model()
+        user2 = user_model.objects.create_user(
             username='testuser2',
             email='test2@example.com',
             password='testpass123'
@@ -158,8 +166,8 @@ class RecommendationsViewTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             email='test@example.com',
             password='testpass123'
@@ -226,8 +234,8 @@ class RecommendationsViewTests(TestCase):
 
     def test_user_only_sees_own_recommendations(self):
         """Test that users only see their own recommendations"""
-        User = get_user_model()
-        user2 = User.objects.create_user(
+        user_model = get_user_model()
+        user2 = user_model.objects.create_user(
             username='testuser2',
             email='test2@example.com',
             password='testpass123'
@@ -256,8 +264,8 @@ class GenerateRecommendationsAjaxTests(TestCase):
 
     def setUp(self):
         """Set up test fixtures"""
-        User = get_user_model()
-        self.user = User.objects.create_user(
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
             username='testuser',
             email='test@example.com',
             password='testpass123'
@@ -326,7 +334,9 @@ class GenerateRecommendationsAjaxTests(TestCase):
     def test_ajax_saves_recommendation_to_database(self, mock_generate):
         """Test that successful generation saves to database"""
         # Mock the AI response
-        mock_generate.return_value = "Great recommendations!\nRECOMMENDED_ITEMS: [1, 2]"
+        mock_generate.return_value = (
+            "Great recommendations!\nRECOMMENDED_ITEMS: [1, 2]"
+        )
 
         self.client.login(username='testuser', password='testpass123')
 
@@ -359,7 +369,9 @@ class GenerateRecommendationsAjaxTests(TestCase):
     @patch('best_dressed_app.views.generate_recommendations')
     def test_ajax_returns_success_response(self, mock_generate):
         """Test that successful generation returns proper JSON response"""
-        mock_generate.return_value = "Here are recommendations\nRECOMMENDED_ITEMS: [1, 2]"
+        mock_generate.return_value = (
+            "Here are recommendations\nRECOMMENDED_ITEMS: [1, 2]"
+        )
 
         self.client.login(username='testuser', password='testpass123')
 
@@ -380,7 +392,9 @@ class GenerateRecommendationsAjaxTests(TestCase):
     @patch('best_dressed_app.views.generate_recommendations')
     def test_ajax_handles_no_items_in_response(self, mock_generate):
         """Test handling when AI doesn't recommend specific items"""
-        mock_generate.return_value = "General fashion advice without specific items"
+        mock_generate.return_value = (
+            "General fashion advice without specific items"
+        )
 
         self.client.login(username='testuser', password='testpass123')
 
@@ -403,8 +417,8 @@ class GenerateRecommendationsAjaxTests(TestCase):
 
     def test_ajax_handles_missing_user_profile(self):
         """Test error handling when user profile doesn't exist"""
-        User = get_user_model()
-        user_no_profile = User.objects.create_user(
+        user_model = get_user_model()
+        user_model.objects.create_user(
             username='noprofile',
             password='testpass123'
         )
