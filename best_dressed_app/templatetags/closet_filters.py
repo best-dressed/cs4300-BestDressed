@@ -1,3 +1,4 @@
+""" item filters for wardrobe stuff"""
 from django import template
 
 register = template.Library()
